@@ -7,6 +7,20 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <script>
+  // Check if elements exist
+  console.log("Checker Elements:", {
+    input: document.getElementById('card-search'),
+    button: document.getElementById('check-btn'),
+    result: document.getElementById('checker-result')
+  });
+  
+  // Test function availability
+  console.log("Functions:", {
+    fetchCard: typeof fetchCard,
+    evaluateCard: typeof evaluateCard
+  });
+  </script>
   <section class="card-checker">
   <h2>Advanced Card Legality Check</h2>
   <input type="text" id="card-search" placeholder="Enter card name">
