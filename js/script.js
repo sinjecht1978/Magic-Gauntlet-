@@ -81,10 +81,12 @@ async function fetchCard(cardName) {
     if (cardCache[cardName.toLowerCase()]) {
       return cardCache[cardName.toLowerCase()];
     }
-    
-    const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
-    const card = await response.json();
-    
+    const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`, {
+  headers: {
+    'User-Agent': 'MagicGauntlet/1.0',
+    'Accept': 'application/json'
+  }
+});
     // Cache the card data
     cardCache[cardName.toLowerCase()] = {
       name: card.name,
