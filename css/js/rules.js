@@ -1,34 +1,44 @@
-// Format Rules Configuration (Edit This Only!)
+// rules.js
 const formatRules = {
-  // 1. Manual Bans (Specific Cards)
+  // A. Manual Bans (Specific Cards)
   bannedCards: [
     "Sol Ring",
     "Mana Crypt",
-    // ... add more as needed
+    "Dockside Extortionist"
+    // Add more as needed
   ],
 
-  // 2. Card Type Bans (Entire Categories)
+  // B. Banned Card Types
   bannedTypes: [
-    "Planeswalker",
-    // "Saga", "Tribal", etc.
+    // "Planeswalker", // Uncomment to ban all planeswalkers
+    // "Saga"         // Uncomment to ban all sagas
   ],
 
-  // 3. Mechanics Restrictions
+  // C. Mechanics Restrictions
   mechanics: {
-    // Kill Spells
     unconditionalKill: { minCmc: 5 },
-    // Counterspells
     unconditionalCounter: { minCmc: 4 },
-    // Damage Spells
-    damage: { maxDamageToCmcRatio: 1 }, // Damage <= CMC
-    // Mana Rocks
+    damageSpells: { maxDamageToCmc: 1 },
     manaRocks: { minCmc: 3, mustEnterTapped: true },
-    // Land Destruction
     landDestruction: { minCmc: 4 }
   },
 
-  // 4. Whitelist (Overrides Bans)
-  whitelist: [
-    // "Tibalt, the Fiend-Blooded" // Example exception
+  // D. NEW: Banned Abilities
+  bannedAbilities: [
+    "Storm",
+    "Dredge",
+    "Annihilator",
+    "venture into the dungeon",
+    "enter the dungeon"
+    // Add more ability phrases (case-insensitive)
+  ],
+
+  // E. NEW: Banned Ability Combos
+  bannedCombos: [
+    {
+      types: ["Creature"], // Required types
+      abilities: ["Flying", "Haste"] // ALL listed abilities must be present
+    }
+    // Add more combos as needed
   ]
 };
