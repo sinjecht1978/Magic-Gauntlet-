@@ -9,6 +9,14 @@
   <title>Set Browser | Magic Gauntlet</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
+  <!-- DEBUG TOOL FOR PHONE (Eruda) -->
+<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>
+  // Initialize Eruda ONLY if it's not a computer
+  if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    eruda.init();
+  }
+</script>
 <body>
   <header>
     <h1>Magic Gauntlet Reject Format</h1>
