@@ -9,7 +9,13 @@ const formatRules = {
     "Dockside Extortionist"
     // Add more as needed
   ],
-
+// Add this with other helper functions
+function hasBannedAbility(card) {
+  return formatRules.bannedAbilities.some(ability => 
+    card.keywords?.includes(ability) || 
+    card.oracle_text?.toLowerCase().includes(ability.toLowerCase())
+  );
+}
   // B. Banned Card Types
   bannedTypes: [
     // "Planeswalker", // Uncomment to ban all planeswalkers
@@ -63,13 +69,16 @@ async function checkLegality() {
 }
 
 function evaluateCard(card) {
-  // 1. Check against banned cards list
+  // 1. Check manual banned cards (specific names)
   if (formatRules.bannedCards.includes(card.name)) return false;
 
-  // 2. Check against banned types
+  // 2. Check banned types (e.g., Planeswalker)
   if (formatRules.bannedTypes.some(type => card.type_line?.includes(type))) return false;
 
-  // 3. Check mechanical restrictions
+  // 3. Check banned abilities (e.g., Storm)
+  if (hasBannedAbility(card)) return false;
+
+  // 4. Mechanical restrictions (your original rules)
   if (isUnconditionalKillSpell(card) && card.cmc < formatRules.mechanics.unconditionalKill.minCmc) return false;
   if (isUnconditionalCounter(card) && card.cmc < formatRules.mechanics.unconditionalCounter.minCmc) return false;
   if (isDamageSpell(card) && getMaxDamage(card) > card.cmc * formatRules.mechanics.damageSpells.maxDamageToCmc) return false;
@@ -77,7 +86,7 @@ function evaluateCard(card) {
      (formatRules.mechanics.manaRocks.mustEnterTapped && !entersTapped(card)))) return false;
   if (isLandDestruction(card) && card.cmc < formatRules.mechanics.landDestruction.minCmc) return false;
 
-  return true;
+  return true; // If all checks pass, card is legal
 }
 
 // ======================
