@@ -218,4 +218,22 @@ footer {
   #search-button {
     border-radius: 4px;
   }
+/* Graveyard Styles */
+.challenger-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.challenger-card {
+  background: #f8f9fa;
+  border-left: 4px solid #d9534f; /* Red "tombstone" accent */
+  padding: 1rem;
+  border-radius: 0 5px 5px 0;
+}
+
+.challenger-card h3 {
+  margin-top: 0;
+  color: #1a1a2e;
+}
 }
