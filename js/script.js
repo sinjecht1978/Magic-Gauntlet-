@@ -1,40 +1,131 @@
 // ======================
-// 1. RULES CONFIGURATION (Edit this section only!)
+// 1. RULES CONFIGURATION
 // ======================
-alert("Testing API..."); // Add this at the start of your fetch function
 const formatRules = {
-  // A. Manual Bans (Specific Cards)
   bannedCards: [
     "Sol Ring",
     "Mana Crypt",
     "Dockside Extortionist"
-    // Add more as needed
   ],
-
-  // B. Banned Card Types
-  bannedTypes: [
-    // "Planeswalker", // Uncomment to ban all planeswalkers
-    // "Saga"         // Uncomment to ban all sagas
-  ],
-  
-  // C. Banned Abilities
+  bannedTypes: [],
   bannedAbilities: [
     "Storm",
     "Dredge",
     "Annihilator"
-    // Add more as needed
   ],
-
-  // D. Mechanics Restrictions
   mechanics: {
-    unconditionalKill: { minCmc: 5 },      // Kill spells must cost 5+ mana
-    unconditionalCounter: { minCmc: 4 },   // Counterspells must cost 4+ mana
-    damageSpells: { maxDamageToCmc: 1 },   // Damage <= CMC
+    unconditionalKill: { minCmc: 5 },
+    unconditionalCounter: { minCmc: 4 },
+    damageSpells: { maxDamageToCmc: 1 },
     manaRocks: { minCmc: 3, mustEnterTapped: true },
     landDestruction: { minCmc: 4 }
   }
 };
 
+// ======================
+// 2. CORE FUNCTIONALITY
+// ======================
+const cardCache = {};
+
+// Initialize only when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  const searchButton = document.getElementById('search-button');
+  const cardSearch = document.getElementById('card-search');
+  const resultBox = document.getElementById('result');
+
+  // Check if elements exist before adding listeners
+  if (searchButton && cardSearch && resultBox) {
+    searchButton.addEventListener('click', checkLegality);
+    cardSearch.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') checkLegality();
+    });
+  } else {
+    console.error("Required elements not found in DOM");
+  }
+
+  if (window.location.pathname.includes('playlist.html')) {
+    loadAllSets();
+  }
+});
+
+async function checkLegality() {
+  alert("Testing API..."); // Moved alert here where it makes sense
+  
+  const cardName = document.getElementById('card-search')?.value.trim();
+  const resultBox = document.getElementById('result');
+  
+  if (!cardName || !resultBox) {
+    console.error("Missing required elements");
+    return;
+  }
+
+  if (!cardName) {
+    resultBox.textContent = "Please enter a card name";
+    resultBox.className = "result-box";
+    return;
+  }
+
+  try {
+    const card = await fetchCard(cardName);
+    if (!card) {
+      resultBox.textContent = "Card not found";
+      resultBox.className = "result-box";
+      return;
+    }
+    
+    const isLegal = evaluateCard(card);
+    resultBox.textContent = `${card.name} is ${isLegal ? 'LEGAL' : 'BANNED'}`;
+    resultBox.className = `result-box ${isLegal ? 'legal' : 'banned'}`;
+    
+  } catch (error) {
+    console.error("Error checking card:", error);
+    if (resultBox) {
+      resultBox.textContent = "Error checking card";
+      resultBox.className = "result-box";
+    }
+  }
+}
+
+async function fetchCard(cardName) {
+  try {
+    if (cardCache[cardName.toLowerCase()]) {
+      return cardCache[cardName.toLowerCase()];
+    }
+
+    const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`, {
+      headers: {
+        'User-Agent': 'MagicGauntlet/1.0',
+        'Accept': 'application/json'
+      },
+      mode: 'cors'
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+
+    const card = await response.json();
+    
+    // Cache the card data
+    cardCache[cardName.toLowerCase()] = {
+      name: card.name,
+      cmc: card.cmc,
+      type_line: card.type_line,
+      oracle_text: card.oracle_text,
+      image_uris: card.image_uris,
+      legalities: card.legalities,
+      keywords: card.keywords || []
+    };
+    
+    return cardCache[cardName.toLowerCase()];
+    
+  } catch (error) {
+    console.error("Failed to fetch card:", error);
+    return null;
+  }
+}
+
+// ... (rest of your helper functions remain the same) ...
 // ======================
 // 2. CORE FUNCTIONALITY (Don't edit below unless adding new rules)
 // ======================
