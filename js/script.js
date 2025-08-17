@@ -1,19 +1,20 @@
+// // ======================
+// ADVANCED CARD CHECKER (Scryfall + Rules)
 // ======================
-// CARD LEGALITY CHECKER
-// ======================
-
 document.addEventListener('DOMContentLoaded', function() {
-  const searchButton = document.getElementById('search-button');
+  const checkButton = document.getElementById('search-button');
   const cardSearch = document.getElementById('card-search');
-  const resultBox = document.getElementById('result');
+  const resultDiv = document.getElementById('result');
 
-  // Event listeners
-  searchButton.addEventListener('click', checkLegality);
-  cardSearch.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') checkLegality();
-  });
+  // Hardcoded bans (supplements your formatRules)
+  const hardBans = {
+    cards: ["Sol Ring", "Mana Crypt", "Dockside Extortionist"],
+    mechanics: ["Storm", "Dredge"]
+  };
 
-  async function checkLegality() {
+  checkButton.addEventListener('click', checkCardLegality);
+
+  async function checkCardLegality() {
     const cardName = cardSearch.value.trim();
     if (!cardName) {
       showResult("Please enter a card name", "black");
@@ -27,20 +28,18 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      // 1. Check hard banned list
-      const isHardBanned = formatRules.bannedCards.some(bannedCard => 
-        card.name.toLowerCase() === bannedCard.toLowerCase()
-      );
-
-      if (isHardBanned) {
-        showResult("BANNED (Hard banned)", "red");
+      // 1. Check hard bans
+      if (hardBans.cards.some(banned => 
+        card.name.toLowerCase() === banned.toLowerCase()
+      )) {
+        showResult("BANNED (Hardlisted)", "red");
         return;
       }
 
-      // 2. Check full rules
-      const isLegal = evaluateCard(card);
+      // 2. Evaluate against format rules
+      const isLegal = evaluateCard(card); // Your existing function
       showResult(
-        isLegal ? "LEGAL" : "BANNED (Rules violation)",
+        isLegal ? "LEGAL" : "BANNED (Rules violation)", 
         isLegal ? "green" : "orange"
       );
 
@@ -51,10 +50,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function showResult(message, color) {
-    resultBox.textContent = message;
-    resultBox.style.color = color;
-    resultBox.style.fontWeight = "bold";
-    resultBox.style.fontSize = "18px";
+    resultDiv.innerHTML = `
+      <div style="font-weight:bold;font-size:18px;color:${color}">
+        ${message}
+      </div>
+    `;
   }
 });
 
