@@ -1,7 +1,4 @@
 <!DOCTYPE html>
-<script>
-  alert("HTML is loading!"); // Add this RIGHT after <body>
-</script>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -9,15 +6,16 @@
   <title>Set Browser | Magic Gauntlet</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
-  <!-- DEBUG TOOL FOR PHONE (Eruda) -->
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>
-  // Initialize Eruda ONLY if it's not a computer
-  if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-    eruda.init();
-  }
-</script>
 <body>
+  <!-- DEBUG TOOL FOR PHONE (Eruda) - MOVED TO BODY -->
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>
+    // Initialize Eruda ONLY if it's not a computer
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      setTimeout(() => eruda.init(), 500); // Small delay to ensure proper init
+    }
+  </script>
+
   <header>
     <h1>Magic Gauntlet Reject Format</h1>
     <nav class="tabs">
@@ -34,7 +32,35 @@
       
       <!-- View Toggle -->
       <div class="view-options">
-        <button onclick="showGridView()">Grid View</button>
+        <button id="grid-view-btn">Grid View</button>
+        <button id="list-view-btn">List View</button>
+        <select id="sort-select">
+          <option value="name">A-Z</option>
+          <option value="cmc">Mana Cost</option>
+          <option value="rarity">Rarity</option>
+        </select>
+      </div>
+
+      <!-- Card Containers -->
+      <div id="card-grid" class="card-grid"></div>
+      <div id="card-list" class="card-list" style="display: none;"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Magic Gauntlet Challenge © 2023</p>
+  </footer>
+
+  <script>
+    // Simple test to verify DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      alert("HTML is fully loaded!");
+    });
+  </script>
+  
+  <script src="js/script.js"></script>
+</body>
+</html>        <button onclick="showGridView()">Grid View</button>
         <button onclick="showListView()">List View</button>
         <select onchange="sortCards(this.value)">
           <option value="name">A-Z</option>
