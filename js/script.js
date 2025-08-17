@@ -1,61 +1,43 @@
-// // ======================
-// ADVANCED CARD CHECKER (Scryfall + Rules)
-// ======================
-document.addEventListener('DOMContentLoaded', function() {
-  const checkButton = document.getElementById('search-button');
-  const cardSearch = document.getElementById('card-search');
-  const resultDiv = document.getElementById('result');
-
-  // Hardcoded bans (supplements your formatRules)
-  const hardBans = {
-    cards: ["Sol Ring", "Mana Crypt", "Dockside Extortionist"],
-    mechanics: ["Storm", "Dredge"]
-  };
-
-  checkButton.addEventListener('click', checkCardLegality);
-
-  async function checkCardLegality() {
-    const cardName = cardSearch.value.trim();
-    if (!cardName) {
-      showResult("Please enter a card name", "black");
-      return;
-    }
-
-    try {
-      const card = await fetchCard(cardName);
-      if (!card) {
-        showResult("Card not found", "black");
-        return;
-      }
-
-      // 1. Check hard bans
-      if (hardBans.cards.some(banned => 
-        card.name.toLowerCase() === banned.toLowerCase()
-      )) {
-        showResult("BANNED (Hardlisted)", "red");
-        return;
-      }
-
-      // 2. Evaluate against format rules
-      const isLegal = evaluateCard(card); // Your existing function
-      showResult(
-        isLegal ? "LEGAL" : "BANNED (Rules violation)", 
-        isLegal ? "green" : "orange"
-      );
-
-    } catch (error) {
-      console.error("Error:", error);
-      showResult("Error checking card", "black");
-    }
+// //// New system coexists with old one
+document.getElementById("advanced-check-button").addEventListener("click", async function() {
+  const cardName = document.getElementById("card-search").value.trim();
+  const resultDiv = document.getElementById("advanced-result");
+  
+  if (!cardName) {
+    resultDiv.textContent = "Enter a card name";
+    return;
   }
 
-  function showResult(message, color) {
-    resultDiv.innerHTML = `
-      <div style="font-weight:bold;font-size:18px;color:${color}">
-        ${message}
-      </div>
-    `;
+  try {
+    // Reuse your existing fetch function
+    const card = await fetchCard(cardName); 
+    
+    // Check both systems
+    const isHardBanned = bannedList.includes(card.name); // Old system
+    const isRuleViolation = !evaluateCard(card); // New system
+    
+    if (isHardBanned) {
+      resultDiv.innerHTML = `<span style="color:red">BANNED (Hard List)</span>`;
+    } else if (isRuleViolation) {
+      resultDiv.innerHTML = `
+        <span style="color:orange">BANNED (Rules)</span>
+        <div>${getViolationReasons(card)}</div>
+      `;
+    } else {
+      resultDiv.innerHTML = `<span style="color:green">LEGAL</span>`;
+    }
+  } catch (error) {
+    resultDiv.textContent = "Error checking card";
   }
+});
+
+// Helper to explain bans
+function getViolationReasons(card) {
+  const reasons = [];
+  if (card.cmc < 3 && isManaRock(card)) reasons.push("Mana rocks must cost 3+");
+  // Add other rule checks...
+  return reasons.join(", ");
+}
 });
 
 // Keep all other existing functions below this point
