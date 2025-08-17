@@ -19,10 +19,16 @@
 
   <main>
     <section class="content-section">
-      <h2>Banned Cards</h2>
-      <div id="banned-list">
-        <!-- Filled by JavaScript -->
-        <p>Loading banned cards...</p>
+      <h2>Fallen Challengers</h2>
+      <div class="challenger-list">
+        <!-- Example Entry -->
+        <div class="challenger-card">
+          <h3>Player: John Doe</h3>
+          <p><strong>Decks:</strong> Mono-Red Rejects, Fog Tribal, Janky Lifegain</p>
+          <p><strong>Defeated By:</strong> "Swamp Tribal" (Round 3)</p>
+          <p><strong>Date:</strong> 2023-10-31</p>
+        </div>
+        <!-- Add more dynamically with JavaScript -->
       </div>
     </section>
   </main>
@@ -33,7 +39,31 @@
 
   <script src="js/script.js"></script>
   <script>
-    // Add logic to fetch/display banned cards here
+    // Optional: Fetch past challengers from a JSON file or API
+    function loadChallengers() {
+      const graveyard = [
+        { 
+          player: "John Doe", 
+          decks: ["Mono-Red Rejects", "Fog Tribal", "Janky Lifegain"], 
+          defeatedBy: "Swamp Tribal", 
+          date: "2023-10-31" 
+        },
+        // Add more entries...
+      ];
+
+      const container = document.querySelector(".challenger-list");
+      container.innerHTML = graveyard.map(challenger => `
+        <div class="challenger-card">
+          <h3>Player: ${challenger.player}</h3>
+          <p><strong>Decks:</strong> ${challenger.decks.join(", ")}</p>
+          <p><strong>Defeated By:</strong> ${challenger.defeatedBy}</p>
+          <p><strong>Date:</strong> ${challenger.date}</p>
+        </div>
+      `).join("");
+    }
+    loadChallengers(); // Call on page load
   </script>
+</body>
+</html>  </script>
 </body>
 </html>
