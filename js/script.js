@@ -1,6 +1,7 @@
 // ======================
 // 1. RULES CONFIGURATION (Edit this section only!)
 // ======================
+alert("Testing API..."); // Add this at the start of your fetch function
 const formatRules = {
   // A. Manual Bans (Specific Cards)
   bannedCards: [
