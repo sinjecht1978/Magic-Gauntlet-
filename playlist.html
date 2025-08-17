@@ -17,7 +17,18 @@
     </nav>
   </header>
 
-  <main>
+  <main><!-- Add this RIGHT AFTER <main> tag -->
+<section id="card-checker">
+  <h2>Card Legality Checker</h2>
+  <input type="text" id="card-search" placeholder="e.g. 'Lightning Bolt'">
+  <button id="check-btn">Check Card</button>
+  <div id="checker-result" style="
+    margin-top: 15px;
+    min-height: 50px;
+    font-weight: bold;
+    font-size: 18px;
+  "></div>
+</section>
     <section class="card-checker">
   <h2>Card Legality Checker</h2>
   <p>Type a card name to see if it's Banned or Legal</p>
