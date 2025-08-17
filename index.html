@@ -7,34 +7,9 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <script>
-  // Check if elements exist
-  console.log("Checker Elements:", {
-    input: document.getElementById('card-search'),
-    button: document.getElementById('check-btn'),
-    result: document.getElementById('checker-result')
-  });
-  
-  // Test function availability
-  console.log("Functions:", {
-    fetchCard: typeof fetchCard,
-    evaluateCard: typeof evaluateCard
-  });
-  </script>
-  <section class="card-checker">
-  <h2>Advanced Card Legality Check</h2>
-  <input type="text" id="card-search" placeholder="Enter card name">
-  <button id="check-button">Evaluate</button>
-  <div id="result">
-    <div id="card-image"></div>
-    <div id="legality-result"></div>
-    <div id="rule-violations"></div>
-  </div>
-  </section>
   <!-- DEBUG TOOL FOR PHONE (Eruda) -->
   <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
   <script>
-    // Initialize Eruda ONLY if it's not a computer
     if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
       setTimeout(() => eruda.init(), 500);
     }
@@ -51,20 +26,17 @@
   </header>
 
   <main>
-    <!-- Card Checker Section -->
+    <!-- SINGLE Card Checker Section -->
     <section class="card-checker">
       <h2>Card Legality Checker</h2>
-      <p>Type a card name to see if it's Banned or Legal</p>
       <input type="text" id="card-search" placeholder="Enter card name">
-      <button id="search-button">Check</button>
-      <div id="result"></div>
+      <button id="check-button">Check</button>
+      <div id="checker-result"></div>
     </section>
 
     <!-- Existing Content Section -->
     <section class="content-section">
       <h2 id="set-title">Legal Sets</h2>
-      
-      <!-- View Toggle -->
       <div class="view-options">
         <button id="grid-view-btn">Grid View</button>
         <button id="list-view-btn">List View</button>
@@ -74,8 +46,6 @@
           <option value="rarity">Rarity</option>
         </select>
       </div>
-
-      <!-- Card Containers -->
       <div id="card-grid" class="card-grid"></div>
       <div id="card-list" class="card-list" style="display: none;"></div>
     </section>
@@ -86,9 +56,13 @@
   </footer>
 
   <script>
-    // Simple test to verify DOM is loaded
+    // Debug check - runs AFTER elements exist
     document.addEventListener('DOMContentLoaded', () => {
-      alert("HTML is fully loaded!");
+      console.log("Checker Elements:", {
+        input: document.getElementById('card-search'),
+        button: document.getElementById('check-button'),
+        result: document.getElementById('checker-result')
+      });
     });
   </script>
   
