@@ -1,5 +1,5 @@
-// ===========// ======================
-// HYBRID CARD CHECKER
+// ======================
+// MAGIC GAUNTLET CHECKER
 // ======================
 
 const hardBannedCards = ["Sol Ring", "Mana Crypt", "Lightning Bolt", "Counterspell"];
@@ -18,14 +18,13 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    // 1. Check hard bans first (instant)
-    const lowerCardName = cardName.toLowerCase();
-    if (hardBannedCards.some(banned => lowerCardName.includes(banned.toLowerCase()))) {
-      resultDiv.innerHTML = "<span style='color:red'>BANNED</span>";
+    // 1. Check hard bans first
+    if (isHardBanned(cardName)) {
+      showBanned();
       return;
     }
 
-    // 2. Full rules evaluation
+    // 2. Check Scryfall API
     try {
       const card = await fetchCard(cardName);
       if (!card) {
@@ -33,33 +32,41 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      // Check all rules
-      if (isManaRock(card) && card.cmc < 3) {
-        resultDiv.innerHTML = "<span style='color:red'>BANNED</span>";
-        return;
+      // 3. Check all format rules
+      if (isBannedByRules(card)) {
+        showBanned();
+      } else {
+        showLegal();
       }
-      
-      if (isUnconditionalCounter(card) && card.cmc < 4) {
-        resultDiv.innerHTML = "<span style='color:red'>BANNED</span>";
-        return;
-      }
-      
-      if (isDamageSpell(card) && getMaxDamage(card) > card.cmc) {
-        resultDiv.innerHTML = "<span style='color:red'>BANNED</span>";
-        return;
-      }
-
-      // If passed all checks
-      resultDiv.innerHTML = "<span style='color:green'>LEGAL</span>";
 
     } catch (error) {
       console.error("Error:", error);
-      // On error, assume legal
-      resultDiv.innerHTML = "<span style='color:green'>LEGAL</span>";
+      showLegal(); // Fallback to legal on errors
     }
   });
 
   // Helper functions
+  function isHardBanned(cardName) {
+    return hardBannedCards.some(banned => 
+      cardName.toLowerCase().includes(banned.toLowerCase())
+    );
+  }
+
+  function isBannedByRules(card) {
+    // Mana Rocks (CMC 3+)
+    if (isManaRock(card) && card.cmc < 3) return true;
+    
+    // Counterspells (CMC 4+)
+    if (isUnconditionalCounter(card) && card.cmc < 4) return true;
+    
+    // Damage Spells (Damage ≤ CMC)
+    if (isDamageSpell(card) && getMaxDamage(card) > card.cmc) return true;
+    
+    // Add more rules here as needed...
+    
+    return false;
+  }
+
   function isManaRock(card) {
     return card.type_line?.includes("Artifact") && 
            /add[s]? \{.+\}/i.test(card.oracle_text);
@@ -78,7 +85,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const match = card.oracle_text.match(/deal(?:s)? (\d+) damage/i);
     return match ? parseInt(match[1]) : 0;
   }
+
+  function showBanned() {
+    resultDiv.innerHTML = "<span style='color:red; font-weight:bold'>BANNED</span>";
+  }
+
+  function showLegal() {
+    resultDiv.innerHTML = "<span style='color:green; font-weight:bold'>LEGAL</span>";
+  }
 });
 
-// KEEP your existing fetchCard() function
-// async function fetchCard(cardName) { ... }
+// Add your Scryfall API function
+async function fetchCard(cardName) {
+  try {
+    const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Scryfall error:", error);
+    return null;
+  }
+                    }
