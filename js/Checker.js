@@ -1,42 +1,69 @@
-// HARD BANNED LIST (included directly in checker)
-const HARD_BANNED = [
-    "sol ring", 
-    "mana crypt", 
-    "lightning bolt",
-    "counterspell",
-    "swords to plowshares",
-    "demonic tutor"
-];
 
-document.addEventListener('DOMContentLoaded', function() {
-    const checkBtn = document.getElementById('check-button');
-    const cardInput = document.getElementById('card-search');
-    const resultDiv = document.getElementById('checker-result');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        input, button {
+            font-size: 16px;
+            padding: 5px;
+            margin: 10px;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Item Checker</h1>
+    <p>Type an item below to see if it's Banned or Legal</p>
+    <input type="text" id="searchInput" placeholder="Enter item name">
+    <button onclick="checkItem()">Check</button>
+    <div id="result"></div>
 
-    function checkCard() {
-        const cardName = cardInput.value.trim().toLowerCase();
-        resultDiv.textContent = "";
-        
-        if (!cardName) {
-            resultDiv.textContent = "Please enter a card name";
-            return;
+    <script>
+        // Initial banned list
+        const bannedList = [" "]
+
+
+  
+    
+        // Helper function to normalize strings
+        function normalizeString(str) {
+            return str
+                .toLowerCase()            // Convert to lowercase
+                .replace(/[^a-z0-9]/g, ''); // Remove all non-alphanumeric characters
         }
 
-        // Check hard bans
-        if (HARD_BANNED.includes(cardName)) {
-            resultDiv.textContent = "BANNED";
-            resultDiv.style.color = "red";
-            return;
+        // Normalize banned list once
+        const normalizedBannedList = bannedList.map(normalizeString);
+
+        // Function to check the item
+        function checkItem() {
+            const input = document.getElementById("searchInput").value.trim();
+            const normalizedInput = normalizeString(input);
+            const resultDiv = document.getElementById("result");
+
+            // Check if normalized input matches any normalized banned list items
+            const isBanned = normalizedBannedList.includes(normalizedInput);
+
+            if (isBanned) {
+                resultDiv.textContent = "Banned";
+                resultDiv.style.color = "red";
+            } else {
+                resultDiv.textContent = "Legal";
+                resultDiv.style.color = "green";
+            }
         }
-
-        // Default to legal
-        resultDiv.textContent = "LEGAL";
-        resultDiv.style.color = "green";
-    }
-
-    // Event listeners
-    checkBtn.addEventListener('click', checkCard);
-    cardInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') checkCard();
-    });
-});
+    </script>
+</body>
+</html>
