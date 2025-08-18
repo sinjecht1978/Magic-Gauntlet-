@@ -1,5 +1,5 @@
 // ======================
-// MAGIC GAUNTLET CHECKER
+// MAGIC GAUNTLET CHECKER (WITH WORKING API)
 // ======================
 
 const hardBannedCards = ["Sol Ring", "Mana Crypt", "Lightning Bolt", "Counterspell"];
@@ -27,7 +27,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // 2. Check Scryfall API
     try {
       const card = await fetchCard(cardName);
-      if (!card) {
+      
+      if (card.object === 'error') {
         resultDiv.innerHTML = "<span style='color:black'>Card not found</span>";
         return;
       }
@@ -41,11 +42,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     } catch (error) {
       console.error("Error:", error);
-      showLegal(); // Fallback to legal on errors
+      resultDiv.innerHTML = "<span style='color:black'>API Error - Try Again</span>";
     }
   });
 
-  // Helper functions
+  // SCRYFALL API FUNCTION - THIS WAS MISSING/MISCONFIGURED
+  async function fetchCard(cardName) {
+    try {
+      const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
+      if (!response.ok) {
+        throw new Error('Card not found');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Scryfall error:", error);
+      return { object: 'error' };
+    }
+  }
+
+  // Rest of your helper functions remain the same...
   function isHardBanned(cardName) {
     return hardBannedCards.some(banned => 
       cardName.toLowerCase().includes(banned.toLowerCase())
@@ -53,17 +68,9 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function isBannedByRules(card) {
-    // Mana Rocks (CMC 3+)
     if (isManaRock(card) && card.cmc < 3) return true;
-    
-    // Counterspells (CMC 4+)
     if (isUnconditionalCounter(card) && card.cmc < 4) return true;
-    
-    // Damage Spells (Damage ≤ CMC)
     if (isDamageSpell(card) && getMaxDamage(card) > card.cmc) return true;
-    
-    // Add more rules here as needed...
-    
     return false;
   }
 
@@ -94,14 +101,3 @@ document.addEventListener('DOMContentLoaded', function() {
     resultDiv.innerHTML = "<span style='color:green; font-weight:bold'>LEGAL</span>";
   }
 });
-
-// Add your Scryfall API function
-async function fetchCard(cardName) {
-  try {
-    const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
-    return await response.json();
-  } catch (error) {
-    console.error("Scryfall error:", error);
-    return null;
-  }
-                    }
