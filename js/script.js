@@ -1,100 +1,114 @@
-// SIMPLIFIED BUT EFFECTIVE CARD CHECKER
+// FINAL PERFECTED CARD CHECKER - ALL RULES EXACTLY AS YOU WANT
+document.addEventListener('DOMContentLoaded', function() {
+    // Mobile debug console
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/eruda';
+        document.body.appendChild(script);
+        script.onload = () => eruda.init();
+        console.log("Mobile debug console enabled");
+    }
 
-// 1. Hard Banned Cards (EXACT matches only)
-const HARD_BANNED = [
-    "Sol Ring", 
-    "Mana Crypt", 
-    "Lightning Bolt", 
-    "Counterspell",
-    "Swords to Plowshares",
-    "Demonic Tutor"
-];
-
-// 2. Card Checker Function
-async function checkCardLegality() {
-    const cardName = document.getElementById('card-search').value.trim();
+    const checkBtn = document.getElementById('check-button');
+    const cardInput = document.getElementById('card-search');
     const resultDiv = document.getElementById('checker-result');
-    
-    // Clear previous result
-    resultDiv.innerHTML = '';
-    resultDiv.style.color = 'black';
-    
-    if (!cardName) {
-        resultDiv.innerHTML = 'Please enter a card name';
-        return;
-    }
 
-    // First check hard bans (exact match only)
-    if (HARD_BANNED.some(banned => banned.toLowerCase() === cardName.toLowerCase())) {
-        resultDiv.innerHTML = 'BANNED (Hard Ban)';
-        resultDiv.style.color = 'red';
-        return;
-    }
+    // HARD BANS (exact matches only)
+    const HARD_BANNED = [
+        "Sol Ring", "Mana Crypt", "Lightning Bolt", 
+        "Counterspell", "Swords to Plowshares", "Demonic Tutor"
+    ].map(c => c.toLowerCase());
 
-    try {
-        // Fetch from Scryfall
-        const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
-        const card = await response.json();
-        
-        // Verify we got the exact card
-        if (card.name.toLowerCase() !== cardName.toLowerCase()) {
-            resultDiv.innerHTML = `Did you mean: <strong>${card.name}</strong>?`;
+    async function checkCard() {
+        const cardName = cardInput.value.trim();
+        resultDiv.textContent = "Checking...";
+        resultDiv.style.color = "black";
+
+        if (!cardName) {
+            resultDiv.textContent = "Please enter a card name";
             return;
         }
 
-        // Now check blanket rules
-        let isBanned = false;
-        let reason = '';
-        
-        // Rule 1: Cheap mana rocks (CMC < 3)
-        if (card.type_line.includes('Artifact') && 
-            /add[s]? \{.+\}/i.test(card.oracle_text) && 
-            card.cmc < 3) {
-            isBanned = true;
-            reason = 'Mana Rock (CMC < 3)';
+        // 1. Check hard bans first
+        if (HARD_BANNED.includes(cardName.toLowerCase())) {
+            resultDiv.textContent = "BANNED (Hard Ban)";
+            resultDiv.style.color = "red";
+            return;
         }
-        
-        // Rule 2: Efficient counters (CMC < 4)
-        else if (/counter target spell/i.test(card.oracle_text) && 
-                !/(if|unless|when)/i.test(card.oracle_text) && 
-                card.cmc < 4) {
-            isBanned = true;
-            reason = 'Counterpell (CMC < 4)';
-        }
-        
-        // Rule 3: Overpowered damage (Damage > CMC)
-        else if (/deal(?:s)? (\d+) damage/i.test(card.oracle_text)) {
-            const damage = parseInt(card.oracle_text.match(/deal(?:s)? (\d+) damage/i)[1]);
-            if (damage > card.cmc) {
-                isBanned = true;
-                reason = `Damage (${damage} > CMC ${card.cmc})`;
+
+        try {
+            // Fetch card data from Scryfall
+            const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
+            if (!response.ok) throw new Error("Card not found");
+            
+            const card = await response.json();
+            console.log("CARD DATA:", card); // Debug log
+
+            // Verify exact name match
+            if (card.name.toLowerCase() !== cardName.toLowerCase()) {
+                resultDiv.textContent = `Did you mean: ${card.name}?`;
+                return;
             }
+
+            // 2. Check blanket ban rules
+            let isBanned = false;
+            let reason = "";
+            const text = card.oracle_text?.toLowerCase() || '';
+            const types = card.type_line?.toLowerCase() || '';
+
+            // RULE 1: All counterspells under 4CMC banned (including Cancel)
+            if (/counter target spell/.test(text) && !/(if|unless|when)/.test(text)) {
+                if (card.cmc < 4) {
+                    isBanned = true;
+                    reason = `Counterspell (${card.cmc}CMC)`;
+                }
+            }
+
+            // RULE 2: Damage spells where damage > CMC (Shock banned: 2 damage for 1 mana)
+            else if (/deal(?:s)? (\d+) damage/.test(text)) {
+                const damage = parseInt(text.match(/deal(?:s)? (\d+) damage/)[1]);
+                if (damage > card.cmc) {
+                    isBanned = true;
+                    reason = `Damage (${damage} for ${card.cmc} mana)`;
+                }
+            }
+
+            // RULE 3: Mass destruction under 6CMC (all non-damage wipes)
+            else if ((types.includes("sorcery") || types.includes("instant")) && 
+                    /(destroy|exile) all/.test(text) && 
+                    !/damage/.test(text)) {
+                if (card.cmc < 6) {
+                    isBanned = true;
+                    reason = `Mass Destruction (${card.cmc}CMC)`;
+                }
+            }
+
+            // RULE 4: Land destruction under 4CMC
+            else if (/destroy target land/.test(text) && card.cmc < 4) {
+                isBanned = true;
+                reason = `Land Destruction (${card.cmc}CMC)`;
+            }
+
+            // RULE 5: Mana rocks (2CMC must ETB tapped, 3CMC+ allowed)
+            else if (types.includes("artifact") && /add[s]? \{.+\}/.test(text)) {
+                const comesTapped = /enters (the )?battlefield tapped/.test(text);
+                if (card.cmc < 2 || (card.cmc < 3 && !comesTapped)) {
+                    isBanned = true;
+                    reason = `Mana Rock (${card.cmc}CMC${comesTapped ? ' ETB tapped' : ''})`;
+                }
+            }
+
+            // Show final result
+            resultDiv.textContent = isBanned ? `BANNED (${reason})` : "LEGAL";
+            resultDiv.style.color = isBanned ? "red" : "green";
+
+        } catch (error) {
+            resultDiv.textContent = "Error: Card not found";
+            console.error("Error:", error);
         }
-
-        // Display result
-        if (isBanned) {
-            resultDiv.innerHTML = `BANNED (${reason})`;
-            resultDiv.style.color = 'red';
-        } else {
-            resultDiv.innerHTML = 'LEGAL';
-            resultDiv.style.color = 'green';
-        }
-
-    } catch (error) {
-        resultDiv.innerHTML = 'Card not found or error occurred';
-        console.error('Error:', error);
     }
-}
 
-// 3. Setup Event Listeners
-document.addEventListener('DOMContentLoaded', function() {
-    const checkBtn = document.getElementById('check-button') || document.getElementById('check-btn');
-    const cardInput = document.getElementById('card-search');
-    
-    if (checkBtn) checkBtn.addEventListener('click', checkCardLegality);
-    if (cardInput) {
-        cardInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') checkCardLegality();
-        });
-    }
+    // Event listeners
+    checkBtn.addEventListener('click', checkCard);
+    cardInput.addEventListener('keypress', (e) => e.key === 'Enter' && checkCard());
 });
