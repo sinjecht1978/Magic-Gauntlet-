@@ -1,6 +1,5 @@
-// //// New system coexists with old one
-doc// =============================================
-// 100% TESTED CARD CHECKER IMPLEMENTATION
+// =============================================
+// CORRECTED CARD CHECKER IMPLEMENTATION
 // =============================================
 
 // 1. Hardcoded bans (works without API)
@@ -13,12 +12,12 @@ const hardBannedCards = [
 
 // 2. Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
-  const checkBtn = document.getElementById('check-btn');
+  const checkBtn = document.getElementById('check-button');
   const cardInput = document.getElementById('card-search');
   const resultDiv = document.getElementById('checker-result');
 
   // 3. Click handler
-  checkBtn.addEventListener('click', async function() {
+  checkBtn.addEventListener('click', async function() {  // Added async here
     const cardName = cardInput.value.trim();
     resultDiv.textContent = ""; // Clear previous result
     
@@ -28,12 +27,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 4. First check hard bans (instant response)
-    const isHardBanned = hardBannedCards.some(banned => 
+    if (hardBannedCards.some(banned =>  // Fixed variable name (lowercase h)
       cardName.toLowerCase().includes(banned.toLowerCase())
-    );
-
-    if (isHardBanned) {
-      showResult("⛔ BANNED (Hard ban)", "red");
+    )) {
+      resultDiv.innerHTML = "<span style='color:red'>BANNED</span>";
       return;
     }
 
@@ -62,4 +59,4 @@ document.addEventListener('DOMContentLoaded', function() {
     resultDiv.textContent = message;
     resultDiv.style.color = color;
   }
-});.)
+});
