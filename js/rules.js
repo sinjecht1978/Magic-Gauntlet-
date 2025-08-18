@@ -1,28 +1,11 @@
-// rules.js - External Rules Configuration
+// rules.js
 export const formatRules = {
-  // 1. Hard banned cards
-  bannedCards: [
-    "Sol Ring", 
-    "Mana Crypt",
-    "Lightning Bolt",
-    "Counterspell"
-  ],
-
-  // 2. Banned types
-  bannedTypes: [
-    "Planeswalker",
-    "Saga"
-  ],
-
-  // 3. Banned abilities
-  bannedAbilities: [
-    "Storm",
-    "Dredge", 
-    "Annihilator",
-    "Partner"
-  ],
-
-  // 4. Mechanic restrictions
+  bannedCards: ["Sol Ring", "Mana Crypt", "Lightning Bolt", "Counterspell"],
+  
+  bannedTypes: ["Planeswalker", "Saga"],
+  
+  bannedAbilities: ["Storm", "Dredge", "Annihilator", "Partner"],
+  
   mechanics: {
     counterspells: { minCmc: 4 },
     boardWipes: { minCmc: 6 },
@@ -32,7 +15,8 @@ export const formatRules = {
       mustEnterTapped: true
     },
     damageSpells: {
-      maxDamageVsCmc: true  // Damage must be ≤ CMC
+      maxDamageVsCmc: true
     }
   }
+};  }
 };
