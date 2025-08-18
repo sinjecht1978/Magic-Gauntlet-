@@ -9,7 +9,38 @@ function isHardBanned(cardName) {
     cardName.toLowerCase().includes(banned.toLowerCase())
   );
 }
+import { formatRules } from './rules.js';
 
+// ONLY your requested rule checks
+function isBannedByRules(card) {
+  // 1. Mana Rocks (CMC 3+)
+  if (isManaRock(card) && (
+    card.cmc < formatRules.mechanics.manaRocks.minCmc ||
+    (formatRules.mechanics.manaRocks.mustEnterTapped && !entersTapped(card))
+  ) return true;
+
+  // 2. Counterspells (CMC 4+)
+  if (isUnconditionalCounter(card) && card.cmc < formatRules.mechanics.counterspells.minCmc)
+    return true;
+
+  // 3. Damage Spells (Damage ≤ CMC)
+  if (isDamageSpell(card) && formatRules.mechanics.damageSpells.maxDamageVsCmc && 
+     getMaxDamage(card) > card.cmc) return true;
+
+  // 4. Board Wipes (CMC 6+)
+  if (isMassBoardWipe(card) && card.cmc < formatRules.mechanics.boardWipes.minCmc)
+    return true;
+
+  // 5. Land Destruction (CMC 4+)
+  if (isLandDestruction(card) && card.cmc < formatRules.mechanics.landDestruction.minCmc)
+    return true;
+
+  return false;
+}
+
+// Keep all your existing helper functions exactly as-is:
+// isManaRock(), isUnconditionalCounter(), isDamageSpell(), 
+// getMaxDamage(), isMassBoardWipe(), isLandDestruction()
 async function fetchCard(cardName) {
   try {
     console.log("Fetching card:", cardName);
