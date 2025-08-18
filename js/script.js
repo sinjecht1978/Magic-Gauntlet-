@@ -1,8 +1,7 @@
-// =============================================
-// CORRECTED CARD CHECKER IMPLEMENTATION
+// ========// =============================================
+// FINAL CARD CHECKER IMPLEMENTATION
 // =============================================
 
-// 1. Hardcoded bans (works without API)
 const hardBannedCards = [
   "Sol Ring",
   "Mana Crypt",
@@ -10,53 +9,45 @@ const hardBannedCards = [
   "Counterspell"
 ];
 
-// 2. Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
   const checkBtn = document.getElementById('check-button');
   const cardInput = document.getElementById('card-search');
   const resultDiv = document.getElementById('checker-result');
 
-  // 3. Click handler
-  checkBtn.addEventListener('click', async function() {  // Added async here
+  checkBtn.addEventListener('click', async function() {
     const cardName = cardInput.value.trim();
-    resultDiv.textContent = ""; // Clear previous result
+    resultDiv.innerHTML = ""; // Clear previous result
     
     if (!cardName) {
-      showResult("Please enter a card name", "black");
+      resultDiv.innerHTML = "<span style='color:black'>Please enter a card name</span>";
       return;
     }
 
-    // 4. First check hard bans (instant response)
-    if (hardBannedCards.some(banned =>  // Fixed variable name (lowercase h)
+    // 1. Check hard bans first
+    if (hardBannedCards.some(banned => 
       cardName.toLowerCase().includes(banned.toLowerCase())
     )) {
       resultDiv.innerHTML = "<span style='color:red'>BANNED</span>";
       return;
     }
 
-    // 5. Try API check if available
+    // 2. Try API check if available
     try {
       if (typeof fetchCard !== 'undefined') {
         const card = await fetchCard(cardName);
         if (card && typeof evaluateCard !== 'undefined') {
           const isLegal = evaluateCard(card);
-          showResult(
-            isLegal ? "✅ LEGAL" : "⚠️ BANNED (Rules)", 
-            isLegal ? "green" : "orange"
-          );
+          resultDiv.innerHTML = isLegal 
+            ? "<span style='color:green'>LEGAL</span>" 
+            : "<span style='color:orange'>BANNED</span>";
           return;
         }
       }
     } catch (error) {
-      console.log("API check failed, using basic mode");
+      console.log("API check failed");
     }
 
-    // 6. Fallback if API unavailable
-    showResult("🔍 LEGAL (Basic check)", "blue");
+    // 3. Fallback for basic legal check
+    resultDiv.innerHTML = "<span style='color:green'>LEGAL</span>";
   });
-
-  function showResult(message, color) {
-    resultDiv.textContent = message;
-    resultDiv.style.color = color;
-  }
 });
