@@ -1,7 +1,28 @@
 // ======================
 // MAGIC GAUNTLET COMPLETE RULE CHECKER
 // ======================
+// ======================
+// ADD THESE DEBUG LINES RIGHT AFTER YOUR DOMContentLoaded
+// ======================
+document.addEventListener('DOMContentLoaded', function() {
+  // ADD THESE 3 LINES FIRST:
+  console.log("Script loaded!");
+  alert("Script is working! Now click the button to test.");
+  document.getElementById('checker-result').innerHTML = "READY";
+  
+  // YOUR EXISTING CODE CONTINUES BELOW...
+  const checkBtn = document.getElementById('check-button');
+  const cardInput = document.getElementById('card-search');
+  const resultDiv = document.getElementById('checker-result');
 
+  // ADD THIS DEBUG LINE INSIDE YOUR CLICK HANDLER:
+  checkBtn.addEventListener('click', async function() {
+    console.log("Button clicked - input value:", cardInput.value);
+    resultDiv.innerHTML = "WORKING..."; // Visual feedback
+    
+    // ... rest of your existing click handler code ...
+  });
+});
 const hardBannedCards = ["Sol Ring", "Mana Crypt", "Lightning Bolt", "Counterspell"];
 
 document.addEventListener('DOMContentLoaded', function() {
