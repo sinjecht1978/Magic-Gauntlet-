@@ -60,7 +60,27 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         showLegal();
       }
-
+function debugRuleCheck(card) {
+  const reasons = [];
+  
+  if (isManaRock(card) && card.cmc < 3) 
+    reasons.push(`Mana Rock (CMC ${card.cmc} < 3)`);
+  
+  if (isUnconditionalCounter(card) && card.cmc < 4) 
+    reasons.push(`Counterspell (CMC ${card.cmc} < 4)`);
+  
+  if (isDamageSpell(card) && getMaxDamage(card) > card.cmc) 
+    reasons.push(`Damage spell (${getMaxDamage(card)} > ${card.cmc})`);
+  
+  if (isMassBoardWipe(card) && card.cmc < 6) 
+    reasons.push(`Board wipe (CMC ${card.cmc} < 6)`);
+  
+  if (isLandDestruction(card) && card.cmc < 4) 
+    reasons.push(`Land destruction (CMC ${card.cmc} < 4)`);
+  
+  console.log(`Checking ${card.name}:`, reasons.length ? reasons : "LEGAL");
+  return reasons.length > 0;
+}
     } catch (error) {
       console.error("Error:", error);
       resultDiv.innerHTML = "<span style='color:black'>API Error - Try Again</span>";
