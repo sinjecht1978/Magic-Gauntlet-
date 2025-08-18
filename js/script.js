@@ -35,17 +35,11 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       const violations = checkCardRules(card);
-      const positives = checkPositiveCases(card); // Check for positive cases
-      
       if (violations.length > 0) {
         showResult("BANNED (Rules violation)", "red");
         showViolations(violations);
       } else {
         showResult("LEGAL", "green");
-        // Show positive cases if any
-        if (positives.length > 0) {
-          showPositives(positives);
-        }
       }
 
     } catch (error) {
@@ -86,20 +80,6 @@ document.addEventListener('DOMContentLoaded', function() {
     return violations;
   }
 
-  // NEW FUNCTION: Check for positive cases (soft test)
-  function checkPositiveCases(card) {
-    const positives = [];
-    
-    // Positive case: Damage exactly equals CMC
-    if (isDamageSpell(card) && getMaxDamage(card) === card.cmc) {
-      positives.push(`Efficient damage (${getMaxDamage(card)} = CMC ${card.cmc})`);
-    }
-    
-    // Add more positive cases here...
-    
-    return positives;
-  }
-
   function isManaRock(card) {
     return card.type_line?.includes("Artifact") && 
            /add[s]? \{.+\}/i.test(card.oracle_text);
@@ -126,13 +106,6 @@ document.addEventListener('DOMContentLoaded', function() {
   function showViolations(violations) {
     resultDiv.innerHTML += violations.map(v => 
       `<div style="color:orange;font-size:0.9em">✖ ${v}</div>`
-    ).join("");
-  }
-
-  // NEW FUNCTION: Show positive cases
-  function showPositives(positives) {
-    resultDiv.innerHTML += positives.map(p => 
-      `<div style="color:darkgreen;font-size:0.9em">✓ ${p}</div>`
     ).join("");
   }
 });
