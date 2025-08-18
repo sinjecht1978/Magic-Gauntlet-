@@ -1,4 +1,3 @@
-
 // ======================
 // HYBRID CARD CHECKER
 // (Hard bans + Dynamic Rules)
@@ -23,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 1. Check hard bans first (instant)
     if (isHardBanned(cardName)) {
-      showResult("BANNED (Hard banned)", "red");
+      showResult("BANNED", "red");
       return;
     }
 
@@ -37,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const violations = checkCardRules(card);
       if (violations.length > 0) {
-        showResult("BANNED (Rules violation)", "red");
+        showResult("BANNED", "red");
         showViolations(violations);
       } else {
         showResult("LEGAL", "green");
@@ -45,9 +44,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     } catch (error) {
       console.error("Error:", error);
-      showResult("Check failed - using basic mode", "black");
-      // Fallback to simple legal if API fails
-      showResult("LEGAL (Basic check)", "blue");
+      // On error, just show LEGAL without any fallback messages
+      showResult("LEGAL", "green");
     }
   });
 
@@ -101,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function showResult(message, color) {
-    resultDiv.innerHTML += `<div style="color:${color};font-weight:bold">${message}</div>`;
+    resultDiv.innerHTML = `<div style="color:${color};font-weight:bold">${message}</div>`;
   }
 
   function showViolations(violations) {
