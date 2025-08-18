@@ -1,22 +1,11 @@
-// ======================
-// MAGIC GAUNTLET COMPLETE RULE CHECKER (DEBUGGING VERSION)
-// ======================
-
-const hardBannedCards = ["Sol Ring", "Mana Crypt", "Lightning Bolt", "Counterspell"];
+import { formatRules } from './rules.js';
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Debug initialization
-  console.log("Script loaded!");
-  document.getElementById('checker-result').innerHTML = "READY";
-  
   const checkBtn = document.getElementById('check-button');
   const cardInput = document.getElementById('card-search');
   const resultDiv = document.getElementById('checker-result');
 
   checkBtn.addEventListener('click', async function() {
-    console.log("Button clicked - input value:", cardInput.value);
-    resultDiv.innerHTML = "WORKING...";
-    
     const cardName = cardInput.value.trim();
     resultDiv.innerHTML = "";
     
@@ -25,26 +14,22 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    // 1. Check hard bans first
-    if (isHardBanned(cardName)) {
-      console.log("Hard banned:", cardName);
-      showBanned();
-      return;
-    }
-
-    // 2. Check Scryfall API
     try {
       const card = await fetchCard(cardName);
-      console.log("API response:", card);
-      
       if (!card || card.object === 'error') {
         resultDiv.innerHTML = "<span style='color:black'>Card not found</span>";
         return;
       }
 
-      // 3. Debug rule checking
-      const isBanned = debugRuleCheck(card); // Using debug version
-      if (isBanned) {
+      // Debug: Show full card data in console
+      console.log("Checking card:", {
+        name: card.name,
+        cmc: card.cmc,
+        type: card.type_line,
+        text: card.oracle_text
+      });
+
+      if (isBannedByRules(card)) {
         showBanned();
       } else {
         showLegal();
@@ -56,42 +41,44 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // Debug rule checker
-  function debugRuleCheck(card) {
-    const reasons = [];
+  function isBannedByRules(card) {
+    // 1. Check hard banned cards
+    if (formatRules.bannedCards.some(banned => 
+      card.name.toLowerCase().includes(banned.toLowerCase())
+    )) return true;
+
+    // 2. Check banned types
+    if (formatRules.bannedTypes.some(type => 
+      card.type_line.includes(type)
+    )) return true;
+
+    // 3. Check banned abilities
+    if (formatRules.bannedAbilities.some(ability => 
+      card.oracle_text.includes(ability)
+    )) return true;
+
+    // 4. Check mechanical restrictions
+    if (isUnconditionalCounter(card) && card.cmc < formatRules.mechanics.counterspells.minCmc) 
+      return true;
     
-    if (isManaRock(card) && card.cmc < 3) 
-      reasons.push(`Mana Rock (CMC ${card.cmc} < 3)`);
+    if (isMassBoardWipe(card) && card.cmc < formatRules.mechanics.boardWipes.minCmc) 
+      return true;
     
-    if (isUnconditionalCounter(card) && card.cmc < 4) 
-      reasons.push(`Counterspell (CMC ${card.cmc} < 4)`);
+    if (isLandDestruction(card) && card.cmc < formatRules.mechanics.landDestruction.minCmc) 
+      return true;
     
-    if (isDamageSpell(card) && getMaxDamage(card) > card.cmc) 
-      reasons.push(`Damage spell (${getMaxDamage(card)} > ${card.cmc})`);
+    if (isManaRock(card) && (
+      card.cmc < formatRules.mechanics.manaRocks.minCmc ||
+      (formatRules.mechanics.manaRocks.mustEnterTapped && !entersTapped(card))
+    )) return true;
     
-    if (isMassBoardWipe(card) && card.cmc < 6) 
-      reasons.push(`Board wipe (CMC ${card.cmc} < 6)`);
-    
-    if (isLandDestruction(card) && card.cmc < 4) 
-      reasons.push(`Land destruction (CMC ${card.cmc} < 4)`);
-    
-    console.log(`Rule check for ${card.name}:`, reasons.length ? reasons : "LEGAL");
-    return reasons.length > 0;
+    if (isDamageSpell(card) && 
+       formatRules.mechanics.damageSpells.maxDamageVsCmc && 
+       getMaxDamage(card) > card.cmc) 
+      return true;
+
+    return false;
   }
 
-  // SCRYFALL API CALL
-  async function fetchCard(cardName) {
-    try {
-      const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
-      if (!response.ok) throw new Error('API Error');
-      return await response.json();
-    } catch (error) {
-      console.error("Scryfall error:", error);
-      return { object: 'error' };
-    }
-  }
-
-  // ... [Keep all your existing helper functions exactly as they were] ...
-  // isHardBanned(), isManaRock(), isUnconditionalCounter(), etc...
-  // ... [All the way through showLegal()] ...
+  // ... [Keep all your existing helper functions] ...
 });
