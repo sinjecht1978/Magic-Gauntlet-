@@ -1,8 +1,8 @@
 // ======================
-// PROPERLY ORDERED SCRIPT
+// PROPERLY STRUCTURED SCRIPT
 // ======================
 
-// 1. First define ALL helper functions
+// 1. First define ALL helper functions at the top
 function isHardBanned(cardName) {
   const hardBannedCards = ["Sol Ring", "Mana Crypt", "Lightning Bolt", "Counterspell"];
   return hardBannedCards.some(banned => 
@@ -10,11 +10,22 @@ function isHardBanned(cardName) {
   );
 }
 
-function fetchCard(cardName) {
-  // ... existing fetchCard implementation ...
+async function fetchCard(cardName) {
+  try {
+    const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
+    if (!response.ok) throw new Error('API Error');
+    return await response.json();
+  } catch (error) {
+    console.error("Scryfall error:", error);
+    return { object: 'error' };
+  }
 }
 
-// ... all other helper functions (isManaRock, isUnconditionalCounter, etc.) ...
+function isBannedByRules(card) {
+  // ... your existing rule checks ...
+}
+
+// ... include all other helper functions here ...
 
 // 2. Then add your DOM event listeners
 document.addEventListener('DOMContentLoaded', function() {
@@ -26,11 +37,18 @@ document.addEventListener('DOMContentLoaded', function() {
   resultDiv.innerHTML = "<span style='color:blue'>READY</span>";
 
   checkBtn.addEventListener('click', async function() {
+    console.log("Button clicked - input value:", cardInput.value);
     const cardName = cardInput.value.trim();
     resultDiv.innerHTML = "<span style='color:orange'>CHECKING...</span>";
     
     if (!cardName) {
       resultDiv.innerHTML = "<span style='color:black'>Please enter a card name</span>";
+      return;
+    }
+
+    // 1. Check hard bans first
+    if (isHardBanned(cardName)) {
+      resultDiv.innerHTML = "<span style='color:red'>BANNED</span>";
       return;
     }
 
@@ -42,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
+      // 2. Check other rules
       if (isBannedByRules(card)) {
         resultDiv.innerHTML = "<span style='color:red'>BANNED</span>";
       } else {
