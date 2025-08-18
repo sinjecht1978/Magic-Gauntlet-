@@ -1,5 +1,5 @@
 // ======================
-// MAGIC GAUNTLET CHECKER (WITH MASS BOARD WIPE RULE)
+// MAGIC GAUNTLET COMPLETE RULE CHECKER
 // ======================
 
 const hardBannedCards = ["Sol Ring", "Mana Crypt", "Lightning Bolt", "Counterspell"];
@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  // SCRYFALL API CALL
   async function fetchCard(cardName) {
     try {
       const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
@@ -57,6 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // RULE CHECKING FUNCTIONS
   function isHardBanned(cardName) {
     return hardBannedCards.some(banned => 
       cardName.toLowerCase().includes(banned.toLowerCase())
@@ -76,6 +78,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mass Board Wipes (CMC 6+)
     if (isMassBoardWipe(card) && card.cmc < 6) return true;
     
+    // Land Destruction (CMC 4+)
+    if (isLandDestruction(card) && card.cmc < 4) return true;
+    
     return false;
   }
 
@@ -93,10 +98,24 @@ document.addEventListener('DOMContentLoaded', function() {
     return /deal(?:s)? \d+ damage/i.test(card.oracle_text);
   }
 
-  // NEW FUNCTION: Mass Board Wipe Check
+  // PRECISE BOARD WIPE DETECTION
   function isMassBoardWipe(card) {
-    return /destroy all|exile all|(-|)x (-|)x|wipe all/i.test(card.oracle_text) && 
-           (card.type_line.includes('Sorcery') || card.type_line.includes('Instant'));
+    if (!card.type_line.includes('Sorcery') && !card.type_line.includes('Instant')) {
+      return false;
+    }
+    const wipePatterns = [
+      /destroy all (creatures|permanents)/i,
+      /exile all (creatures|permanents)/i,
+      /each player sacrifices all (creatures|permanents)/i,
+      /(-|)x (-|)x/i,
+      /wipe all/i
+    ];
+    return wipePatterns.some(pattern => pattern.test(card.oracle_text));
+  }
+
+  // LAND DESTRUCTION CHECK
+  function isLandDestruction(card) {
+    return /destroy target land|destroy all lands|sacrifice a land/i.test(card.oracle_text);
   }
 
   function getMaxDamage(card) {
@@ -104,6 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
     return match ? parseInt(match[1]) : 0;
   }
 
+  // DISPLAY FUNCTIONS
   function showBanned() {
     resultDiv.innerHTML = "<span style='color:red; font-weight:bold'>BANNED</span>";
   }
