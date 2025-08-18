@@ -1,40 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Playlist | Magic Gauntlet</title>
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    /* Add this to make the checker more visible */
-    .card-checker {
-      background: #f8f8f8;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 30px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    #card-search {
-      padding: 10px;
-      width: 300px;
-      font-size: 16px;
-    }
-    #check-button {
-      padding: 10px 20px;
-      background: #1a1a2e;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    #checker-result {
-      margin-top: 15px;
-      font-size: 18px;
-      font-weight: bold;
-      min-height: 25px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Gauntlet</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Magic Gauntlet Reject Format</h1>
+        <nav class="tabs">
+            <a href="index.html">Home</a>
+            <a href="guidelines.html">Guidelines</a>
+            <a href="playlist.html">Playlist</a>
+            <a href="graveyard.html">Graveyard</a>
+            <a href="banned.html">Banned List</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="card-checker">
+            <h2>Card Legality Checker</h2>
+            <input type="text" id="card-search" placeholder="Enter card name">
+            <button id="check-button">Check</button>
+            <div id="checker-result"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Magic Gauntlet Challenge © 2023</p>
+    </footer>
+
+    <script src="js/checker.js"></script>
+</body>
+</html>  </style>
 </head>
 <body>
   <header>
