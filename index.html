@@ -3,18 +3,40 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Set Browser | Magic Gauntlet</title>
+  <title>Playlist | Magic Gauntlet</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Add this to make the checker more visible */
+    .card-checker {
+      background: #f8f8f8;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    #card-search {
+      padding: 10px;
+      width: 300px;
+      font-size: 16px;
+    }
+    #check-button {
+      padding: 10px 20px;
+      background: #1a1a2e;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    #checker-result {
+      margin-top: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      min-height: 25px;
+    }
+  </style>
 </head>
 <body>
-  <!-- DEBUG TOOL FOR PHONE (Eruda) -->
-  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-  <script>
-    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-      setTimeout(() => eruda.init(), 500);
-    }
-  </script>
-
   <header>
     <h1>Magic Gauntlet Reject Format</h1>
     <nav class="tabs">
@@ -26,28 +48,17 @@
   </header>
 
   <main>
-    <!-- SINGLE Card Checker Section -->
+    <!-- Card Checker Section -->
     <section class="card-checker">
       <h2>Card Legality Checker</h2>
-      <input type="text" id="card-search" placeholder="Enter card name">
-      <button id="check-button">Check</button>
+      <input type="text" id="card-search" placeholder="e.g. 'Lightning Bolt'">
+      <button id="check-button">Check Card</button>
       <div id="checker-result"></div>
     </section>
 
-    <!-- Existing Content Section -->
+    <!-- Rest of your content -->
     <section class="content-section">
-      <h2 id="set-title">Legal Sets</h2>
-      <div class="view-options">
-        <button id="grid-view-btn">Grid View</button>
-        <button id="list-view-btn">List View</button>
-        <select id="sort-select">
-          <option value="name">A-Z</option>
-          <option value="cmc">Mana Cost</option>
-          <option value="rarity">Rarity</option>
-        </select>
-      </div>
-      <div id="card-grid" class="card-grid"></div>
-      <div id="card-list" class="card-list" style="display: none;"></div>
+      <!-- ... your existing content ... -->
     </section>
   </main>
 
@@ -55,17 +66,9 @@
     <p>Magic Gauntlet Challenge © 2023</p>
   </footer>
 
-  <script>
-    // Debug check - runs AFTER elements exist
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log("Checker Elements:", {
-        input: document.getElementById('card-search'),
-        button: document.getElementById('check-button'),
-        result: document.getElementById('checker-result')
-      });
-    });
-  </script>
-  
+  <!-- Load the checker script FIRST -->
+  <script src="js/card-checker.js"></script>
+  <!-- Then your other scripts -->
   <script src="js/script.js"></script>
 </body>
 </html>
