@@ -1,21 +1,33 @@
 // ======================
-// FIXED VISUAL FEEDBACK VERSION
+// PROPERLY ORDERED SCRIPT
 // ======================
 
+// 1. First define ALL helper functions
+function isHardBanned(cardName) {
+  const hardBannedCards = ["Sol Ring", "Mana Crypt", "Lightning Bolt", "Counterspell"];
+  return hardBannedCards.some(banned => 
+    cardName.toLowerCase().includes(banned.toLowerCase())
+  );
+}
+
+function fetchCard(cardName) {
+  // ... existing fetchCard implementation ...
+}
+
+// ... all other helper functions (isManaRock, isUnconditionalCounter, etc.) ...
+
+// 2. Then add your DOM event listeners
 document.addEventListener('DOMContentLoaded', function() {
   const checkBtn = document.getElementById('check-button');
   const cardInput = document.getElementById('card-search');
   const resultDiv = document.getElementById('checker-result');
 
-  // Initialize with READY state
-  resultDiv.innerHTML = "<span style='color:blue; font-weight:bold'>READY</span>";
-  resultDiv.style.minHeight = "20px"; // Prevents collapse when empty
+  // Initialize display
+  resultDiv.innerHTML = "<span style='color:blue'>READY</span>";
 
   checkBtn.addEventListener('click', async function() {
     const cardName = cardInput.value.trim();
-    
-    // Clear previous result but keep space
-    resultDiv.innerHTML = "<span style='color:orange; font-weight:bold'>CHECKING...</span>";
+    resultDiv.innerHTML = "<span style='color:orange'>CHECKING...</span>";
     
     if (!cardName) {
       resultDiv.innerHTML = "<span style='color:black'>Please enter a card name</span>";
@@ -30,49 +42,15 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      // Debug: Show what's being checked
-      console.log("Checking:", {
-        name: card.name,
-        cmc: card.cmc, 
-        type: card.type_line,
-        text: card.oracle_text
-      });
-
       if (isBannedByRules(card)) {
-        showBanned();
+        resultDiv.innerHTML = "<span style='color:red'>BANNED</span>";
       } else {
-        showLegal();
+        resultDiv.innerHTML = "<span style='color:green'>LEGAL</span>";
       }
 
     } catch (error) {
       console.error("Error:", error);
-      resultDiv.innerHTML = "<span style='color:red'>API Error</span>";
-      // Restore READY state after 2 seconds
-      setTimeout(() => {
-        resultDiv.innerHTML = "<span style='color:blue; font-weight:bold'>READY</span>";
-      }, 2000);
+      resultDiv.innerHTML = "<span style='color:black'>API Error</span>";
     }
   });
-
-  // ... [keep all your existing helper functions exactly as they were] ...
-
-  function showBanned() {
-    resultDiv.innerHTML = "<span style='color:red; font-weight:bold'>BANNED</span>";
-  }
-
-  function showLegal() {
-    resultDiv.innerHTML = "<span style='color:green; font-weight:bold'>LEGAL</span>";
-  }
 });
-
-// Ensure this is at the end if not using modules
-async function fetchCard(cardName) {
-  try {
-    const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
-    if (!response.ok) throw new Error('API Error');
-    return await response.json();
-  } catch (error) {
-    console.error("Scryfall error:", error);
-    return { object: 'error' };
-  }
-}
