@@ -1,56 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Playlist | Magic Gauntlet</title>
-  <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Title | Magic Gauntlet</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header>
-    <h1>Magic Gauntlet Reject Format</h1>
-    <nav class="tabs">
-      <a href="index.html">Home</a>
-      <a href="guidelines.html">Guidelines</a>
-      <a href="playlist.html" class="active">Playlist</a>
-      <a href="graveyard.html">Graveyard</a>
-    </nav>
-  </header>
+    <header>
+        <h1>Magic Gauntlet Reject Format</h1>
+        <nav class="tabs">
+            <a href="index.html">Home</a>
+            <a href="guidelines.html">Guidelines</a>
+            <a href="playlist.html">Playlist</a>
+            <a href="graveyard.html">Graveyard</a>
+            <a href="banned.html">Banned List</a>
+        </nav>
+    </header>
 
-  <main><!-- Add this RIGHT AFTER <main> tag -->
-<section id="card-checker">
-  <h2>Card Legality Checker</h2>
-  <input type="text" id="card-search" placeholder="e.g. 'Lightning Bolt'">
-  <button id="check-btn">Check Card</button>
-  <div id="checker-result" style="
-    margin-top: 15px;
-    min-height: 50px;
-    font-weight: bold;
-    font-size: 18px;
-  "></div>
-</section>
-    <section class="card-checker">
-  <h2>Card Legality Checker</h2>
-  <p>Type a card name to see if it's Banned or Legal</p>
-  <input type="text" id="card-search" placeholder="Enter card name">
-  <button id="search-button">Check</button>
-  <div id="result"></div>
-</section>
-      <h2>Card Browser</h2>
-      <!-- Copy the card grid/list view from index.html -->
-      <div class="view-options">
-        <button onclick="showGridView()">Grid View</button>
-        <button onclick="showListView()">List View</button>
-      </div>
-      <div id="card-grid" class="card-grid"></div>
-      <div id="card-list" class="card-list" style="display: none;"></div>
-    </section>
-  </main>
+    <main>
+        <!-- Page-specific content will go here -->
+    </main>
 
-  <footer>
-    <p>Magic Gauntlet Challenge © 2023</p>
-  </footer>
-
-  <script src="js/script.js"></script>
+    <footer>
+        <p>Magic Gauntlet Challenge © 2023</p>
+    </footer>
 </body>
 </html>
