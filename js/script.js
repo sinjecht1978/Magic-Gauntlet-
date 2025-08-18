@@ -1,5 +1,5 @@
-/// ======================
-// MAGIC GAUNTLET CHECKER (FULLY WORKING VERSION)
+// ======================
+// MAGIC GAUNTLET CHECKER (WITH MASS BOARD WIPE RULE)
 // ======================
 
 const hardBannedCards = ["Sol Ring", "Mana Crypt", "Lightning Bolt", "Counterspell"];
@@ -26,48 +26,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 2. Check Scryfall API
     try {
-      console.log("Fetching card:", cardName); // Debug log
       const card = await fetchCard(cardName);
-      console.log("API Response:", card); // Debug log
       
       if (!card || card.object === 'error') {
-        console.warn("Card not found in API"); // Debug log
         resultDiv.innerHTML = "<span style='color:black'>Card not found</span>";
         return;
       }
 
       // 3. Check all format rules
       if (isBannedByRules(card)) {
-        console.log("Card is banned by rules"); // Debug log
         showBanned();
       } else {
-        console.log("Card is legal"); // Debug log
         showLegal();
       }
 
     } catch (error) {
-      console.error("API Error:", error); // Detailed error logging
+      console.error("Error:", error);
       resultDiv.innerHTML = "<span style='color:black'>API Error - Try Again</span>";
     }
   });
 
-  // Properly implemented fetch function
   async function fetchCard(cardName) {
     try {
       const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
+      if (!response.ok) throw new Error('API Error');
       return await response.json();
     } catch (error) {
-      console.error("Fetch error:", error);
+      console.error("Scryfall error:", error);
       return { object: 'error' };
     }
   }
 
-  // Helper functions (unchanged from your original)
   function isHardBanned(cardName) {
     return hardBannedCards.some(banned => 
       cardName.toLowerCase().includes(banned.toLowerCase())
@@ -75,9 +64,18 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function isBannedByRules(card) {
+    // Mana Rocks (CMC 3+)
     if (isManaRock(card) && card.cmc < 3) return true;
+    
+    // Counterspells (CMC 4+)
     if (isUnconditionalCounter(card) && card.cmc < 4) return true;
+    
+    // Damage Spells (Damage ≤ CMC)
     if (isDamageSpell(card) && getMaxDamage(card) > card.cmc) return true;
+    
+    // Mass Board Wipes (CMC 6+)
+    if (isMassBoardWipe(card) && card.cmc < 6) return true;
+    
     return false;
   }
 
@@ -93,6 +91,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function isDamageSpell(card) {
     return /deal(?:s)? \d+ damage/i.test(card.oracle_text);
+  }
+
+  // NEW FUNCTION: Mass Board Wipe Check
+  function isMassBoardWipe(card) {
+    return /destroy all|exile all|(-|)x (-|)x|wipe all/i.test(card.oracle_text) && 
+           (card.type_line.includes('Sorcery') || card.type_line.includes('Instant'));
   }
 
   function getMaxDamage(card) {
