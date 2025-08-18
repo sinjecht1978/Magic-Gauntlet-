@@ -1,5 +1,5 @@
-// ======================
-// MAGIC GAUNTLET CHECKER (WITH WORKING API)
+/// ======================
+// MAGIC GAUNTLET CHECKER (FULLY WORKING VERSION)
 // ======================
 
 const hardBannedCards = ["Sol Ring", "Mana Crypt", "Lightning Bolt", "Counterspell"];
@@ -26,41 +26,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 2. Check Scryfall API
     try {
+      console.log("Fetching card:", cardName); // Debug log
       const card = await fetchCard(cardName);
+      console.log("API Response:", card); // Debug log
       
-      if (card.object === 'error') {
+      if (!card || card.object === 'error') {
+        console.warn("Card not found in API"); // Debug log
         resultDiv.innerHTML = "<span style='color:black'>Card not found</span>";
         return;
       }
 
       // 3. Check all format rules
       if (isBannedByRules(card)) {
+        console.log("Card is banned by rules"); // Debug log
         showBanned();
       } else {
+        console.log("Card is legal"); // Debug log
         showLegal();
       }
 
     } catch (error) {
-      console.error("Error:", error);
+      console.error("API Error:", error); // Detailed error logging
       resultDiv.innerHTML = "<span style='color:black'>API Error - Try Again</span>";
     }
   });
 
-  // SCRYFALL API FUNCTION - THIS WAS MISSING/MISCONFIGURED
+  // Properly implemented fetch function
   async function fetchCard(cardName) {
     try {
       const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
+      
       if (!response.ok) {
-        throw new Error('Card not found');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+      
       return await response.json();
     } catch (error) {
-      console.error("Scryfall error:", error);
+      console.error("Fetch error:", error);
       return { object: 'error' };
     }
   }
 
-  // Rest of your helper functions remain the same...
+  // Helper functions (unchanged from your original)
   function isHardBanned(cardName) {
     return hardBannedCards.some(banned => 
       cardName.toLowerCase().includes(banned.toLowerCase())
