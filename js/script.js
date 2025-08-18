@@ -1,13 +1,4 @@
-// ========// =============================================
-// FINAL CARD CHECKER IMPLEMENTATION
-// =============================================
-
-const hardBannedCards = [
-  "Sol Ring",
-  "Mana Crypt",
-  "Lightning Bolt",
-  "Counterspell"
-];
+const hardBannedCards = ["Sol Ring", "Mana Crypt", "Lightning Bolt", "Counterspell"];
 
 document.addEventListener('DOMContentLoaded', function() {
   const checkBtn = document.getElementById('check-button');
@@ -16,14 +7,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
   checkBtn.addEventListener('click', async function() {
     const cardName = cardInput.value.trim();
-    resultDiv.innerHTML = ""; // Clear previous result
+    resultDiv.innerHTML = "";
     
     if (!cardName) {
       resultDiv.innerHTML = "<span style='color:black'>Please enter a card name</span>";
       return;
     }
 
-    // 1. Check hard bans first
+    // 1. Hard ban check
     if (hardBannedCards.some(banned => 
       cardName.toLowerCase().includes(banned.toLowerCase())
     )) {
@@ -31,23 +22,22 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    // 2. Try API check if available
+    // 2. API check
     try {
-      if (typeof fetchCard !== 'undefined') {
+      if (window.fetchCard) { // More reliable check
         const card = await fetchCard(cardName);
-        if (card && typeof evaluateCard !== 'undefined') {
-          const isLegal = evaluateCard(card);
-          resultDiv.innerHTML = isLegal 
-            ? "<span style='color:green'>LEGAL</span>" 
+        if (card && window.evaluateCard) {
+          resultDiv.innerHTML = evaluateCard(card)
+            ? "<span style='color:green'>LEGAL</span>"
             : "<span style='color:orange'>BANNED</span>";
           return;
         }
       }
     } catch (error) {
-      console.log("API check failed");
+      console.error("API error:", error);
     }
 
-    // 3. Fallback for basic legal check
+    // 3. Fallback
     resultDiv.innerHTML = "<span style='color:green'>LEGAL</span>";
   });
 });
