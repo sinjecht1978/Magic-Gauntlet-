@@ -1,3 +1,9 @@
+// ======================
+// HYBRID CARD CHECKER
+// (Hard bans + Dynamic Rules)
+// ======================
+
+// 1. Hardcoded bans (instant checks)
 const hardBannedCards = ["Sol Ring", "Mana Crypt", "Lightning Bolt", "Counterspell"];
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -10,34 +16,99 @@ document.addEventListener('DOMContentLoaded', function() {
     resultDiv.innerHTML = "";
     
     if (!cardName) {
-      resultDiv.innerHTML = "<span style='color:black'>Please enter a card name</span>";
+      showResult("Please enter a card name", "black");
       return;
     }
 
-    // 1. Hard ban check
-    if (hardBannedCards.some(banned => 
-      cardName.toLowerCase().includes(banned.toLowerCase())
-    )) {
-      resultDiv.innerHTML = "<span style='color:red'>BANNED</span>";
+    // 1. Check hard bans first (instant)
+    if (isHardBanned(cardName)) {
+      showResult("BANNED (Hard banned)", "red");
       return;
     }
 
-    // 2. API check
+    // 2. Full rules evaluation
     try {
-      if (window.fetchCard) { // More reliable check
-        const card = await fetchCard(cardName);
-        if (card && window.evaluateCard) {
-          resultDiv.innerHTML = evaluateCard(card)
-            ? "<span style='color:green'>LEGAL</span>"
-            : "<span style='color:orange'>BANNED</span>";
-          return;
-        }
+      const card = await fetchCard(cardName);
+      if (!card) {
+        showResult("Card not found", "black");
+        return;
       }
+
+      const violations = checkCardRules(card);
+      if (violations.length > 0) {
+        showResult("BANNED (Rules violation)", "red");
+        showViolations(violations);
+      } else {
+        showResult("LEGAL", "green");
+      }
+
     } catch (error) {
-      console.error("API error:", error);
+      console.error("Error:", error);
+      showResult("Check failed - using basic mode", "black");
+      // Fallback to simple legal if API fails
+      showResult("LEGAL (Basic check)", "blue");
+    }
+  });
+
+  // Helper functions
+  function isHardBanned(cardName) {
+    return hardBannedCards.some(banned => 
+      cardName.toLowerCase().includes(banned.toLowerCase())
+    );
+  }
+
+  function checkCardRules(card) {
+    const violations = [];
+    
+    // Mana Rocks (CMC 3+)
+    if (isManaRock(card) && card.cmc < 3) {
+      violations.push("Mana rocks must cost 3+");
     }
 
-    // 3. Fallback
-    resultDiv.innerHTML = "<span style='color:green'>LEGAL</span>";
-  });
+    // Counterspells (CMC 4+)
+    if (isUnconditionalCounter(card) && card.cmc < 4) {
+      violations.push("Counterspells must cost 4+");
+    }
+
+    // Damage Spells (Damage ≤ CMC)
+    if (isDamageSpell(card) && getMaxDamage(card) > card.cmc) {
+      violations.push("Damage cannot exceed CMC");
+    }
+
+    // Add more rules here...
+    
+    return violations;
+  }
+
+  function isManaRock(card) {
+    return card.type_line?.includes("Artifact") && 
+           /add[s]? \{.+\}/i.test(card.oracle_text);
+  }
+
+  function isUnconditionalCounter(card) {
+    return /counter target (spell|ability)/i.test(card.oracle_text) &&
+           !/(if|unless|when)/i.test(card.oracle_text);
+  }
+
+  function isDamageSpell(card) {
+    return /deal(?:s)? \d+ damage/i.test(card.oracle_text);
+  }
+
+  function getMaxDamage(card) {
+    const match = card.oracle_text.match(/deal(?:s)? (\d+) damage/i);
+    return match ? parseInt(match[1]) : 0;
+  }
+
+  function showResult(message, color) {
+    resultDiv.innerHTML += `<div style="color:${color};font-weight:bold">${message}</div>`;
+  }
+
+  function showViolations(violations) {
+    resultDiv.innerHTML += violations.map(v => 
+      `<div style="color:orange;font-size:0.9em">✖ ${v}</div>`
+    ).join("");
+  }
 });
+
+// KEEP your existing fetchCard() function if you have one
+// async function fetchCard(cardName) { ... }
