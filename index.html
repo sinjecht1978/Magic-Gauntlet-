@@ -1,37 +1,69 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magic Gauntlet</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Item Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        input, button {
+            font-size: 16px;
+            padding: 5px;
+            margin: 10px;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Magic Gauntlet Reject Format</h1>
-        <nav class="tabs">
-            <a href="index.html">Home</a>
-            <a href="guidelines.html">Guidelines</a>
-            <a href="playlist.html">Playlist</a>
-            <a href="graveyard.html">Graveyard</a>
-            <a href="banned.html">Banned List</a>
-        </nav>
-    </header>
+    <h1>Item Checker</h1>
+    <p>Type an item below to see if it's Banned or Legal</p>
+    <input type="text" id="searchInput" placeholder="Enter item name">
+    <button onclick="checkItem()">Check</button>
+    <div id="result"></div>
 
-    <main>
-        <section class="card-checker">
-            <h2>Card Legality Checker</h2>
-            <input type="text" id="card-search" placeholder="Enter card name">
-            <button id="check-button">Check</button>
-            <div id="checker-result"></div>
-        </section>
-    </main>
+    <script>
+        // Initial banned list
+        const bannedList = ["bolt "]
 
-    <footer>
-        <p>Magic Gauntlet Challenge © 2023</p>
-    </footer>
 
-    <!-- Only load ONE checker script -->
-    <script src="js/checker.js"></script>
+  
+    
+        // Helper function to normalize strings
+        function normalizeString(str) {
+            return str
+                .toLowerCase()            // Convert to lowercase
+                .replace(/[^a-z0-9]/g, ''); // Remove all non-alphanumeric characters
+        }
+
+        // Normalize banned list once
+        const normalizedBannedList = bannedList.map(normalizeString);
+
+        // Function to check the item
+        function checkItem() {
+            const input = document.getElementById("searchInput").value.trim();
+            const normalizedInput = normalizeString(input);
+            const resultDiv = document.getElementById("result");
+
+            // Check if normalized input matches any normalized banned list items
+            const isBanned = normalizedBannedList.includes(normalizedInput);
+
+            if (isBanned) {
+                resultDiv.textContent = "Banned";
+                resultDiv.style.color = "red";
+            } else {
+                resultDiv.textContent = "Legal";
+                resultDiv.style.color = "green";
+            }
+        }
+    </script>
 </body>
 </html>
