@@ -3,125 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magic Gauntlet Card Checker</title>
+    <title>Magic Gauntlet Hub</title>
     <style>
-    /* (Your existing CSS styles remain exactly the same) */
+    /* ===== BASE STYLES ===== */
+    body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #f5f7fa;
+        color: #333;
+        line-height: 1.6;
+    }
+    
+    /* ===== TAB SYSTEM ===== */
+    .tab-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .tab-buttons {
+        display: flex;
+        margin-bottom: -1px;
+    }
+    
+    .tab-btn {
+        padding: 12px 20px;
+        background: #e0e0e0;
+        border: none;
+        border-radius: 5px 5px 0 0;
+        cursor: pointer;
+        margin-right: 5px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    
+    .tab-btn.active {
+        background: #3498db;
+        color: white;
+    }
+    
+    .tab-content {
+        display: none;
+        padding: 20px;
+        background: white;
+        border-radius: 0 5px 5px 5px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    /* ===== CARD CHECKER STYLES (from original) ===== */
+    #checker-container {
+        padding: 30px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    input {
+        width: 70%;
+        padding: 12px 15px;
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        font-size: 1rem;
+        transition: border 0.3s;
+    }
+    
+    /* (Keep all your existing CSS styles, add them here) */
     </style>
 </head>
 <body>
-    <h1>Magic Gauntlet Card Checker</h1>
-    <p>Check if a Magic: The Gathering card is legal in the Gauntlet format</p>
-    
-    <div id="checker-container">
-        <input type="text" id="searchInput" placeholder="Enter card name">
-        <button onclick="checkCard()">Check Card</button>
-        <div id="result"></div>
-        <div id="card-display" style="display:none;">
-            <img id="card-image" class="card-image" src="" alt="Card Image">
-            <div id="card-info" class="card-info"></div>
+    <div class="tab-container">
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="openTab('checker')">Card Checker</button>
+            <button class="tab-btn" onclick="openTab('guidelines')">Guidelines</button>
+            <button class="tab-btn" onclick="openTab('playlist')">Playlist</button>
+            <button class="tab-btn" onclick="openTab('graveyard')">Graveyard</button>
+        </div>
+        
+        <!-- Card Checker Tab -->
+        <div id="checker" class="tab-content active">
+            <h1>Magic Gauntlet Card Checker</h1>
+            <div id="checker-container">
+                <input type="text" id="searchInput" placeholder="Enter card name">
+                <button onclick="checkCard()">Check Card</button>
+                <div id="result"></div>
+                <div id="card-display" style="display:none;">
+                    <img id="card-image" class="card-image" src="" alt="Card Image">
+                    <div id="card-info" class="card-info"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Guidelines Tab -->
+        <div id="guidelines" class="tab-content">
+            <h1>Format Guidelines</h1>
+            <div class="guidelines-container">
+                <h2>Core Rules</h2>
+                <ul>
+                    <li><strong>Damage Spells:</strong> Can't deal more damage than their CMC</li>
+                    <li><strong>Kill Spells:</strong> Unconditional removal must cost 5+ mana</li>
+                    <li><strong>Counterspells:</strong> Unconditional counters must cost 4+ mana</li>
+                    <li><strong>Board Wipes:</strong> Must cost 6+ mana</li>
+                    <li><strong>Land Destruction:</strong> Must cost 4+ mana</li>
+                    <li><strong>Mana Rocks:</strong> Under 3 CMC must enter tapped, can only produce 1 mana</li>
+                </ul>
+                
+                <h2>Hard Banned Cards</h2>
+                <div id="banned-list"></div>
+            </div>
+        </div>
+        
+        <!-- Playlist Tab -->
+        <div id="playlist" class="tab-content">
+            <h1>Match Playlists</h1>
+            <div class="video-gallery">
+                <!-- Example video embed -->
+                <div class="video-item">
+                    <h3>Gauntlet Match #1</h3>
+                    <div class="video-placeholder" style="background:#ddd;padding:56.25% 0 0 0;position:relative;">
+                        <p style="position:absolute;top:50%;left:0;right:0;text-align:center;">YouTube embed will go here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Graveyard Tab -->
+        <div id="graveyard" class="tab-content">
+            <h1>Graveyard (Banned Cards)</h1>
+            <div id="graveyard-cards" class="card-gallery">
+                <!-- Will be populated by JavaScript -->
+            </div>
         </div>
     </div>
 
     <script>
-        // HARD BAN LIST - Add cards here that violate the spirit of your format
+        // TAB SYSTEM FUNCTIONALITY
+        function openTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove("active");
+            }
+            
+            // Deactivate all tab buttons
+            const tabButtons = document.getElementsByClassName("tab-btn");
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove("active");
+            }
+            
+            // Activate selected tab
+            document.getElementById(tabName).classList.add("active");
+            event.currentTarget.classList.add("active");
+            
+            // Special cases
+            if (tabName === 'graveyard') {
+                updateGraveyardDisplay();
+            }
+        }
+        
+        // HARD BAN LIST - Same as before
         const hardBannedCards = [
             { name: "Sol Ring", reason: "Mana rocks producing 2+ mana are banned" },
             { name: "Lightning Bolt", reason: "Damage exceeds CMC (3 damage for 1 mana)" },
-            { name: "Mana Crypt", reason: "Free mana rocks are banned" },
-            { name: "Mox Emerald", reason: "Free mana rocks are banned" },
-            { name: "Mox Jet", reason: "Free mana rocks are banned" },
-            { name: "Mox Pearl", reason: "Free mana rocks are banned" },
-            { name: "Mox Ruby", reason: "Free mana rocks are banned" },
-            { name: "Mox Sapphire", reason: "Free mana rocks are banned" },
-            // Add more as needed
+            // ... rest of your banned cards
         ];
-
-        // Custom rules for Magic Gauntlet format
-        function isCardBanned(card) {
-            // Check hard ban list first
-            const hardBan = hardBannedCards.find(banned => 
-                card.name.toLowerCase() === banned.name.toLowerCase()
-            );
-            if (hardBan) return hardBan.reason;
-
-            // Damage spell rules
-            if (card.type_line.includes("Instant") || card.type_line.includes("Sorcery")) {
-                if (card.oracle_text.toLowerCase().includes("damage")) {
-                    const damageMatch = card.oracle_text.match(/deal[s]? (\d+) damage/i);
-                    if (damageMatch) {
-                        const damage = parseInt(damageMatch[1]);
-                        const cmc = card.cmc;
-                        if (damage > cmc) {
-                            return "Damage spells cannot deal more damage than their CMC";
-                        }
-                    }
-                }
-                
-                // Kill spell rules
-                if (card.oracle_text.toLowerCase().includes("destroy target") && 
-                    !card.oracle_text.toLowerCase().includes("unless") &&
-                    !card.oracle_text.toLowerCase().includes("if") &&
-                    card.cmc < 5) {
-                    return "Unconditional kill spells must cost 5 or more";
-                }
-                
-                // Counter spell rules
-                if (card.oracle_text.toLowerCase().includes("counter target") && 
-                    !card.oracle_text.toLowerCase().includes("unless") &&
-                    !card.oracle_text.toLowerCase().includes("if") &&
-                    card.cmc < 4) {
-                    return "Unconditional counterspells must cost 4 or more";
-                }
-            }
+        
+        // UPDATE GRAVEYARD DISPLAY
+        function updateGraveyardDisplay() {
+            const graveyard = document.getElementById("graveyard-cards");
+            graveyard.innerHTML = "";
             
-            // Board wipe rules
-            if ((card.oracle_text.toLowerCase().includes("destroy all") || 
-                card.oracle_text.toLowerCase().includes("exile all")) &&
-                card.cmc < 6) {
-                return "Mass board wipes must cost 6 or more";
-            }
-            
-            // Land destruction rules
-            if (card.oracle_text.toLowerCase().includes("destroy target land") && 
-                card.cmc < 4) {
-                return "Land destruction spells must cost 4 or more";
-            }
-            
-            // Land rules
-            if (card.type_line.includes("Land")) {
-                if (card.oracle_text.toLowerCase().includes("enters the battlefield untapped") ||
-                    card.oracle_text.toLowerCase().includes("add two or more mana")) {
-                    return "Dual lands must enter tapped and cannot have positive ETB effects";
-                }
-            }
-            
-            // MANA ROCK RULES - IMPROVED DETECTION
-            if (card.type_line.includes("Artifact")) {
-                const oracleText = card.oracle_text.toLowerCase();
-                
-                // Check for mana production
-                if (oracleText.includes("add") && oracleText.includes("mana")) {
-                    // Check for producing 2+ mana
-                    if (oracleText.match(/adds? \{.+\}.+and.+{.+}/) || 
-                        oracleText.includes("two or more") ||
-                        oracleText.includes("add an additional") ||
-                        oracleText.match(/adds? \w+ mana/)) {
-                        return "Mana rocks can only produce 1 mana";
-                    }
-                    
-                    // Check for untapped rocks under 3 CMC
-                    if (card.cmc < 3 && 
-                        !oracleText.includes("enters the battlefield tapped") &&
-                        !card.name.toLowerCase().includes("lotus")) { // Exclude Lotus artifacts
-                        return "Mana rocks under 3 CMC must enter tapped";
-                    }
-                }
-            }
-            
-            return false;
+            hardBannedCards.forEach(card => {
+                graveyard.innerHTML += `
+                    <div class="banned-card">
+                        <h3>${card.name}</h3>
+                        <p>${card.reason}</p>
+                    </div>
+                `;
+            });
         }
-
-        // (Rest of your JavaScript remains exactly the same)
+        
+        // UPDATE GUIDELINES BANNED LIST
+        function updateBannedList() {
+            const bannedList = document.getElementById("banned-list");
+            bannedList.innerHTML = "<ul>" + 
+                hardBannedCards.map(card => `<li><strong>${card.name}</strong>: ${card.reason}</li>`).join("") +
+                "</ul>";
+        }
+        
+        // INITIALIZE ON LOAD
+        window.onload = function() {
+            updateBannedList();
+            updateGraveyardDisplay();
+            
+            // (Your existing card checker JavaScript goes here)
+        };
+        
+        // (Keep all your existing card checker JavaScript functions here)
     </script>
 </body>
 </html>
