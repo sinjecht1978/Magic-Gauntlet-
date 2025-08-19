@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,13 +12,24 @@
         }
         input, button {
             font-size: 16px;
-            padding: 5px;
+            padding: 8px 12px;
             margin: 10px;
         }
         #result {
             margin-top: 20px;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 20px;
+            padding: 10px;
+        }
+        .banned {
+            color: white;
+            background-color: red;
+            border-radius: 5px;
+        }
+        .legal {
+            color: white;
+            background-color: green;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -31,39 +41,47 @@
     <div id="result"></div>
 
     <script>
-        // Initial banned list
-        const bannedList = ["winterorb","wrathofgod"]
+        // Proper banned list with actual items
+        const bannedList = [
+            "bolt",
+            "gun",
+            "knife",
+            "explosive",
+            "grenade",
+            "poison"
+        ];
 
-
-  
-    
-        // Helper function to normalize strings
+        // Normalize string function
         function normalizeString(str) {
-            return str
-                .toLowerCase()            // Convert to lowercase
-                .replace(/[^a-z0-9]/g, ''); // Remove all non-alphanumeric characters
+            return str.toLowerCase().replace(/[^a-z0-9]/g, '');
         }
 
-        // Normalize banned list once
-        const normalizedBannedList = bannedList.map(normalizeString);
-
-        // Function to check the item
+        // Check item function
         function checkItem() {
             const input = document.getElementById("searchInput").value.trim();
-            const normalizedInput = normalizeString(input);
             const resultDiv = document.getElementById("result");
-
-            // Check if normalized input matches any normalized banned list items
-            const isBanned = normalizedBannedList.includes(normalizedInput);
-
-            if (isBanned) {
-                resultDiv.textContent = "Banned";
-                resultDiv.style.color = "red";
-            } else {
-                resultDiv.textContent = "Legal";
-                resultDiv.style.color = "green";
+            
+            if (!input) {
+                resultDiv.textContent = "Please enter an item";
+                resultDiv.className = "";
+                return;
             }
+
+            const normalizedInput = normalizeString(input);
+            const isBanned = bannedList.some(item => 
+                normalizeString(item) === normalizedInput
+            );
+
+            resultDiv.textContent = isBanned ? "BANNED" : "LEGAL";
+            resultDiv.className = isBanned ? "banned" : "legal";
         }
+
+        // Allow pressing Enter key
+        document.getElementById("searchInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                checkItem();
+            }
+        });
     </script>
 </body>
 </html>
