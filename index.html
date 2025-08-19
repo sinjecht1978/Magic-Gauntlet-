@@ -345,6 +345,55 @@
         border-radius: 4px;
         border-left: 3px solid #ff9800;
     }
+
+    /* ===== LOADING AND PAGINATION STYLES ===== */
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,.3);
+        border-radius: 50%;
+        border-top-color: #3498db;
+        animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+        gap: 10px;
+    }
+    
+    .pagination button {
+        padding: 8px 15px;
+        background: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .pagination button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+    
+    .filter-controls {
+        margin: 15px 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .filter-controls label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
     
     @media (max-width: 768px) {
         .card-gallery {
@@ -360,6 +409,10 @@
         }
         
         .add-banned-form {
+            flex-direction: column;
+        }
+        
+        .filter-controls {
             flex-direction: column;
         }
     }
@@ -451,8 +504,19 @@
                 </select>
             </div>
             
+            <div class="filter-controls">
+                <label><input type="checkbox" id="filter-creatures" checked> Creatures</label>
+                <label><input type="checkbox" id="filter-instants" checked> Instants</label>
+                <label><input type="checkbox" id="filter-sorceries" checked> Sorceries</label>
+                <label><input type="checkbox" id="filter-enchantments" checked> Enchantments</label>
+                <label><input type="checkbox" id="filter-artifacts" checked> Artifacts</label>
+                <label><input type="checkbox" id="filter-lands" checked> Lands</label>
+                <label><input type="checkbox" id="filter-planeswalkers" checked> Planeswalkers</label>
+            </div>
+            
             <div id="set-info"></div>
             <div id="set-cards" class="card-gallery"></div>
+            <div id="pagination-controls" class="pagination"></div>
         </div>
         
         <!-- Graveyard Tab -->
@@ -595,6 +659,26 @@
             "Zendikar", "Zendikar Rising"
         ];
 
+        // Scryfall set codes for sets that don't match by name
+        const setCodeMap = {
+            "Limited Edition Beta": "leb",
+            "Magic 2010": "m10",
+            "Magic 2011": "m11",
+            "Magic 2012": "m12",
+            "Magic 2013": "m13",
+            "Magic 2014": "m14",
+            "Magic 2015": "m15",
+            "Core Set 2019": "m19",
+            "Core Set 2020": "m20",
+            "Core Set 2021": "m21"
+        };
+
+        // Variables for pagination
+        let currentPage = 1;
+        let totalPages = 1;
+        let allCards = [];
+        let filteredCards = [];
+
         // TAB SYSTEM
         function openTab(event, tabName) {
             // Hide all tab contents
@@ -700,44 +784,156 @@
             
             const setInfo = document.getElementById("set-info");
             const setCards = document.getElementById("set-cards");
+            const paginationControls = document.getElementById("pagination-controls");
             
-            setInfo.innerHTML = "<p>Loading cards...</p>";
+            setInfo.innerHTML = "<p>Loading cards... <span class='loading-spinner'></span></p>";
             setCards.innerHTML = "";
+            paginationControls.innerHTML = "";
             
             try {
-                // Handle Limited Edition Beta specially
-                let apiSetName = setName;
-                if (setName === "Limited Edition Beta") {
-                    apiSetName = "leb"; // Scryfall uses "leb" for Limited Edition Beta
-                }
+                // Get the set code for API query
+                let setCode = setCodeMap[setName] || setName.toLowerCase().replace(/[^a-z0-9]+/g, '');
                 
                 // We need to use the Scryfall API to search for cards in the set
-                const response = await fetch(`https://api.scryfall.com/cards/search?q=e:${encodeURIComponent(apiSetName.toLowerCase().replace(/[^a-z0-9]+/g, ''))}+order:set`);
-                const data = await response.json();
+                // This approach will get all cards, not just the first page
+                let hasMore = true;
+                let nextPage = `https://api.scryfall.com/cards/search?q=e:${setCode}+order:set`;
+                allCards = [];
                 
-                setInfo.innerHTML = `<h2>${setName} (${data.data.length} cards)</h2>`;
+                while (hasMore) {
+                    const response = await fetch(nextPage);
+                    const data = await response.json();
+                    
+                    allCards = allCards.concat(data.data);
+                    
+                    hasMore = data.has_more;
+                    nextPage = data.next_page;
+                    
+                    // Add a small delay to be respectful to the API
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
                 
-                // Display cards
-                data.data.forEach(card => {
-                    const isBanned = isCardBanned(card);
-                    const status = isBanned ? "banned" : "legal";
-                    
-                    const cardElement = document.createElement("div");
-                    cardElement.className = "card-item";
-                    cardElement.innerHTML = `
-                        <img src="${card.image_uris ? card.image_uris.normal : (card.card_faces ? card.card_faces[0].image_uris.normal : '')}" alt="${card.name}">
-                        <div class="card-item-content">
-                            <h3>${card.name}</h3>
-                            <span class="card-status status-${status}">${status.toUpperCase()}</span>
-                        </div>
-                    `;
-                    
-                    setCards.appendChild(cardElement);
-                });
+                setInfo.innerHTML = `<h2>${setName} (${allCards.length} cards)</h2>`;
+                
+                // Apply filters and display first page
+                applyFilters();
+                
             } catch (error) {
                 setInfo.innerHTML = `<p>Error loading set: ${error.message}. Note: Some custom sets may not be available in the API.</p>`;
                 console.error("Error loading set:", error);
             }
+        }
+
+        // APPLY FILTERS TO CARDS
+        function applyFilters() {
+            const showCreatures = document.getElementById("filter-creatures").checked;
+            const showInstants = document.getElementById("filter-instants").checked;
+            const showSorceries = document.getElementById("filter-sorceries").checked;
+            const showEnchantments = document.getElementById("filter-enchantments").checked;
+            const showArtifacts = document.getElementById("filter-artifacts").checked;
+            const showLands = document.getElementById("filter-lands").checked;
+            const showPlaneswalkers = document.getElementById("filter-planeswalkers").checked;
+            
+            filteredCards = allCards.filter(card => {
+                const typeLine = card.type_line || "";
+                
+                if (!showCreatures && typeLine.includes("Creature")) return false;
+                if (!showInstants && typeLine.includes("Instant")) return false;
+                if (!showSorceries && typeLine.includes("Sorcery")) return false;
+                if (!showEnchantments && typeLine.includes("Enchantment")) return false;
+                if (!showArtifacts && typeLine.includes("Artifact")) return false;
+                if (!showLands && typeLine.includes("Land")) return false;
+                if (!showPlaneswalkers && typeLine.includes("Planeswalker")) return false;
+                
+                return true;
+            });
+            
+            // Reset to first page
+            currentPage = 1;
+            totalPages = Math.ceil(filteredCards.length / 20);
+            
+            // Display current page
+            displayCurrentPage();
+            
+            // Update pagination controls
+            updatePaginationControls();
+        }
+
+        // DISPLAY CURRENT PAGE OF CARDS
+        function displayCurrentPage() {
+            const setCards = document.getElementById("set-cards");
+            setCards.innerHTML = "";
+            
+            const startIndex = (currentPage - 1) * 20;
+            const endIndex = Math.min(startIndex + 20, filteredCards.length);
+            
+            for (let i = startIndex; i < endIndex; i++) {
+                const card = filteredCards[i];
+                const isBanned = isCardBanned(card);
+                const status = isBanned ? "banned" : "legal";
+                
+                const cardElement = document.createElement("div");
+                cardElement.className = "card-item";
+                
+                // Get image URL - handle double-faced cards
+                let imageUrl = "";
+                if (card.image_uris) {
+                    imageUrl = card.image_uris.normal;
+                } else if (card.card_faces && card.card_faces[0].image_uris) {
+                    imageUrl = card.card_faces[0].image_uris.normal;
+                }
+                
+                cardElement.innerHTML = `
+                    ${imageUrl ? `<img src="${imageUrl}" alt="${card.name}">` : ''}
+                    <div class="card-item-content">
+                        <h3>${card.name}</h3>
+                        <div>${card.type_line}</div>
+                        <div>${card.mana_cost || ''}</div>
+                        <span class="card-status status-${status}">${status.toUpperCase()}</span>
+                    </div>
+                `;
+                
+                setCards.appendChild(cardElement);
+            }
+        }
+
+        // UPDATE PAGINATION CONTROLS
+        function updatePaginationControls() {
+            const paginationControls = document.getElementById("pagination-controls");
+            paginationControls.innerHTML = "";
+            
+            if (totalPages <= 1) return;
+            
+            const prevButton = document.createElement("button");
+            prevButton.textContent = "Previous";
+            prevButton.disabled = currentPage === 1;
+            prevButton.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displayCurrentPage();
+                    updatePaginationControls();
+                }
+            };
+            
+            const nextButton = document.createElement("button");
+            nextButton.textContent = "Next";
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    displayCurrentPage();
+                    updatePaginationControls();
+                }
+            };
+            
+            const pageInfo = document.createElement("span");
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            pageInfo.style.margin = "0 15px";
+            pageInfo.style.lineHeight = "35px";
+            
+            paginationControls.appendChild(prevButton);
+            paginationControls.appendChild(pageInfo);
+            paginationControls.appendChild(nextButton);
         }
 
         // UPDATE GRAVEYARD DISPLAY
@@ -814,7 +1010,8 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                loadSetCards();
+                applyFilters();
+                displayCurrentPage();
             }
         }
         
@@ -829,7 +1026,8 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                loadSetCards();
+                applyFilters();
+                displayCurrentPage();
             }
         }
 
@@ -1035,6 +1233,12 @@
                 if (event.key === "Enter") {
                     checkPassword();
                 }
+            });
+            
+            // Add event listeners to filter checkboxes
+            const filterCheckboxes = document.querySelectorAll('.filter-controls input');
+            filterCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', applyFilters);
             });
         };
     </script>
