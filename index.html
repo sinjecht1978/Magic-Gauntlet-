@@ -249,6 +249,96 @@
         border-left: 3px solid #3498db;
     }
     
+    /* ===== BANNED MANAGEMENT STYLES ===== */
+    .banned-management {
+        margin-top: 20px;
+    }
+    
+    .password-prompt {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        border-left: 4px solid #3498db;
+    }
+    
+    .password-prompt input {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-right: 10px;
+    }
+    
+    .password-prompt button {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .add-banned-form {
+        display: flex;
+        margin-bottom: 20px;
+        gap: 10px;
+    }
+    
+    .add-banned-form input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    .add-banned-form button {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .banned-list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background: #f8d7da;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        border-left: 4px solid #dc3545;
+    }
+    
+    .remove-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+    
+    .ban-type-section {
+        margin-top: 30px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+    
+    .ban-type-checkbox {
+        margin-right: 8px;
+    }
+    
+    .ban-type-item {
+        margin-bottom: 10px;
+        padding: 10px;
+        background: white;
+        border-radius: 4px;
+        border-left: 3px solid #ff9800;
+    }
+    
     @media (max-width: 768px) {
         .card-gallery {
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -260,6 +350,10 @@
         
         .legal-sets-grid {
             grid-template-columns: 1fr;
+        }
+        
+        .add-banned-form {
+            flex-direction: column;
         }
     }
     
@@ -294,7 +388,7 @@
             <button class="tab-btn" onclick="openTab(event, 'guidelines')">Guidelines</button>
             <button class="tab-btn" onclick="openTab(event, 'playlist')">Playlist</button>
             <button class="tab-btn" onclick="openTab(event, 'graveyard')">Graveyard</button>
-            <button class="tab-btn" onclick="window.location.href='banned.html'">Manage Banned</button>
+            <button class="tab-btn" onclick="openTab(event, 'banned-management')">Manage Banned</button>
         </div>
         
         <!-- Card Checker Tab -->
@@ -330,6 +424,9 @@
                 <h2>Hard Banned Cards</h2>
                 <div id="banned-list"></div>
                 
+                <h2>Banned Card Types</h2>
+                <div id="banned-types-list"></div>
+                
                 <h2>Legal Sets</h2>
                 <div id="legal-sets-list" class="legal-sets"></div>
             </div>
@@ -356,19 +453,67 @@
             <h1>Graveyard (Banned Cards)</h1>
             <div id="graveyard-cards" class="card-gallery"></div>
         </div>
+        
+        <!-- Banned Management Tab -->
+        <div id="banned-management" class="tab-content">
+            <h1>Manage Banned Cards</h1>
+            
+            <div id="password-section" class="password-prompt">
+                <h3>Admin Access Required</h3>
+                <input type="password" id="adminPassword" placeholder="Enter admin password">
+                <button onclick="checkPassword()">Authenticate</button>
+            </div>
+            
+            <div id="banned-management-content" style="display: none;">
+                <p>Add or remove cards from the hard banned list. Changes will be reflected across all sections.</p>
+                
+                <div class="banned-management">
+                    <div class="add-banned-form">
+                        <input type="text" id="newBannedCard" placeholder="Enter card name to ban">
+                        <button onclick="addToBannedList()">Add to Banned List</button>
+                    </div>
+                    
+                    <div id="banned-management-list"></div>
+                    
+                    <div class="ban-type-section">
+                        <h3>Ban Entire Card Types</h3>
+                        <p>Check the box to ban all cards of these types:</p>
+                        <div class="ban-type-item">
+                            <input type="checkbox" id="ban-planeswalkers" class="ban-type-checkbox" onchange="toggleCardTypeBan('Planeswalker', this.checked)">
+                            <label for="ban-planeswalkers">Ban all Planeswalker cards</label>
+                        </div>
+                        <div class="ban-type-item">
+                            <input type="checkbox" id="ban-schemes" class="ban-type-checkbox" onchange="toggleCardTypeBan('Scheme', this.checked)">
+                            <label for="ban-schemes">Ban all Scheme cards</label>
+                        </div>
+                        <div class="ban-type-item">
+                            <input type="checkbox" id="ban-conspiracies" class="ban-type-checkbox" onchange="toggleCardTypeBan('Conspiracy', this.checked)">
+                            <label for="ban-conspiracies">Ban all Conspiracy cards</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
+        // ADMIN PASSWORD - Change this to your desired password
+        const ADMIN_PASSWORD = "admin123";
+        
         // SINGLE SOURCE OF TRUTH FOR BANNED CARDS - Load from localStorage or use default
         let hardBannedCards = JSON.parse(localStorage.getItem('hardBannedCards')) || [
             "Sol Ring", "Lightning Bolt", "Mana Crypt", "Mox Emerald", 
             "Mox Jet", "Mox Pearl", "Mox Ruby", "Mox Sapphire", 
             "Murder", "Hero's Downfall", "Angel of Sanctions"
         ];
+        
+        // Banned card types
+        let bannedCardTypes = JSON.parse(localStorage.getItem('bannedCardTypes')) || [];
 
         // Save to localStorage whenever the list changes
         function saveBannedCards() {
             localStorage.setItem('hardBannedCards', JSON.stringify(hardBannedCards));
+            localStorage.setItem('bannedCardTypes', JSON.stringify(bannedCardTypes));
         }
 
         // LEGAL SETS
@@ -426,6 +571,54 @@
             if (tabName === 'playlist') {
                 populateSetSelector();
             }
+            
+            // If banned management tab is opened, check if already authenticated
+            if (tabName === 'banned-management') {
+                const isAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
+                if (isAuthenticated) {
+                    document.getElementById('password-section').style.display = 'none';
+                    document.getElementById('banned-management-content').style.display = 'block';
+                    updateBannedManagementList();
+                    updateBanTypeCheckboxes();
+                } else {
+                    document.getElementById('password-section').style.display = 'block';
+                    document.getElementById('banned-management-content').style.display = 'none';
+                }
+            }
+        }
+
+        // CHECK ADMIN PASSWORD
+        function checkPassword() {
+            const passwordInput = document.getElementById('adminPassword');
+            if (passwordInput.value === ADMIN_PASSWORD) {
+                sessionStorage.setItem('adminAuthenticated', 'true');
+                document.getElementById('password-section').style.display = 'none';
+                document.getElementById('banned-management-content').style.display = 'block';
+                updateBannedManagementList();
+                updateBanTypeCheckboxes();
+            } else {
+                alert('Incorrect password. Access denied.');
+                passwordInput.value = '';
+            }
+        }
+        
+        // UPDATE BAN TYPE CHECKBOXES
+        function updateBanTypeCheckboxes() {
+            document.getElementById('ban-planeswalkers').checked = bannedCardTypes.includes('Planeswalker');
+            document.getElementById('ban-schemes').checked = bannedCardTypes.includes('Scheme');
+            document.getElementById('ban-conspiracies').checked = bannedCardTypes.includes('Conspiracy');
+        }
+        
+        // TOGGLE CARD TYPE BAN
+        function toggleCardTypeBan(cardType, isBanned) {
+            if (isBanned) {
+                if (!bannedCardTypes.includes(cardType)) {
+                    bannedCardTypes.push(cardType);
+                }
+            } else {
+                bannedCardTypes = bannedCardTypes.filter(type => type !== cardType);
+            }
+            saveBannedCards();
         }
 
         // POPULATE SET SELECTOR
@@ -506,6 +699,24 @@
         function updateBannedList() {
             const bannedList = document.getElementById("banned-list");
             bannedList.innerHTML = "<p>" + hardBannedCards.map(card => `"${card}"`).join(", ") + "</p>";
+            
+            const bannedTypesList = document.getElementById("banned-types-list");
+            if (bannedCardTypes.length > 0) {
+                bannedTypesList.innerHTML = "<p>" + bannedCardTypes.map(type => `All ${type} cards`).join(", ") + "</p>";
+            } else {
+                bannedTypesList.innerHTML = "<p>No card types are currently banned.</p>";
+            }
+        }
+        
+        // UPDATE BANNED MANAGEMENT LIST
+        function updateBannedManagementList() {
+            const bannedManagementList = document.getElementById("banned-management-list");
+            bannedManagementList.innerHTML = hardBannedCards.map(card => `
+                <div class="banned-list-item">
+                    <span>${card}</span>
+                    <button class="remove-btn" onclick="removeFromBannedList('${card.replace(/'/g, "\\'")}')">Remove</button>
+                </div>
+            `).join("");
         }
         
         // UPDATE LEGAL SETS LIST IN GUIDELINES
@@ -517,11 +728,63 @@
                 </div>`;
         }
 
+        // ADD TO BANNED LIST
+        function addToBannedList() {
+            const newCardInput = document.getElementById("newBannedCard");
+            const newCard = newCardInput.value.trim();
+            
+            if (!newCard) {
+                alert("Please enter a card name");
+                return;
+            }
+            
+            if (hardBannedCards.includes(newCard)) {
+                alert("This card is already banned");
+                return;
+            }
+            
+            hardBannedCards.push(newCard);
+            saveBannedCards();
+            updateBannedList();
+            updateGraveyardDisplay();
+            updateBannedManagementList();
+            
+            newCardInput.value = "";
+            
+            // If we're on the playlist tab and cards are loaded, refresh them
+            if (document.getElementById("playlist").classList.contains("active") && 
+                document.getElementById("setSelect").value) {
+                loadSetCards();
+            }
+        }
+        
+        // REMOVE FROM BANNED LIST
+        function removeFromBannedList(cardName) {
+            hardBannedCards = hardBannedCards.filter(card => card !== cardName);
+            saveBannedCards();
+            updateBannedList();
+            updateGraveyardDisplay();
+            updateBannedManagementList();
+            
+            // If we're on the playlist tab and cards are loaded, refresh them
+            if (document.getElementById("playlist").classList.contains("active") && 
+                document.getElementById("setSelect").value) {
+                loadSetCards();
+            }
+        }
+
         // CHECK IF CARD IS BANNED
         function isCardBanned(card) {
             // Check hard ban list first
             if (hardBannedCards.includes(card.name)) {
                 return true;
+            }
+            
+            // Check banned card types
+            for (const bannedType of bannedCardTypes) {
+                if (card.type_line && card.type_line.includes(bannedType)) {
+                    return true;
+                }
             }
             
             // Check if card is from a legal set
@@ -532,6 +795,11 @@
             
             if (cardSetName && !legalSets.includes(cardSetName)) {
                 return true;
+            }
+
+            // Special case for Abu Ja'far
+            if (card.name === "Abu Ja'far") {
+                return false;
             }
 
             // Damage spell rules
@@ -685,7 +953,21 @@
                     checkCard();
                 }
             });
+            
+            // Enable Enter key in banned card input
+            document.getElementById("newBannedCard")?.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    addToBannedList();
+                }
+            });
+            
+            // Enable Enter key in password input
+            document.getElementById("adminPassword")?.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    checkPassword();
+                }
+            });
         };
     </script>
 </body>
-    </html>
+        </html>
