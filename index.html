@@ -37,7 +37,7 @@
     <div id="result"></div>
 
     <script>
-        // Banned items list (normalized automatically)
+        // Banned items list
         const bannedList = [
             "bolt",
             "gun",
@@ -64,13 +64,8 @@
             const normalizedInput = normalizeString(input);
             const isBanned = bannedList.some(item => normalizeString(item) === normalizedInput);
 
-            if (isBanned) {
-                resultDiv.textContent = "BANNED";
-                resultDiv.className = "banned";
-            } else {
-                resultDiv.textContent = "LEGAL";
-                resultDiv.className = "legal";
-            }
+            resultDiv.textContent = isBanned ? "BANNED" : "LEGAL";
+            resultDiv.className = isBanned ? "banned" : "legal";
         }
 
         // Allow pressing Enter key to check
