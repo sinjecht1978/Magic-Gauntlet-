@@ -249,6 +249,53 @@
         border-left: 3px solid #3498db;
     }
     
+    /* ===== BANNED MANAGEMENT STYLES ===== */
+    .banned-management {
+        margin-top: 20px;
+    }
+    
+    .add-banned-form {
+        display: flex;
+        margin-bottom: 20px;
+        gap: 10px;
+    }
+    
+    .add-banned-form input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    .add-banned-form button {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .banned-list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background: #f8d7da;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        border-left: 4px solid #dc3545;
+    }
+    
+    .remove-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+    
     @media (max-width: 768px) {
         .card-gallery {
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -260,6 +307,10 @@
         
         .legal-sets-grid {
             grid-template-columns: 1fr;
+        }
+        
+        .add-banned-form {
+            flex-direction: column;
         }
     }
     
@@ -294,6 +345,7 @@
             <button class="tab-btn" onclick="openTab(event, 'guidelines')">Guidelines</button>
             <button class="tab-btn" onclick="openTab(event, 'playlist')">Playlist</button>
             <button class="tab-btn" onclick="openTab(event, 'graveyard')">Graveyard</button>
+            <button class="tab-btn" onclick="openTab(event, 'banned-management')">Manage Banned</button>
         </div>
         
         <!-- Card Checker Tab -->
@@ -355,15 +407,35 @@
             <h1>Graveyard (Banned Cards)</h1>
             <div id="graveyard-cards" class="card-gallery"></div>
         </div>
+        
+        <!-- Banned Management Tab -->
+        <div id="banned-management" class="tab-content">
+            <h1>Manage Banned Cards</h1>
+            <p>Add or remove cards from the hard banned list. Changes will be reflected across all sections.</p>
+            
+            <div class="banned-management">
+                <div class="add-banned-form">
+                    <input type="text" id="newBannedCard" placeholder="Enter card name to ban">
+                    <button onclick="addToBannedList()">Add to Banned List</button>
+                </div>
+                
+                <div id="banned-management-list"></div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // SINGLE SOURCE OF TRUTH FOR BANNED CARDS
-        const hardBannedCards = [
+        // SINGLE SOURCE OF TRUTH FOR BANNED CARDS - Load from localStorage or use default
+        let hardBannedCards = JSON.parse(localStorage.getItem('hardBannedCards')) || [
             "Sol Ring", "Lightning Bolt", "Mana Crypt", "Mox Emerald", 
             "Mox Jet", "Mox Pearl", "Mox Ruby", "Mox Sapphire", 
-            "Murder", "Hero's Downfall", "Angel of Sanctions","Approach of the Second Sun"
+            "Murder", "Hero's Downfall", "Angel of Sanctions"
         ];
+
+        // Save to localStorage whenever the list changes
+        function saveBannedCards() {
+            localStorage.setItem('hardBannedCards', JSON.stringify(hardBannedCards));
+        }
 
         // LEGAL SETS
         const legalSets = [
@@ -419,6 +491,11 @@
             // If playlist tab is opened, populate set selector
             if (tabName === 'playlist') {
                 populateSetSelector();
+            }
+            
+            // If banned management tab is opened, update the list
+            if (tabName === 'banned-management') {
+                updateBannedManagementList();
             }
         }
 
@@ -503,6 +580,17 @@
             bannedList.innerHTML = "<p>" + hardBannedCards.map(card => `"${card}"`).join(", ") + "</p>";
         }
         
+        // UPDATE BANNED MANAGEMENT LIST
+        function updateBannedManagementList() {
+            const bannedManagementList = document.getElementById("banned-management-list");
+            bannedManagementList.innerHTML = hardBannedCards.map(card => `
+                <div class="banned-list-item">
+                    <span>${card}</span>
+                    <button class="remove-btn" onclick="removeFromBannedList('${card}')">Remove</button>
+                </div>
+            `).join("");
+        }
+        
         // UPDATE LEGAL SETS LIST IN GUIDELINES
         function updateLegalSetsList() {
             const legalSetsList = document.getElementById("legal-sets-list");
@@ -510,6 +598,51 @@
                 <div class="legal-sets-grid">
                     ${legalSets.map(set => `<div class="legal-set-item">${set}</div>`).join("")}
                 </div>`;
+        }
+
+        // ADD TO BANNED LIST
+        function addToBannedList() {
+            const newCardInput = document.getElementById("newBannedCard");
+            const newCard = newCardInput.value.trim();
+            
+            if (!newCard) {
+                alert("Please enter a card name");
+                return;
+            }
+            
+            if (hardBannedCards.includes(newCard)) {
+                alert("This card is already banned");
+                return;
+            }
+            
+            hardBannedCards.push(newCard);
+            saveBannedCards();
+            updateBannedList();
+            updateGraveyardDisplay();
+            updateBannedManagementList();
+            
+            newCardInput.value = "";
+            
+            // If we're on the playlist tab and cards are loaded, refresh them
+            if (document.getElementById("playlist").classList.contains("active") && 
+                document.getElementById("setSelect").value) {
+                loadSetCards();
+            }
+        }
+        
+        // REMOVE FROM BANNED LIST
+        function removeFromBannedList(cardName) {
+            hardBannedCards = hardBannedCards.filter(card => card !== cardName);
+            saveBannedCards();
+            updateBannedList();
+            updateGraveyardDisplay();
+            updateBannedManagementList();
+            
+            // If we're on the playlist tab and cards are loaded, refresh them
+            if (document.getElementById("playlist").classList.contains("active") && 
+                document.getElementById("setSelect").value) {
+                loadSetCards();
+            }
         }
 
         // IMPROVED CARD CHECKER FUNCTIONS
@@ -682,7 +815,14 @@
                     checkCard();
                 }
             });
+            
+            // Enable Enter key in banned card input
+            document.getElementById("newBannedCard").addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    addToBannedList();
+                }
+            });
         };
     </script>
 </body>
-            </html>
+                                               </html>
