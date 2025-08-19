@@ -249,53 +249,6 @@
         border-left: 3px solid #3498db;
     }
     
-    /* ===== BANNED MANAGEMENT STYLES ===== */
-    .banned-management {
-        margin-top: 20px;
-    }
-    
-    .add-banned-form {
-        display: flex;
-        margin-bottom: 20px;
-        gap: 10px;
-    }
-    
-    .add-banned-form input {
-        flex: 1;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-    }
-    
-    .add-banned-form button {
-        background: #e74c3c;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-    
-    .banned-list-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px;
-        background: #f8d7da;
-        margin-bottom: 8px;
-        border-radius: 4px;
-        border-left: 4px solid #dc3545;
-    }
-    
-    .remove-btn {
-        background: #dc3545;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        border-radius: 3px;
-        cursor: pointer;
-    }
-    
     @media (max-width: 768px) {
         .card-gallery {
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -307,10 +260,6 @@
         
         .legal-sets-grid {
             grid-template-columns: 1fr;
-        }
-        
-        .add-banned-form {
-            flex-direction: column;
         }
     }
     
@@ -345,7 +294,7 @@
             <button class="tab-btn" onclick="openTab(event, 'guidelines')">Guidelines</button>
             <button class="tab-btn" onclick="openTab(event, 'playlist')">Playlist</button>
             <button class="tab-btn" onclick="openTab(event, 'graveyard')">Graveyard</button>
-            <button class="tab-btn" onclick="openTab(event, 'banned-management')">Manage Banned</button>
+            <button class="tab-btn" onclick="window.location.href='banned.html'">Manage Banned</button>
         </div>
         
         <!-- Card Checker Tab -->
@@ -407,21 +356,6 @@
             <h1>Graveyard (Banned Cards)</h1>
             <div id="graveyard-cards" class="card-gallery"></div>
         </div>
-        
-        <!-- Banned Management Tab -->
-        <div id="banned-management" class="tab-content">
-            <h1>Manage Banned Cards</h1>
-            <p>Add or remove cards from the hard banned list. Changes will be reflected across all sections.</p>
-            
-            <div class="banned-management">
-                <div class="add-banned-form">
-                    <input type="text" id="newBannedCard" placeholder="Enter card name to ban">
-                    <button onclick="addToBannedList()">Add to Banned List</button>
-                </div>
-                
-                <div id="banned-management-list"></div>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -429,7 +363,7 @@
         let hardBannedCards = JSON.parse(localStorage.getItem('hardBannedCards')) || [
             "Sol Ring", "Lightning Bolt", "Mana Crypt", "Mox Emerald", 
             "Mox Jet", "Mox Pearl", "Mox Ruby", "Mox Sapphire", 
-            "Murder", "Hero's Downfall", "Angel of Sanctions","Cast Out"
+            "Murder", "Hero's Downfall", "Angel of Sanctions"
         ];
 
         // Save to localStorage whenever the list changes
@@ -492,11 +426,6 @@
             if (tabName === 'playlist') {
                 populateSetSelector();
             }
-            
-            // If banned management tab is opened, update the list
-            if (tabName === 'banned-management') {
-                updateBannedManagementList();
-            }
         }
 
         // POPULATE SET SELECTOR
@@ -542,8 +471,8 @@
                 
                 // Display cards
                 data.data.forEach(card => {
-                    const banReason = isCardBanned(card);
-                    const status = banReason ? "banned" : "legal";
+                    const isBanned = isCardBanned(card);
+                    const status = isBanned ? "banned" : "legal";
                     
                     const cardElement = document.createElement("div");
                     cardElement.className = "card-item";
@@ -552,7 +481,6 @@
                         <div class="card-item-content">
                             <h3>${card.name}</h3>
                             <span class="card-status status-${status}">${status.toUpperCase()}</span>
-                            ${banReason ? `<p class="card-rules-text">${banReason}</p>` : ''}
                         </div>
                     `;
                     
@@ -580,17 +508,6 @@
             bannedList.innerHTML = "<p>" + hardBannedCards.map(card => `"${card}"`).join(", ") + "</p>";
         }
         
-        // UPDATE BANNED MANAGEMENT LIST
-        function updateBannedManagementList() {
-            const bannedManagementList = document.getElementById("banned-management-list");
-            bannedManagementList.innerHTML = hardBannedCards.map(card => `
-                <div class="banned-list-item">
-                    <span>${card}</span>
-                    <button class="remove-btn" onclick="removeFromBannedList('${card}')">Remove</button>
-                </div>
-            `).join("");
-        }
-        
         // UPDATE LEGAL SETS LIST IN GUIDELINES
         function updateLegalSetsList() {
             const legalSetsList = document.getElementById("legal-sets-list");
@@ -600,67 +517,21 @@
                 </div>`;
         }
 
-        // ADD TO BANNED LIST
-        function addToBannedList() {
-            const newCardInput = document.getElementById("newBannedCard");
-            const newCard = newCardInput.value.trim();
-            
-            if (!newCard) {
-                alert("Please enter a card name");
-                return;
-            }
-            
-            if (hardBannedCards.includes(newCard)) {
-                alert("This card is already banned");
-                return;
-            }
-            
-            hardBannedCards.push(newCard);
-            saveBannedCards();
-            updateBannedList();
-            updateGraveyardDisplay();
-            updateBannedManagementList();
-            
-            newCardInput.value = "";
-            
-            // If we're on the playlist tab and cards are loaded, refresh them
-            if (document.getElementById("playlist").classList.contains("active") && 
-                document.getElementById("setSelect").value) {
-                loadSetCards();
-            }
-        }
-        
-        // REMOVE FROM BANNED LIST
-        function removeFromBannedList(cardName) {
-            hardBannedCards = hardBannedCards.filter(card => card !== cardName);
-            saveBannedCards();
-            updateBannedList();
-            updateGraveyardDisplay();
-            updateBannedManagementList();
-            
-            // If we're on the playlist tab and cards are loaded, refresh them
-            if (document.getElementById("playlist").classList.contains("active") && 
-                document.getElementById("setSelect").value) {
-                loadSetCards();
-            }
-        }
-
-        // IMPROVED CARD CHECKER FUNCTIONS
+        // CHECK IF CARD IS BANNED
         function isCardBanned(card) {
             // Check hard ban list first
             if (hardBannedCards.includes(card.name)) {
-                return "Card is hard banned";
+                return true;
             }
             
             // Check if card is from a legal set
-            // Handle Limited Edition Beta (Scryfall returns "Limited Edition Beta" as set_name)
             let cardSetName = card.set_name;
             if (cardSetName === "Limited Edition Beta") {
                 cardSetName = "Limited Edition Beta";
             }
             
             if (cardSetName && !legalSets.includes(cardSetName)) {
-                return "Card is from a non-legal set: " + cardSetName;
+                return true;
             }
 
             // Damage spell rules
@@ -671,7 +542,7 @@
                         const damage = parseInt(damageMatch[1]);
                         const cmc = card.cmc;
                         if (damage > cmc) {
-                            return "Damage spells cannot deal more damage than their CMC";
+                            return true;
                         }
                     }
                 }
@@ -693,7 +564,7 @@
                     
                     // Unconditional removal must cost 5 or more
                     if (!isConditional && card.cmc < 5) {
-                        return "Unconditional kill spells must cost 5 or more";
+                        return true;
                     }
                 }
                 
@@ -709,7 +580,7 @@
                     
                     // Unconditional counters must cost 4 or more
                     if (!isConditional && card.cmc < 4) {
-                        return "Unconditional counterspells must cost 4 or more";
+                        return true;
                     }
                 }
             }
@@ -718,20 +589,20 @@
             if (card.oracle_text && (card.oracle_text.toLowerCase().includes("destroy all") || 
                 card.oracle_text.toLowerCase().includes("exile all")) &&
                 card.cmc < 6) {
-                return "Mass board wipes must cost 6 or more";
+                return true;
             }
             
             // Land destruction rules
             if (card.oracle_text && card.oracle_text.toLowerCase().includes("destroy target land") && 
                 card.cmc < 4) {
-                return "Land destruction spells must cost 4 or more";
+                return true;
             }
             
             // Land rules
             if (card.type_line.includes("Land")) {
                 if (card.oracle_text && (card.oracle_text.toLowerCase().includes("enters the battlefield untapped") ||
                     card.oracle_text.toLowerCase().includes("add two or more mana"))) {
-                    return "Dual lands must enter tapped and cannot have positive ETB effects";
+                    return true;
                 }
             }
             
@@ -744,13 +615,13 @@
                         oracleText.includes("two or more") ||
                         oracleText.includes("add an additional") ||
                         oracleText.match(/adds? \w+ mana/)) {
-                        return "Mana rocks can only produce 1 mana";
+                        return true;
                     }
                     
                     if (card.cmc < 3 && 
                         !oracleText.includes("enters the battlefield tapped") &&
                         !card.name.toLowerCase().includes("lotus")) {
-                        return "Mana rocks under 3 CMC must enter tapped";
+                        return true;
                     }
                 }
             }
@@ -780,18 +651,17 @@
                 cardInfo.innerHTML = `
                     <strong>${card.name}</strong><br>
                     <em>${card.type_line}</em><br>
-                    ${card.oracle_text}<br>
                     <strong>Mana Cost:</strong> ${card.mana_cost} (CMC: ${card.cmc})<br>
                     <strong>Set:</strong> ${card.set_name}
                 `;
                 cardDisplay.style.display = "block";
                 
-                const banReason = isCardBanned(card);
-                if (banReason) {
-                    resultDiv.textContent = `BANNED: ${banReason}`;
+                const isBanned = isCardBanned(card);
+                if (isBanned) {
+                    resultDiv.textContent = "BANNED";
                     resultDiv.className = "banned";
                 } else {
-                    resultDiv.textContent = "LEGAL in Magic Gauntlet";
+                    resultDiv.textContent = "LEGAL";
                     resultDiv.className = "legal";
                 }
             } catch (error) {
@@ -815,14 +685,7 @@
                     checkCard();
                 }
             });
-            
-            // Enable Enter key in banned card input
-            document.getElementById("newBannedCard").addEventListener("keypress", function(event) {
-                if (event.key === "Enter") {
-                    addToBannedList();
-                }
-            });
         };
     </script>
 </body>
-                                               </html>
+    </html>
