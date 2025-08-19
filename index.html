@@ -36,15 +36,10 @@
     <button onclick="checkItem()">Check</button>
     <div id="result"></div>
 
+    <!-- Load banned list first -->
+    <script src="banned.html"></script>
+    
     <script>
-        // Banned items list (normalized automatically)
-        const bannedList = [
-            "bolt",
-            "gun",
-            "knife",
-            "explosive"
-        ];
-
         // Normalize string for comparison
         function normalizeString(str) {
             return str.toLowerCase().replace(/[^a-z0-9]/g, '');
