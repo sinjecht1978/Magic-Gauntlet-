@@ -145,16 +145,8 @@
     </div>
 
     <script>
-        // Custom ban list rules for Magic Gauntlet format
+        // Custom rules for Magic Gauntlet format
         function isCardBanned(card) {
-            // Rule: Any card that would remotely be considered for a competitive deck
-            if (card.legalities.commander === "banned" || 
-                card.legalities.modern === "banned" ||
-                card.legalities.legacy === "banned" ||
-                card.legalities.vintage === "banned") {
-                return true;
-            }
-            
             // Damage spell rules
             if (card.type_line.includes("Instant") || card.type_line.includes("Sorcery")) {
                 if (card.oracle_text.toLowerCase().includes("damage")) {
@@ -163,7 +155,7 @@
                         const damage = parseInt(damageMatch[1]);
                         const cmc = card.cmc;
                         if (damage > cmc) {
-                            return true;
+                            return "Damage spells cannot deal more damage than their CMC";
                         }
                     }
                 }
@@ -173,7 +165,7 @@
                     !card.oracle_text.toLowerCase().includes("unless") &&
                     !card.oracle_text.toLowerCase().includes("if") &&
                     card.cmc < 5) {
-                    return true;
+                    return "Unconditional kill spells must cost 5 or more";
                 }
                 
                 // Counter spell rules
@@ -181,7 +173,7 @@
                     !card.oracle_text.toLowerCase().includes("unless") &&
                     !card.oracle_text.toLowerCase().includes("if") &&
                     card.cmc < 4) {
-                    return true;
+                    return "Unconditional counterspells must cost 4 or more";
                 }
             }
             
@@ -189,20 +181,20 @@
             if ((card.oracle_text.toLowerCase().includes("destroy all") || 
                 card.oracle_text.toLowerCase().includes("exile all")) &&
                 card.cmc < 6) {
-                return true;
+                return "Mass board wipes must cost 6 or more";
             }
             
             // Land destruction rules
             if (card.oracle_text.toLowerCase().includes("destroy target land") && 
                 card.cmc < 4) {
-                return true;
+                return "Land destruction spells must cost 4 or more";
             }
             
             // Land rules
             if (card.type_line.includes("Land")) {
                 if (card.oracle_text.toLowerCase().includes("enters the battlefield untapped") ||
                     card.oracle_text.toLowerCase().includes("add two or more mana")) {
-                    return true;
+                    return "Dual lands must enter tapped and cannot have positive ETB effects";
                 }
             }
             
@@ -212,10 +204,10 @@
                 card.oracle_text.toLowerCase().includes("mana")) {
                 if (card.cmc < 3 && 
                     !card.oracle_text.toLowerCase().includes("enters the battlefield tapped")) {
-                    return true;
+                    return "Mana rocks under 3 CMC must enter tapped";
                 }
                 if (card.oracle_text.toLowerCase().includes("add two or more mana")) {
-                    return true;
+                    return "Mana rocks can only produce 1 mana";
                 }
             }
             
@@ -253,8 +245,9 @@
                 cardDisplay.style.display = "block";
                 
                 // Check if card is banned
-                if (isCardBanned(card)) {
-                    resultDiv.textContent = "BANNED in Magic Gauntlet";
+                const banReason = isCardBanned(card);
+                if (banReason) {
+                    resultDiv.textContent = `BANNED: ${banReason}`;
                     resultDiv.className = "banned";
                 } else {
                     resultDiv.textContent = "LEGAL in Magic Gauntlet";
