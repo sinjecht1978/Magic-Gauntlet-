@@ -1,65 +1,82 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Item Checker</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        input, button {
+            font-size: 16px;
+            padding: 8px 12px;
+            margin: 10px;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 20px;
+            min-height: 30px;
+        }
+        .banned {
+            color: red;
+        }
+        .legal {
+            color: green;
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <h1>Community Rules Hub</h1>
-  </header>
-  
-  <nav>
-    <a href="index.html">Checker</a>
-    <a href="guidelines.html">Guidelines</a>  <!-- Fixed typo: "guidelines" instead of "guidelines" -->
-    <a href="playlist.html">Playlist</a>
-    <a href="graveyard.html">Graveyard</a>
-  </nav>
+    <h1>Item Checker</h1>
+    <p>Type an item below to see if it's Banned or Legal</p>
+    <input type="text" id="searchInput" placeholder="Enter item name">
+    <button onclick="checkItem()">Check</button>
+    <div id="result"></div>
 
-  <div class="container">
-    <div id="checker">
-      <h2>Item Legality Checker</h2>
-      <input type="text" id="searchInput" placeholder="Enter item name">
-      <button onclick="checkItem()">Check Status</button>
-      <div id="result"></div>
-    </div>
-  </div>
+    <script>
+        // Banned items list
+        const bannedList = [
+            "bolt",
+            "gun",
+            "knife",
+            "explosive"
+        ];
 
-  <script>
-    // Moved bannedList directly into the HTML file since you deleted banned.js
-    const bannedList = [
-      "bolt",
-      "gun",
-      "knife",
-      "explosive"
-    ];
+        // Normalize string for comparison
+        function normalizeString(str) {
+            return str.toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
 
-    function checkItem() {
-      const input = document.getElementById("searchInput").value.trim();
-      const resultDiv = document.getElementById("result");
-      if (!input) {
-        resultDiv.textContent = "Please enter an item";
-        resultDiv.className = "";
-        return;
-      }
-      
-      const normalizedInput = input.toLowerCase().replace(/[^a-z0-9]/g, '');
-      const isBanned = bannedList.some(item => 
-        item.toLowerCase().replace(/[^a-z0-9]/g, '') === normalizedInput
-      );
-      
-      resultDiv.textContent = isBanned ? "BANNED" : "LEGAL";
-      resultDiv.className = isBanned ? "banned" : "legal";
-    }
+        // Check if item is banned
+        function checkItem() {
+            const input = document.getElementById("searchInput").value.trim();
+            const resultDiv = document.getElementById("result");
+            
+            if (!input) {
+                resultDiv.textContent = "Please enter an item";
+                resultDiv.className = "";
+                return;
+            }
 
-    // Added Enter key functionality
-    document.getElementById("searchInput").addEventListener("keypress", function(event) {
-      if (event.key === "Enter") {
-        checkItem();
-      }
-    });
-  </script>
+            const normalizedInput = normalizeString(input);
+            const isBanned = bannedList.some(item => normalizeString(item) === normalizedInput);
+
+            resultDiv.textContent = isBanned ? "BANNED" : "LEGAL";
+            resultDiv.className = isBanned ? "banned" : "legal";
+        }
+
+        // Allow pressing Enter key to check
+        document.getElementById("searchInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                checkItem();
+            }
+        });
+    </script>
 </body>
 </html>
