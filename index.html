@@ -234,6 +234,21 @@
         margin-top: 0;
     }
     
+    /* ===== LEGAL SETS STYLES ===== */
+    .legal-sets-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .legal-set-item {
+        background: #f0f8ff;
+        padding: 10px;
+        border-radius: 5px;
+        border-left: 3px solid #3498db;
+    }
+    
     @media (max-width: 768px) {
         .card-gallery {
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -241,6 +256,10 @@
         
         .examples {
             flex-direction: column;
+        }
+        
+        .legal-sets-grid {
+            grid-template-columns: 1fr;
         }
     }
     
@@ -338,92 +357,46 @@
         </div>
     </div>
 
-    <!-- External HTML files will be loaded here -->
-    <div id="external-content" style="display: none;"></div>
-
     <script>
-        // HARD BAN LIST - Will be loaded from banned.html
-        let hardBannedCards = [];
-        
-        // LEGAL SETS - Will be loaded from playlist.html
-        let legalSets = [];
+        // HARD BAN LIST - Just card names without reasons
+        const hardBannedCards = [
+            "Sol Ring", "Lightning Bolt", "Mana Crypt", "Mox Emerald", 
+            "Mox Jet", "Mox Pearl", "Mox Ruby", "Mox Sapphire", 
+            "Murder", "Hero's Downfall"
+        ];
 
-        // Load external content
-        function loadExternalContent() {
-            // Load banned.html
-            fetch('banned.html')
-                .then(response => response.text())
-                .then(data => {
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = data;
-                    const bannedScript = tempDiv.querySelector('script');
-                    if (bannedScript) {
-                        eval(bannedScript.innerHTML);
-                    }
-                    updateBannedList();
-                    updateGraveyardDisplay();
-                })
-                .catch(error => {
-                    console.error('Error loading banned.html:', error);
-                    // Fallback to default banned cards
-                    hardBannedCards = ["Sol Ring", "Lightning Bolt", "Mana Crypt", "Mox Emerald", 
-                                      "Mox Jet", "Mox Pearl", "Mox Ruby", "Mox Sapphire", 
-                                      "Murder", "Hero's Downfall"];
-                    updateBannedList();
-                    updateGraveyardDisplay();
-                });
-
-            // Load playlist.html
-            fetch('playlist.html')
-                .then(response => response.text())
-                .then(data => {
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = data;
-                    const playlistScript = tempDiv.querySelector('script');
-                    if (playlistScript) {
-                        eval(playlistScript.innerHTML);
-                    }
-                    updateLegalSetsList();
-                    populateSetSelector();
-                })
-                .catch(error => {
-                    console.error('Error loading playlist.html:', error);
-                    // Fallback to default legal sets
-                    legalSets = [
-                        "Adventures in the Forgotten Realms", "Aether Revolt", "Aetherdrift", "Alara Reborn", 
-                        "Alliances", "Amonkhet", "Antiquities", "Apocalypse", "Arabian Nights", 
-                        "Assassin's Creed", "Avacyn Restored", "Battle for Zendikar", 
-                        "Betrayers of Kamigawa", "Bloomburrow", "Born of the Gods", "Champions of Kamigawa", 
-                        "Coldsnap", "Conflux", "Core Set 2019", "Core Set 2020", "Core Set 2021", 
-                        "Dark Ascension", "Darksteel", "Dominaria", "Dominaria: United", 
-                        "Dragons of Tarkir", "Dragon's Maze", "Duskmourn: House of Horror", "Edge of Eternities", 
-                        "Eldritch Moon", "Eventide", "Exodus", "Fallen Empires", "Fate Reforged", 
-                        "Final Fantasy", "Fifth Dawn", "Future Sight", "Gatecrash", "Guilds of Ravnica", 
-                        "Homelands", "Hour of Devastation", "Ice Age", "Ikoria: Lair of Behemoths", 
-                        "Innistrad", "Innistrad: Crimson Vow", "Innistrad: Midnight Hunt", "Invasion", 
-                        "Ixalan", "Judgment", "Journey into Nyx", "Kaladesh", "Kaldheim", 
-                        "Kamigawa: Neon Dynasty", "Khans of Tarkir", "Legends", "Legions", 
-                        "Limited Edition Beta", "Lorwyn", "Magic 2010", "Magic 2011", "Magic 2012", 
-                        "Magic 2013", "Magic 2014", "Magic 2015", "Magic Origins", "March of the Machine", 
-                        "March of the Machine: The Aftermath", "Mercadian Masques", "Mirage", 
-                        "Mirrodin", "Mirrodin Besieged", "Morningtide", "MTG Lord of the Rings", 
-                        "Murders at Karlov Manor", "Nemesis", "New Phyrexia", "Oath of the Gatewatch", 
-                        "Odyssey", "Onslaught", "Outlaws of Thunder Junction", "Phyrexia: All Will Be One", 
-                        "Planechase", "Planar Chaos", "Planeshift", "Prophecy", "Ravnica Allegiance", 
-                        "Ravnica: City of Guilds", "Return to Ravnica", "Rise of the Eldrazi", 
-                        "Rivals of Ixalan", "Saviors of Kamigawa", "Scars of Mirrodin", "Scourge", 
-                        "Shadows over Innistrad", "Shadowmoor", "Shards of Alara", "Streets of New Capenna", 
-                        "Strixhaven: School of Mages", "Stronghold", "Tarkir: Dragonstorm", "Tempest", 
-                        "The Brothers' War", "The Dark", "The Lost Caverns of Ixalan", "Theros", 
-                        "Theros Beyond Death", "Throne of Eldraine", "Time Spiral", "Torment", 
-                        "Urza's Destiny", "Urza's Legacy", "Urza's Saga", "Visions", 
-                        "War of the Spark", "Weatherlight", "Wilds of Eldraine", "Worldwake", 
-                        "Zendikar", "Zendikar Rising"
-                    ];
-                    updateLegalSetsList();
-                    populateSetSelector();
-                });
-        }
+        // LEGAL SETS - Now sorted alphabetically and with Beta renamed to Limited Edition Beta
+        const legalSets = [
+            "Adventures in the Forgotten Realms", "Aether Revolt", "Aetherdrift", "Alara Reborn", 
+            "Alliances", "Amonkhet", "Antiquities", "Apocalypse", "Arabian Nights", 
+            "Assassin's Creed", "Avacyn Restored", "Battle for Zendikar", 
+            "Betrayers of Kamigawa", "Bloomburrow", "Born of the Gods", "Champions of Kamigawa", 
+            "Coldsnap", "Conflux", "Core Set 2019", "Core Set 2020", "Core Set 2021", 
+            "Dark Ascension", "Darksteel", "Dominaria", "Dominaria: United", 
+            "Dragons of Tarkir", "Dragon's Maze", "Duskmourn: House of Horror", "Edge of Eternities", 
+            "Eldritch Moon", "Eventide", "Exodus", "Fallen Empires", "Fate Reforged", 
+            "Final Fantasy", "Fifth Dawn", "Future Sight", "Gatecrash", "Guilds of Ravnica", 
+            "Homelands", "Hour of Devastation", "Ice Age", "Ikoria: Lair of Behemoths", 
+            "Innistrad", "Innistrad: Crimson Vow", "Innistrad: Midnight Hunt", "Invasion", 
+            "Ixalan", "Judgment", "Journey into Nyx", "Kaladesh", "Kaldheim", 
+            "Kamigawa: Neon Dynasty", "Khans of Tarkir", "Legends", "Legions", 
+            "Limited Edition Beta", "Lorwyn", "Magic 2010", "Magic 2011", "Magic 2012", 
+            "Magic 2013", "Magic 2014", "Magic 2015", "Magic Origins", "March of the Machine", 
+            "March of the Machine: The Aftermath", "Mercadian Masques", "Mirage", 
+            "Mirrodin", "Mirrodin Besieged", "Morningtide", "MTG Lord of the Rings", 
+            "Murders at Karlov Manor", "Nemesis", "New Phyrexia", "Oath of the Gatewatch", 
+            "Odyssey", "Onslaught", "Outlaws of Thunder Junction", "Phyrexia: All Will Be One", 
+            "Planechase", "Planar Chaos", "Planeshift", "Prophecy", "Ravnica Allegiance", 
+            "Ravnica: City of Guilds", "Return to Ravnica", "Rise of the Eldrazi", 
+            "Rivals of Ixalan", "Saviors of Kamigawa", "Scars of Mirrodin", "Scourge", 
+            "Shadows over Innistrad", "Shadowmoor", "Shards of Alara", "Streets of New Capenna", 
+            "Strixhaven: School of Mages", "Stronghold", "Tarkir: Dragonstorm", "Tempest", 
+            "The Brothers' War", "The Dark", "The Lost Caverns of Ixalan", "Theros", 
+            "Theros Beyond Death", "Throne of Eldraine", "Time Spiral", "Torment", 
+            "Urza's Destiny", "Urza's Legacy", "Urza's Saga", "Visions", 
+            "War of the Spark", "Weatherlight", "Wilds of Eldraine", "Worldwake", 
+            "Zendikar", "Zendikar Rising"
+        ];
 
         // TAB SYSTEM
         function openTab(event, tabName) {
@@ -452,8 +425,12 @@
         // POPULATE SET SELECTOR
         function populateSetSelector() {
             const setSelect = document.getElementById("setSelect");
-            if (setSelect.options.length > 1) return; // Already populated
+            // Clear existing options except the first one
+            while (setSelect.options.length > 1) {
+                setSelect.remove(1);
+            }
             
+            // Add legal sets to the dropdown
             legalSets.forEach(set => {
                 const option = document.createElement("option");
                 option.value = set;
@@ -481,7 +458,7 @@
                 }
                 
                 // We need to use the Scryfall API to search for cards in the set
-                const response = await fetch(`https://api.scryfall.com/cards/search?q=e:${apiSetName.toLowerCase().replace(/[^a-z0-9]+/g, '')}+order:set`);
+                const response = await fetch(`https://api.scryfall.com/cards/search?q=e:${encodeURIComponent(apiSetName.toLowerCase().replace(/[^a-z0-9]+/g, ''))}+order:set`);
                 const data = await response.json();
                 
                 setInfo.innerHTML = `<h2>${setName} (${data.data.length} cards)</h2>`;
@@ -529,8 +506,10 @@
         // UPDATE LEGAL SETS LIST IN GUIDELINES
         function updateLegalSetsList() {
             const legalSetsList = document.getElementById("legal-sets-list");
-            legalSetsList.innerHTML = "<p><strong>" + legalSets.length + " Legal Sets:</strong></p><p>" + 
-                legalSets.join(", ") + "</p>";
+            legalSetsList.innerHTML = `<p><strong>${legalSets.length} Legal Sets:</strong></p>
+                <div class="legal-sets-grid">
+                    ${legalSets.map(set => `<div class="legal-set-item">${set}</div>`).join("")}
+                </div>`;
         }
 
         // IMPROVED CARD CHECKER FUNCTIONS
@@ -692,7 +671,10 @@
 
         // INITIALIZE ON LOAD
         window.onload = function() {
-            loadExternalContent();
+            updateBannedList();
+            updateGraveyardDisplay();
+            updateLegalSetsList();
+            populateSetSelector();
             
             // Enable Enter key in search
             document.getElementById("searchInput").addEventListener("keypress", function(event) {
@@ -703,4 +685,4 @@
         };
     </script>
 </body>
-    </html>
+                </html>
