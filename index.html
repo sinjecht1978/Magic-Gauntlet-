@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -210,6 +209,28 @@
     .set-not-legal {
         background: #ff9800;
         color: white;
+    }
+    
+    /* ===== FILTER STYLES ===== */
+    .card-filters {
+        margin: 20px 0;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .filter-checkbox {
+        margin-right: 5px;
+    }
+    
+    .filter-label {
+        display: inline-flex;
+        align-items: center;
+        margin-right: 15px;
+        cursor: pointer;
     }
     
     /* ===== PAGINATION STYLES ===== */
@@ -447,6 +468,11 @@
         .add-banned-form {
             flex-direction: column;
         }
+        
+        .card-filters {
+            flex-direction: column;
+            align-items: flex-start;
+        }
     }
     
     @media (max-width: 600px) {
@@ -511,7 +537,7 @@
                     <li><strong>Land Destruction:</strong> Must cost 4+ mana</li>
                     <li><strong>Mana Rocks:</strong> Under 3 CMC must enter tapped, can only produce 1 mana</li>
                     <li><strong>Set Restrictions:</strong> Only cards from approved sets are legal</li>
-                    <li><strong>Creature Power/Toughness:</strong> Creatures with power and toughness 5 or higher must cost 5+ mana</li>
+                    <li><strong>Creature Power/Toughness:</strong> Creatures with power and toughness 5 or higher must cost 5+ mana AND have equal power and toughness (e.g., 5/5, 6/6)</li>
                 </ul>
                 
                 <h2>Hard Banned Cards</h2>
@@ -548,6 +574,37 @@
                     <option value="">-- Choose a Set --</option>
                 </select>
                 <button onclick="loadSetCards()">Load Set</button>
+            </div>
+            
+            <div class="card-filters">
+                <label class="filter-label">
+                    <input type="checkbox" id="filter-creature" class="filter-checkbox" checked onchange="filterCards()">
+                    Creature
+                </label>
+                <label class="filter-label">
+                    <input type="checkbox" id="filter-instant" class="filter-checkbox" checked onchange="filterCards()">
+                    Instant
+                </label>
+                <label class="filter-label">
+                    <input type="checkbox" id="filter-sorcery" class="filter-checkbox" checked onchange="filterCards()">
+                    Sorcery
+                </label>
+                <label class="filter-label">
+                    <input type="checkbox" id="filter-artifact" class="filter-checkbox" checked onchange="filterCards()">
+                    Artifact
+                </label>
+                <label class="filter-label">
+                    <input type="checkbox" id="filter-enchantment" class="filter-checkbox" checked onchange="filterCards()">
+                    Enchantment
+                </label>
+                <label class="filter-label">
+                    <input type="checkbox" id="filter-land" class="filter-checkbox" checked onchange="filterCards()">
+                    Land
+                </label>
+                <label class="filter-label">
+                    <input type="checkbox" id="filter-planeswalker" class="filter-checkbox" checked onchange="filterCards()">
+                    Planeswalker
+                </label>
             </div>
             
             <div id="set-info"></div>
@@ -767,6 +824,7 @@
         let currentPage = 1;
         let cardsPerPage = 20;
         let allCards = [];
+        let filteredCards = [];
         let totalPages = 1;
 
         // TAB SYSTEM
@@ -900,7 +958,8 @@
                 
                 // Store all cards for pagination
                 allCards = data.data;
-                totalPages = Math.ceil(allCards.length / cardsPerPage);
+                filteredCards = [...allCards];
+                totalPages = Math.ceil(filteredCards.length / cardsPerPage);
                 currentPage = page;
                 
                 setInfo.innerHTML = `<h2>${setName} (${allCards.length} cards)</h2>`;
@@ -908,33 +967,69 @@
                 // Display pagination
                 updatePagination();
                 
-                // Get cards for current page
-                const startIndex = (currentPage - 1) * cardsPerPage;
-                const endIndex = Math.min(startIndex + cardsPerPage, allCards.length);
-                const pageCards = allCards.slice(startIndex, endIndex);
-                
-                // Display cards
-                pageCards.forEach(card => {
-                    const isBanned = isCardBanned(card);
-                    const status = isBanned ? "banned" : "legal";
-                    
-                    const cardElement = document.createElement("div");
-                    cardElement.className = "card-item";
-                    cardElement.innerHTML = `
-                        <img src="${card.image_uris ? card.image_uris.normal : (card.card_faces ? card.card_faces[0].image_uris.normal : '')}" alt="${card.name}">
-                        <div class="card-item-content">
-                            <h3>${card.name}</h3>
-                            <span class="card-status status-${status}">${status.toUpperCase()}</span>
-                            <p class="card-rules-text">${card.type_line}</p>
-                        </div>
-                    `;
-                    
-                    setCards.appendChild(cardElement);
-                });
+                // Apply filters and display cards
+                filterCards();
             } catch (error) {
                 setInfo.innerHTML = `<p>Error loading set: ${error.message}. Note: Some custom sets may not be available in the API.</p>`;
                 console.error("Error loading set:", error);
             }
+        }
+
+        // FILTER CARDS BY TYPE
+        function filterCards() {
+            const setCards = document.getElementById("set-cards");
+            setCards.innerHTML = "";
+            
+            // Get filter states
+            const showCreature = document.getElementById("filter-creature").checked;
+            const showInstant = document.getElementById("filter-instant").checked;
+            const showSorcery = document.getElementById("filter-sorcery").checked;
+            const showArtifact = document.getElementById("filter-artifact").checked;
+            const showEnchantment = document.getElementById("filter-enchantment").checked;
+            const showLand = document.getElementById("filter-land").checked;
+            const showPlaneswalker = document.getElementById("filter-planeswalker").checked;
+            
+            // Filter cards
+            filteredCards = allCards.filter(card => {
+                const typeLine = card.type_line || "";
+                
+                if (typeLine.includes("Creature") && showCreature) return true;
+                if (typeLine.includes("Instant") && showInstant) return true;
+                if (typeLine.includes("Sorcery") && showSorcery) return true;
+                if (typeLine.includes("Artifact") && showArtifact) return true;
+                if (typeLine.includes("Enchantment") && showEnchantment) return true;
+                if (typeLine.includes("Land") && showLand) return true;
+                if (typeLine.includes("Planeswalker") && showPlaneswalker) return true;
+                
+                return false;
+            });
+            
+            totalPages = Math.ceil(filteredCards.length / cardsPerPage);
+            updatePagination();
+            
+            // Get cards for current page
+            const startIndex = (currentPage - 1) * cardsPerPage;
+            const endIndex = Math.min(startIndex + cardsPerPage, filteredCards.length);
+            const pageCards = filteredCards.slice(startIndex, endIndex);
+            
+            // Display cards
+            pageCards.forEach(card => {
+                const isBanned = isCardBanned(card);
+                const status = isBanned ? "banned" : "legal";
+                
+                const cardElement = document.createElement("div");
+                cardElement.className = "card-item";
+                cardElement.innerHTML = `
+                    <img src="${card.image_uris ? card.image_uris.normal : (card.card_faces ? card.card_faces[0].image_uris.normal : '')}" alt="${card.name}">
+                    <div class="card-item-content">
+                        <h3>${card.name}</h3>
+                        <span class="card-status status-${status}">${status.toUpperCase()}</span>
+                        <p class="card-rules-text">${card.type_line}</p>
+                    </div>
+                `;
+                
+                setCards.appendChild(cardElement);
+            });
         }
 
         // UPDATE PAGINATION CONTROLS
@@ -1246,160 +1341,160 @@
             }
         }
 
-      // CHECK IF CARD IS BANNED
-function isCardBanned(card) {
-    // Check force-banned list first (highest priority)
-    if (forceBannedCards.includes(card.name)) {
-        return true;
-    }
-    
-    // Check force-legal list second (overrides all other rules)
-    if (forceLegalCards.includes(card.name)) {
-        return false;
-    }
-    
-    // Check hard ban list
-    if (hardBannedCards.includes(card.name)) {
-        return true;
-    }
-    
-    // Check banned card types
-    for (const bannedType of bannedCardTypes) {
-        if (card.type_line && card.type_line.includes(bannedType)) {
-            return true;
-        }
-    }
-    
-    // Check banned abilities
-    const oracleText = card.oracle_text ? card.oracle_text.toLowerCase() : "";
-    for (const bannedAbility of bannedAbilities) {
-        if (oracleText.includes(bannedAbility.toLowerCase())) {
-            return true;
-        }
-    }
-    
-    // Check if card is from a legal set
-    let cardSetName = card.set_name;
-    if (cardSetName === "Limited Edition Beta") {
-        cardSetName = "Limited Edition Beta";
-    }
-    
-    if (cardSetName && !legalSets.includes(cardSetName)) {
-        return true;
-    }
-
-    // Special case for Abu Ja'far
-    if (card.name === "Abu Ja'far") {
-        return false;
-    }
-
-    // NEW: Creature power/toughness rule - BOTH must be 5 or higher
-    if (card.type_line && card.type_line.includes("Creature")) {
-        // Check if BOTH power AND toughness are 5 or higher
-        const power = parseInt(card.power);
-        const toughness = parseInt(card.toughness);
-        
-        if (!isNaN(power) && !isNaN(toughness) && 
-            power >= 5 && toughness >= 5) {
-            // If CMC is 4 or less, it's banned
-            if (card.cmc <= 4) {
+        // CHECK IF CARD IS BANNED
+        function isCardBanned(card) {
+            // Check force-banned list first (highest priority)
+            if (forceBannedCards.includes(card.name)) {
                 return true;
             }
-        }
-    }
-
-    // Damage spell rules
-    if (card.type_line.includes("Instant") || card.type_line.includes("Sorcery")) {
-        if (oracleText.includes("damage")) {
-            const damageMatch = oracleText.match(/deal[s]? (\d+) damage/i);
-            if (damageMatch) {
-                const damage = parseInt(damageMatch[1]);
-                const cmc = card.cmc;
-                if (damage > cmc) {
+            
+            // Check force-legal list second (overrides all other rules)
+            if (forceLegalCards.includes(card.name)) {
+                return false;
+            }
+            
+            // Check hard ban list
+            if (hardBannedCards.includes(card.name)) {
+                return true;
+            }
+            
+            // Check banned card types
+            for (const bannedType of bannedCardTypes) {
+                if (card.type_line && card.type_line.includes(bannedType)) {
                     return true;
                 }
             }
-        }
-        
-        // Improved kill spell rules - now properly handles conditional removal
-        if (oracleText.includes("destroy target")) {
-            // Check if it's conditional removal
-            const isConditional = (
-                oracleText.includes("with") ||
-                oracleText.includes("unless") ||
-                oracleText.includes("if") ||
-                oracleText.includes("non") ||
-                oracleText.includes("can't") ||
-                oracleText.includes("without") ||
-                oracleText.includes("equal") ||
-                oracleText.includes("less") ||
-                oracleText.includes("greater")
-            );
             
-            // Unconditional removal must cost 5 or more
-            if (!isConditional && card.cmc < 5) {
-                return true;
-            }
-        }
-        
-        // Counter spell rules
-        if (oracleText.includes("counter target")) {
-            // Check if it's conditional
-            const isConditional = (
-                oracleText.includes("unless") ||
-                oracleText.includes("if") ||
-                oracleText.includes("unless its controller pays") ||
-                oracleText.includes("that targets a")
-            );
-            
-            // Unconditional counters must cost 4 or more
-            if (!isConditional && card.cmc < 4) {
-                return true;
-            }
-        }
-    }
-    
-    // Board wipe rules
-    if ((oracleText.includes("destroy all") || 
-        oracleText.includes("exile all")) &&
-        card.cmc < 6) {
-        return true;
-    }
-    
-    // Land destruction rules
-    if (oracleText.includes("destroy target land") && 
-        card.cmc < 4) {
-        return true;
-    }
-    
-    // Land rules
-    if (card.type_line.includes("Land")) {
-        if (oracleText.includes("enters the battlefield untapped") ||
-            oracleText.includes("add two or more mana")) {
-            return true;
-        }
-    }
-    
-    // Mana rock rules
-    if (card.type_line.includes("Artifact")) {
-        if (oracleText.includes("add") && oracleText.includes("mana")) {
-            if (oracleText.match(/adds? \{.+\}.+and.+{.+}/) || 
-                oracleText.includes("two or more") ||
-                oracleText.includes("add an additional") ||
-                oracleText.match(/adds? \w+ mana/)) {
-                return true;
+            // Check banned abilities
+            const oracleText = card.oracle_text ? card.oracle_text.toLowerCase() : "";
+            for (const bannedAbility of bannedAbilities) {
+                if (oracleText.includes(bannedAbility.toLowerCase())) {
+                    return true;
+                }
             }
             
-            if (card.cmc < 3 && 
-                !oracleText.includes("enters the battlefield tapped") &&
-                !card.name.toLowerCase().includes("lotus")) {
+            // Check if card is from a legal set
+            let cardSetName = card.set_name;
+            if (cardSetName === "Limited Edition Beta") {
+                cardSetName = "Limited Edition Beta";
+            }
+            
+            if (cardSetName && !legalSets.includes(cardSetName)) {
                 return true;
             }
+
+            // Special case for Abu Ja'far
+            if (card.name === "Abu Ja'far") {
+                return false;
+            }
+
+            // NEW: Creature power/toughness rule - BOTH must be 5 or higher AND equal
+            if (card.type_line && card.type_line.includes("Creature")) {
+                // Check if BOTH power AND toughness are 5 or higher AND equal
+                const power = parseInt(card.power);
+                const toughness = parseInt(card.toughness);
+                
+                if (!isNaN(power) && !isNaN(toughness) && 
+                    power >= 5 && toughness >= 5 && power === toughness) {
+                    // If CMC is 4 or less, it's banned
+                    if (card.cmc <= 4) {
+                        return true;
+                    }
+                }
+            }
+
+            // Damage spell rules
+            if (card.type_line.includes("Instant") || card.type_line.includes("Sorcery")) {
+                if (oracleText.includes("damage")) {
+                    const damageMatch = oracleText.match(/deal[s]? (\d+) damage/i);
+                    if (damageMatch) {
+                        const damage = parseInt(damageMatch[1]);
+                        const cmc = card.cmc;
+                        if (damage > cmc) {
+                            return true;
+                        }
+                    }
+                }
+                
+                // Improved kill spell rules - now properly handles conditional removal
+                if (oracleText.includes("destroy target")) {
+                    // Check if it's conditional removal
+                    const isConditional = (
+                        oracleText.includes("with") ||
+                        oracleText.includes("unless") ||
+                        oracleText.includes("if") ||
+                        oracleText.includes("non") ||
+                        oracleText.includes("can't") ||
+                        oracleText.includes("without") ||
+                        oracleText.includes("equal") ||
+                        oracleText.includes("less") ||
+                        oracleText.includes("greater")
+                    );
+                    
+                    // Unconditional removal must cost 5 or more
+                    if (!isConditional && card.cmc < 5) {
+                        return true;
+                    }
+                }
+                
+                // Counter spell rules
+                if (oracleText.includes("counter target")) {
+                    // Check if it's conditional
+                    const isConditional = (
+                        oracleText.includes("unless") ||
+                        oracleText.includes("if") ||
+                        oracleText.includes("unless its controller pays") ||
+                        oracleText.includes("that targets a")
+                    );
+                    
+                    // Unconditional counters must cost 4 or more
+                    if (!isConditional && card.cmc < 4) {
+                        return true;
+                    }
+                }
+            }
+            
+            // Board wipe rules
+            if ((oracleText.includes("destroy all") || 
+                oracleText.includes("exile all")) &&
+                card.cmc < 6) {
+                return true;
+            }
+            
+            // Land destruction rules
+            if (oracleText.includes("destroy target land") && 
+                card.cmc < 4) {
+                return true;
+            }
+            
+            // Land rules
+            if (card.type_line.includes("Land")) {
+                if (oracleText.includes("enters the battlefield untapped") ||
+                    oracleText.includes("add two or more mana")) {
+                    return true;
+                }
+            }
+            
+            // Mana rock rules
+            if (card.type_line.includes("Artifact")) {
+                if (oracleText.includes("add") && oracleText.includes("mana")) {
+                    if (oracleText.match(/adds? \{.+\}.+and.+{.+}/) || 
+                        oracleText.includes("two or more") ||
+                        oracleText.includes("add an additional") ||
+                        oracleText.match(/adds? \w+ mana/)) {
+                        return true;
+                    }
+                    
+                    if (card.cmc < 3 && 
+                        !oracleText.includes("enters the battlefield tapped") &&
+                        !card.name.toLowerCase().includes("lotus")) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
         }
-    }
-    
-    return false;
-}
 
         async function checkCard() {
             const input = document.getElementById("searchInput").value.trim();
@@ -1542,4 +1637,4 @@ function isCardBanned(card) {
         };
     </script>
 </body>
-                                                                           </html>
+</html>
