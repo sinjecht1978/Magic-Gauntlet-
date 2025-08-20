@@ -542,9 +542,10 @@
             
             <div class="set-selector">
                 <label for="setSelect">Select a Set:</label>
-                <select id="setSelect" onchange="loadSetCards()">
+                <select id="setSelect">
                     <option value="">-- Choose a Set --</option>
                 </select>
+                <button onclick="loadSetCards()">Load Set</button>
             </div>
             
             <div id="set-info"></div>
@@ -587,59 +588,59 @@
                         <h3>Ban Entire Card Types</h3>
                         <p>Check the box to ban all cards of these types:</p>
                         <div class="ban-type-item">
-                            <input type="checkbox" id="ban-planeswalkers" class="ban-type-checkbox" onchange="toggleCardTypeBan('Planeswalker', this.checked)">
+                            <input type="checkbox" id="ban-planeswalkers" class="ban-type-checkbox">
                             <label for="ban-planeswalkers">Ban all Planeswalker cards</label>
                         </div>
                         <div class="ban-type-item">
-                            <input type="checkbox" id="ban-schemes" class="ban-type-checkbox" onchange="toggleCardTypeBan('Scheme', this.checked)">
+                            <input type="checkbox" id="ban-schemes" class="ban-type-checkbox">
                             <label for="ban-schemes">Ban all Scheme cards</label>
                         </div>
                         <div class="ban-type-item">
-                            <input type="checkbox" id="ban-conspiracies" class="ban-type-checkbox" onchange="toggleCardTypeBan('Conspiracy', this.checked)">
+                            <input type="checkbox" id="ban-conspiracies" class="ban-type-checkbox">
                             <label for="ban-conspiracies">Ban all Conspiracy cards</label>
                         </div>
                         <div class="ban-type-item">
-                            <input type="checkbox" id="ban-phenomenons" class="ban-type-checkbox" onchange="toggleCardTypeBan('Phenomenon', this.checked)">
+                            <input type="checkbox" id="ban-phenomenons" class="ban-type-checkbox">
                             <label for="ban-phenomenons">Ban all Phenomenon cards</label>
                         </div>
                         <div class="ban-type-item">
-                            <input type="checkbox" id="ban-vanguards" class="ban-type-checkbox" onchange="toggleCardTypeBan('Vanguard', this.checked)">
+                            <input type="checkbox" id="ban-vanguards" class="ban-type-checkbox">
                             <label for="ban-vanguards">Ban all Vanguard cards</label>
                         </div>
                         <div class="ban-type-item">
-                            <input type="checkbox" id="ban-dungeons" class="ban-type-checkbox" onchange="toggleCardTypeBan('Dungeon', this.checked)">
+                            <input type="checkbox" id="ban-dungeons" class="ban-type-checkbox">
                             <label for="ban-dungeons">Ban all Dungeon cards</label>
                         </div>
                         <div class="ban-type-item">
-                            <input type="checkbox" id="ban-towns" class="ban-type-checkbox" onchange="toggleCardTypeBan('Town', this.checked)">
+                            <input type="checkbox" id="ban-towns" class="ban-type-checkbox">
                             <label for="ban-towns">Ban all Town cards</label>
                         </div>
                         <div class="ban-type-item">
-                            <input type="checkbox" id="ban-attractions" class="ban-type-checkbox" onchange="toggleCardTypeBan('Attraction', this.checked)">
+                            <input type="checkbox" id="ban-attractions" class="ban-type-checkbox">
                             <label for="ban-attractions">Ban all Attraction cards</label>
                         </div>
                         <div class="ban-type-item">
-                            <input type="checkbox" id="ban-planes" class="ban-type-checkbox" onchange="toggleCardTypeBan('Plane', this.checked)">
+                            <input type="checkbox" id="ban-planes" class="ban-type-checkbox">
                             <label for="ban-planes">Ban all Plane cards</label>
                         </div>
                         <div class="ban-type-item">
-                            <input type="checkbox" id="ban-tribals" class="ban-type-checkbox" onchange="toggleCardTypeBan('Tribal', this.checked)">
+                            <input type="checkbox" id="ban-tribals" class="ban-type-checkbox">
                             <label for="ban-tribals">Ban all Tribal cards</label>
                         </div>
                         <div class="ban-type-item">
-                            <input type="checkbox" id="ban-snow" class="ban-type-checkbox" onchange="toggleCardTypeBan('Snow', this.checked)">
+                            <input type="checkbox" id="ban-snow" class="ban-type-checkbox">
                             <label for="ban-snow">Ban all Snow cards</label>
                         </div>
                         <div class="ban-type-item">
-                            <input type="checkbox" id="ban-world" class="ban-type-checkbox" onchange="toggleCardTypeBan('World', this.checked)">
+                            <input type="checkbox" id="ban-world" class="ban-type-checkbox">
                             <label for="ban-world">Ban all World cards</label>
                         </div>
                         <div class="ban-type-item">
-                            <input type="checkbox" id="ban-classes" class="ban-type-checkbox" onchange="toggleCardTypeBan('Class', this.checked)">
+                            <input type="checkbox" id="ban-classes" class="ban-type-checkbox">
                             <label for="ban-classes">Ban all Class cards</label>
                         </div>
                         <div class="ban-type-item">
-                            <input type="checkbox" id="ban-sagas" class="ban-type-checkbox" onchange="toggleCardTypeBan('Saga', this.checked)">
+                            <input type="checkbox" id="ban-sagas" class="ban-type-checkbox">
                             <label for="ban-sagas">Ban all Saga cards</label>
                         </div>
                     </div>
@@ -873,7 +874,10 @@
         // LOAD CARDS FOR SELECTED SET
         async function loadSetCards(page = 1) {
             const setName = document.getElementById("setSelect").value;
-            if (!setName) return;
+            if (!setName) {
+                alert("Please select a set first");
+                return;
+            }
             
             const setInfo = document.getElementById("set-info");
             const setCards = document.getElementById("set-cards");
@@ -1031,7 +1035,7 @@
             const forceBannedManagement = document.getElementById("force-banned-management");
             forceBannedManagement.innerHTML = forceBannedCards.map(card => `
                 <div class="exception-card banned">
-                    <span>${card</span>
+                    <span>${card}</span>
                     <button class="remove-btn" onclick="removeFromForceBannedList('${card.replace(/'/g, "\\'")}')">Remove</button>
                 </div>
             `).join("");
@@ -1479,7 +1483,51 @@
                     checkPassword();
                 }
             });
+            
+            // Set up checkbox event listeners
+            document.getElementById('ban-planeswalkers').addEventListener('change', function() {
+                toggleCardTypeBan('Planeswalker', this.checked);
+            });
+            document.getElementById('ban-schemes').addEventListener('change', function() {
+                toggleCardTypeBan('Scheme', this.checked);
+            });
+            document.getElementById('ban-conspiracies').addEventListener('change', function() {
+                toggleCardTypeBan('Conspiracy', this.checked);
+            });
+            document.getElementById('ban-phenomenons').addEventListener('change', function() {
+                toggleCardTypeBan('Phenomenon', this.checked);
+            });
+            document.getElementById('ban-vanguards').addEventListener('change', function() {
+                toggleCardTypeBan('Vanguard', this.checked);
+            });
+            document.getElementById('ban-dungeons').addEventListener('change', function() {
+                toggleCardTypeBan('Dungeon', this.checked);
+            });
+            document.getElementById('ban-towns').addEventListener('change', function() {
+                toggleCardTypeBan('Town', this.checked);
+            });
+            document.getElementById('ban-attractions').addEventListener('change', function() {
+                toggleCardTypeBan('Attraction', this.checked);
+            });
+            document.getElementById('ban-planes').addEventListener('change', function() {
+                toggleCardTypeBan('Plane', this.checked);
+            });
+            document.getElementById('ban-tribals').addEventListener('change', function() {
+                toggleCardTypeBan('Tribal', this.checked);
+            });
+            document.getElementById('ban-snow').addEventListener('change', function() {
+                toggleCardTypeBan('Snow', this.checked);
+            });
+            document.getElementById('ban-world').addEventListener('change', function() {
+                toggleCardTypeBan('World', this.checked);
+            });
+            document.getElementById('ban-classes').addEventListener('change', function() {
+                toggleCardTypeBan('Class', this.checked);
+            });
+            document.getElementById('ban-sagas').addEventListener('change', function() {
+                toggleCardTypeBan('Saga', this.checked);
+            });
         };
     </script>
 </body>
-                                                  </html>
+</html>
