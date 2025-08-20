@@ -1246,157 +1246,160 @@
             }
         }
 
-        // CHECK IF CARD IS BANNED
-        function isCardBanned(card) {
-            // Check force-banned list first (highest priority)
-            if (forceBannedCards.includes(card.name)) {
-                return true;
-            }
-            
-            // Check force-legal list second (overrides all other rules)
-            if (forceLegalCards.includes(card.name)) {
-                return false;
-            }
-            
-            // Check hard ban list
-            if (hardBannedCards.includes(card.name)) {
-                return true;
-            }
-            
-            // Check banned card types
-            for (const bannedType of bannedCardTypes) {
-                if (card.type_line && card.type_line.includes(bannedType)) {
-                    return true;
-                }
-            }
-            
-            // Check banned abilities
-            const oracleText = card.oracle_text ? card.oracle_text.toLowerCase() : "";
-            for (const bannedAbility of bannedAbilities) {
-                if (oracleText.includes(bannedAbility.toLowerCase())) {
-                    return true;
-                }
-            }
-            
-            // Check if card is from a legal set
-            let cardSetName = card.set_name;
-            if (cardSetName === "Limited Edition Beta") {
-                cardSetName = "Limited Edition Beta";
-            }
-            
-            if (cardSetName && !legalSets.includes(cardSetName)) {
-                return true;
-            }
-
-            // Special case for Abu Ja'far
-            if (card.name === "Abu Ja'far") {
-                return false;
-            }
-
-            // NEW: Creature power/toughness rule
-            if (card.type_line && card.type_line.includes("Creature")) {
-                // Check if power or toughness is 5 or higher
-                if ((card.power && parseInt(card.power) >= 5) || 
-                    (card.toughness && parseInt(card.toughness) >= 5)) {
-                    // If CMC is 4 or less, it's banned
-                    if (card.cmc <= 4) {
-                        return true;
-                    }
-                }
-            }
-
-            // Damage spell rules
-            if (card.type_line.includes("Instant") || card.type_line.includes("Sorcery")) {
-                if (oracleText.includes("damage")) {
-                    const damageMatch = oracleText.match(/deal[s]? (\d+) damage/i);
-                    if (damageMatch) {
-                        const damage = parseInt(damageMatch[1]);
-                        const cmc = card.cmc;
-                        if (damage > cmc) {
-                            return true;
-                        }
-                    }
-                }
-                
-                // Improved kill spell rules - now properly handles conditional removal
-                if (oracleText.includes("destroy target")) {
-                    // Check if it's conditional removal
-                    const isConditional = (
-                        oracleText.includes("with") ||
-                        oracleText.includes("unless") ||
-                        oracleText.includes("if") ||
-                        oracleText.includes("non") ||
-                        oracleText.includes("can't") ||
-                        oracleText.includes("without") ||
-                        oracleText.includes("equal") ||
-                        oracleText.includes("less") ||
-                        oracleText.includes("greater")
-                    );
-                    
-                    // Unconditional removal must cost 5 or more
-                    if (!isConditional && card.cmc < 5) {
-                        return true;
-                    }
-                }
-                
-                // Counter spell rules
-                if (oracleText.includes("counter target")) {
-                    // Check if it's conditional
-                    const isConditional = (
-                        oracleText.includes("unless") ||
-                        oracleText.includes("if") ||
-                        oracleText.includes("unless its controller pays") ||
-                        oracleText.includes("that targets a")
-                    );
-                    
-                    // Unconditional counters must cost 4 or more
-                    if (!isConditional && card.cmc < 4) {
-                        return true;
-                    }
-                }
-            }
-            
-            // Board wipe rules
-            if ((oracleText.includes("destroy all") || 
-                oracleText.includes("exile all")) &&
-                card.cmc < 6) {
-                return true;
-            }
-            
-            // Land destruction rules
-            if (oracleText.includes("destroy target land") && 
-                card.cmc < 4) {
-                return true;
-            }
-            
-            // Land rules
-            if (card.type_line.includes("Land")) {
-                if (oracleText.includes("enters the battlefield untapped") ||
-                    oracleText.includes("add two or more mana")) {
-                    return true;
-                }
-            }
-            
-            // Mana rock rules
-            if (card.type_line.includes("Artifact")) {
-                if (oracleText.includes("add") && oracleText.includes("mana")) {
-                    if (oracleText.match(/adds? \{.+\}.+and.+{.+}/) || 
-                        oracleText.includes("two or more") ||
-                        oracleText.includes("add an additional") ||
-                        oracleText.match(/adds? \w+ mana/)) {
-                        return true;
-                    }
-                    
-                    if (card.cmc < 3 && 
-                        !oracleText.includes("enters the battlefield tapped") &&
-                        !card.name.toLowerCase().includes("lotus")) {
-                        return true;
-                    }
-                }
-            }
-            
-            return false;
+      // CHECK IF CARD IS BANNED
+function isCardBanned(card) {
+    // Check force-banned list first (highest priority)
+    if (forceBannedCards.includes(card.name)) {
+        return true;
+    }
+    
+    // Check force-legal list second (overrides all other rules)
+    if (forceLegalCards.includes(card.name)) {
+        return false;
+    }
+    
+    // Check hard ban list
+    if (hardBannedCards.includes(card.name)) {
+        return true;
+    }
+    
+    // Check banned card types
+    for (const bannedType of bannedCardTypes) {
+        if (card.type_line && card.type_line.includes(bannedType)) {
+            return true;
         }
+    }
+    
+    // Check banned abilities
+    const oracleText = card.oracle_text ? card.oracle_text.toLowerCase() : "";
+    for (const bannedAbility of bannedAbilities) {
+        if (oracleText.includes(bannedAbility.toLowerCase())) {
+            return true;
+        }
+    }
+    
+    // Check if card is from a legal set
+    let cardSetName = card.set_name;
+    if (cardSetName === "Limited Edition Beta") {
+        cardSetName = "Limited Edition Beta";
+    }
+    
+    if (cardSetName && !legalSets.includes(cardSetName)) {
+        return true;
+    }
+
+    // Special case for Abu Ja'far
+    if (card.name === "Abu Ja'far") {
+        return false;
+    }
+
+    // NEW: Creature power/toughness rule - BOTH must be 5 or higher
+    if (card.type_line && card.type_line.includes("Creature")) {
+        // Check if BOTH power AND toughness are 5 or higher
+        const power = parseInt(card.power);
+        const toughness = parseInt(card.toughness);
+        
+        if (!isNaN(power) && !isNaN(toughness) && 
+            power >= 5 && toughness >= 5) {
+            // If CMC is 4 or less, it's banned
+            if (card.cmc <= 4) {
+                return true;
+            }
+        }
+    }
+
+    // Damage spell rules
+    if (card.type_line.includes("Instant") || card.type_line.includes("Sorcery")) {
+        if (oracleText.includes("damage")) {
+            const damageMatch = oracleText.match(/deal[s]? (\d+) damage/i);
+            if (damageMatch) {
+                const damage = parseInt(damageMatch[1]);
+                const cmc = card.cmc;
+                if (damage > cmc) {
+                    return true;
+                }
+            }
+        }
+        
+        // Improved kill spell rules - now properly handles conditional removal
+        if (oracleText.includes("destroy target")) {
+            // Check if it's conditional removal
+            const isConditional = (
+                oracleText.includes("with") ||
+                oracleText.includes("unless") ||
+                oracleText.includes("if") ||
+                oracleText.includes("non") ||
+                oracleText.includes("can't") ||
+                oracleText.includes("without") ||
+                oracleText.includes("equal") ||
+                oracleText.includes("less") ||
+                oracleText.includes("greater")
+            );
+            
+            // Unconditional removal must cost 5 or more
+            if (!isConditional && card.cmc < 5) {
+                return true;
+            }
+        }
+        
+        // Counter spell rules
+        if (oracleText.includes("counter target")) {
+            // Check if it's conditional
+            const isConditional = (
+                oracleText.includes("unless") ||
+                oracleText.includes("if") ||
+                oracleText.includes("unless its controller pays") ||
+                oracleText.includes("that targets a")
+            );
+            
+            // Unconditional counters must cost 4 or more
+            if (!isConditional && card.cmc < 4) {
+                return true;
+            }
+        }
+    }
+    
+    // Board wipe rules
+    if ((oracleText.includes("destroy all") || 
+        oracleText.includes("exile all")) &&
+        card.cmc < 6) {
+        return true;
+    }
+    
+    // Land destruction rules
+    if (oracleText.includes("destroy target land") && 
+        card.cmc < 4) {
+        return true;
+    }
+    
+    // Land rules
+    if (card.type_line.includes("Land")) {
+        if (oracleText.includes("enters the battlefield untapped") ||
+            oracleText.includes("add two or more mana")) {
+            return true;
+        }
+    }
+    
+    // Mana rock rules
+    if (card.type_line.includes("Artifact")) {
+        if (oracleText.includes("add") && oracleText.includes("mana")) {
+            if (oracleText.match(/adds? \{.+\}.+and.+{.+}/) || 
+                oracleText.includes("two or more") ||
+                oracleText.includes("add an additional") ||
+                oracleText.match(/adds? \w+ mana/)) {
+                return true;
+            }
+            
+            if (card.cmc < 3 && 
+                !oracleText.includes("enters the battlefield tapped") &&
+                !card.name.toLowerCase().includes("lotus")) {
+                return true;
+            }
+        }
+    }
+    
+    return false;
+}
 
         async function checkCard() {
             const input = document.getElementById("searchInput").value.trim();
@@ -1539,4 +1542,4 @@
         };
     </script>
 </body>
-</html>
+                                                                           </html>
