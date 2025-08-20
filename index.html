@@ -211,6 +211,39 @@
         color: white;
     }
     
+    /* ===== PAGINATION STYLES ===== */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin: 20px 0;
+        gap: 10px;
+    }
+    
+    .pagination button {
+        padding: 8px 15px;
+        background: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    
+    .pagination button:hover:not(:disabled) {
+        background: #2980b9;
+    }
+    
+    .pagination button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+    
+    .pagination-info {
+        text-align: center;
+        margin: 10px 0;
+        font-weight: bold;
+    }
+    
     /* ===== EXAMPLES SECTION ===== */
     .examples {
         display: flex;
@@ -388,6 +421,15 @@
         border-left: 3px solid #e74c3c;
     }
     
+    /* ===== ABILITY BAN STYLES ===== */
+    .ability-ban-section {
+        margin-top: 30px;
+        padding: 15px;
+        background: #fff3e0;
+        border-radius: 5px;
+        border-left: 4px solid #ff9800;
+    }
+    
     @media (max-width: 768px) {
         .card-gallery {
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -476,6 +518,9 @@
                 <h2>Banned Card Types</h2>
                 <div id="banned-types-list"></div>
                 
+                <h2>Banned Abilities</h2>
+                <div id="banned-abilities-list"></div>
+                
                 <h2>Exception Cards</h2>
                 <div id="exception-list">
                     <p><strong>Force-Legal Cards:</strong> These cards are always legal regardless of other rules</p>
@@ -503,7 +548,9 @@
             </div>
             
             <div id="set-info"></div>
+            <div id="pagination-top" class="pagination"></div>
             <div id="set-cards" class="card-gallery"></div>
+            <div id="pagination-bottom" class="pagination"></div>
         </div>
         
         <!-- Graveyard Tab -->
@@ -587,6 +634,26 @@
                             <input type="checkbox" id="ban-world" class="ban-type-checkbox" onchange="toggleCardTypeBan('World', this.checked)">
                             <label for="ban-world">Ban all World cards</label>
                         </div>
+                        <div class="ban-type-item">
+                            <input type="checkbox" id="ban-classes" class="ban-type-checkbox" onchange="toggleCardTypeBan('Class', this.checked)">
+                            <label for="ban-classes">Ban all Class cards</label>
+                        </div>
+                        <div class="ban-type-item">
+                            <input type="checkbox" id="ban-sagas" class="ban-type-checkbox" onchange="toggleCardTypeBan('Saga', this.checked)">
+                            <label for="ban-sagas">Ban all Saga cards</label>
+                        </div>
+                    </div>
+                    
+                    <div class="ability-ban-section">
+                        <h3>Ban Cards with Specific Abilities</h3>
+                        <p>Ban all cards that contain these abilities in their text:</p>
+                        
+                        <div class="add-banned-form">
+                            <input type="text" id="newBannedAbility" placeholder="Enter ability text (e.g., venture into the dungeon)">
+                            <button onclick="addToBannedAbilities()">Add to Banned Abilities</button>
+                        </div>
+                        
+                        <div id="banned-abilities-management" class="exception-list"></div>
                     </div>
                     
                     <div class="exception-section">
@@ -632,6 +699,11 @@
         // Banned card types
         let bannedCardTypes = JSON.parse(localStorage.getItem('bannedCardTypes')) || [];
 
+        // Banned abilities
+        let bannedAbilities = JSON.parse(localStorage.getItem('bannedAbilities')) || [
+            "venture into the dungeon"
+        ];
+
         // Force-legal cards (exceptions to rules)
         let forceLegalCards = JSON.parse(localStorage.getItem('forceLegalCards')) || [
             "Sengir Autocrat", "Drudge Spell", "Essence Filter", "Vertigo",
@@ -650,6 +722,7 @@
         function saveAllLists() {
             localStorage.setItem('hardBannedCards', JSON.stringify(hardBannedCards));
             localStorage.setItem('bannedCardTypes', JSON.stringify(bannedCardTypes));
+            localStorage.setItem('bannedAbilities', JSON.stringify(bannedAbilities));
             localStorage.setItem('forceLegalCards', JSON.stringify(forceLegalCards));
             localStorage.setItem('forceBannedCards', JSON.stringify(forceBannedCards));
         }
@@ -687,6 +760,12 @@
             "Zendikar", "Zendikar Rising"
         ];
 
+        // Pagination variables
+        let currentPage = 1;
+        let cardsPerPage = 20;
+        let allCards = [];
+        let totalPages = 1;
+
         // TAB SYSTEM
         function openTab(event, tabName) {
             // Hide all tab contents
@@ -718,6 +797,7 @@
                     document.getElementById('banned-management-content').style.display = 'block';
                     updateBannedManagementList();
                     updateBanTypeCheckboxes();
+                    updateBannedAbilitiesList();
                     updateExceptionManagementLists();
                 } else {
                     document.getElementById('password-section').style.display = 'block';
@@ -735,6 +815,7 @@
                 document.getElementById('banned-management-content').style.display = 'block';
                 updateBannedManagementList();
                 updateBanTypeCheckboxes();
+                updateBannedAbilitiesList();
                 updateExceptionManagementLists();
             } else {
                 alert('Incorrect password. Access denied.');
@@ -756,6 +837,8 @@
             document.getElementById('ban-tribals').checked = bannedCardTypes.includes('Tribal');
             document.getElementById('ban-snow').checked = bannedCardTypes.includes('Snow');
             document.getElementById('ban-world').checked = bannedCardTypes.includes('World');
+            document.getElementById('ban-classes').checked = bannedCardTypes.includes('Class');
+            document.getElementById('ban-sagas').checked = bannedCardTypes.includes('Saga');
         }
         
         // TOGGLE CARD TYPE BAN
@@ -788,7 +871,7 @@
         }
 
         // LOAD CARDS FOR SELECTED SET
-        async function loadSetCards() {
+        async function loadSetCards(page = 1) {
             const setName = document.getElementById("setSelect").value;
             if (!setName) return;
             
@@ -809,10 +892,23 @@
                 const response = await fetch(`https://api.scryfall.com/cards/search?q=e:${encodeURIComponent(apiSetName.toLowerCase().replace(/[^a-z0-9]+/g, ''))}+order:set`);
                 const data = await response.json();
                 
-                setInfo.innerHTML = `<h2>${setName} (${data.data.length} cards)</h2>`;
+                // Store all cards for pagination
+                allCards = data.data;
+                totalPages = Math.ceil(allCards.length / cardsPerPage);
+                currentPage = page;
+                
+                setInfo.innerHTML = `<h2>${setName} (${allCards.length} cards)</h2>`;
+                
+                // Display pagination
+                updatePagination();
+                
+                // Get cards for current page
+                const startIndex = (currentPage - 1) * cardsPerPage;
+                const endIndex = Math.min(startIndex + cardsPerPage, allCards.length);
+                const pageCards = allCards.slice(startIndex, endIndex);
                 
                 // Display cards
-                data.data.forEach(card => {
+                pageCards.forEach(card => {
                     const isBanned = isCardBanned(card);
                     const status = isBanned ? "banned" : "legal";
                     
@@ -823,6 +919,7 @@
                         <div class="card-item-content">
                             <h3>${card.name}</h3>
                             <span class="card-status status-${status}">${status.toUpperCase()}</span>
+                            <p class="card-rules-text">${card.type_line}</p>
                         </div>
                     `;
                     
@@ -832,6 +929,27 @@
                 setInfo.innerHTML = `<p>Error loading set: ${error.message}. Note: Some custom sets may not be available in the API.</p>`;
                 console.error("Error loading set:", error);
             }
+        }
+
+        // UPDATE PAGINATION CONTROLS
+        function updatePagination() {
+            const paginationTop = document.getElementById("pagination-top");
+            const paginationBottom = document.getElementById("pagination-bottom");
+            
+            if (totalPages <= 1) {
+                paginationTop.innerHTML = "";
+                paginationBottom.innerHTML = "";
+                return;
+            }
+            
+            const paginationHTML = `
+                <button onclick="loadSetCards(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>
+                <span class="pagination-info">Page ${currentPage} of ${totalPages}</span>
+                <button onclick="loadSetCards(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>
+            `;
+            
+            paginationTop.innerHTML = paginationHTML;
+            paginationBottom.innerHTML = paginationHTML;
         }
 
         // UPDATE GRAVEYARD DISPLAY
@@ -856,8 +974,31 @@
                 bannedTypesList.innerHTML = "<p>No card types are currently banned.</p>";
             }
             
+            // Update banned abilities list
+            updateBannedAbilitiesList();
+            
             // Update exception lists
             updateExceptionLists();
+        }
+        
+        // UPDATE BANNED ABILITIES LIST
+        function updateBannedAbilitiesList() {
+            const bannedAbilitiesList = document.getElementById("banned-abilities-list");
+            const bannedAbilitiesManagement = document.getElementById("banned-abilities-management");
+            
+            if (bannedAbilities.length > 0) {
+                bannedAbilitiesList.innerHTML = "<p>" + bannedAbilities.map(ability => `Cards with "${ability}"`).join(", ") + "</p>";
+                
+                bannedAbilitiesManagement.innerHTML = bannedAbilities.map(ability => `
+                    <div class="exception-card banned">
+                        <span>"${ability}"</span>
+                        <button class="remove-btn" onclick="removeFromBannedAbilities('${ability.replace(/'/g, "\\'")}')">Remove</button>
+                    </div>
+                `).join("");
+            } else {
+                bannedAbilitiesList.innerHTML = "<p>No abilities are currently banned.</p>";
+                bannedAbilitiesManagement.innerHTML = "";
+            }
         }
         
         // UPDATE EXCEPTION LISTS IN GUIDELINES
@@ -890,7 +1031,7 @@
             const forceBannedManagement = document.getElementById("force-banned-management");
             forceBannedManagement.innerHTML = forceBannedCards.map(card => `
                 <div class="exception-card banned">
-                    <span>${card}</span>
+                    <span>${card</span>
                     <button class="remove-btn" onclick="removeFromForceBannedList('${card.replace(/'/g, "\\'")}')">Remove</button>
                 </div>
             `).join("");
@@ -947,7 +1088,7 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                loadSetCards();
+                loadSetCards(currentPage);
             }
         }
         
@@ -962,7 +1103,50 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                loadSetCards();
+                loadSetCards(currentPage);
+            }
+        }
+        
+        // ADD TO BANNED ABILITIES
+        function addToBannedAbilities() {
+            const newAbilityInput = document.getElementById("newBannedAbility");
+            const newAbility = newAbilityInput.value.trim().toLowerCase();
+            
+            if (!newAbility) {
+                alert("Please enter an ability");
+                return;
+            }
+            
+            if (bannedAbilities.includes(newAbility)) {
+                alert("This ability is already banned");
+                return;
+            }
+            
+            bannedAbilities.push(newAbility);
+            saveAllLists();
+            updateBannedList();
+            updateBannedAbilitiesList();
+            
+            newAbilityInput.value = "";
+            
+            // If we're on the playlist tab and cards are loaded, refresh them
+            if (document.getElementById("playlist").classList.contains("active") && 
+                document.getElementById("setSelect").value) {
+                loadSetCards(currentPage);
+            }
+        }
+        
+        // REMOVE FROM BANNED ABILITIES
+        function removeFromBannedAbilities(ability) {
+            bannedAbilities = bannedAbilities.filter(a => a !== ability);
+            saveAllLists();
+            updateBannedList();
+            updateBannedAbilitiesList();
+            
+            // If we're on the playlist tab and cards are loaded, refresh them
+            if (document.getElementById("playlist").classList.contains("active") && 
+                document.getElementById("setSelect").value) {
+                loadSetCards(currentPage);
             }
         }
         
@@ -993,7 +1177,7 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                loadSetCards();
+                loadSetCards(currentPage);
             }
         }
         
@@ -1007,7 +1191,7 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                loadSetCards();
+                loadSetCards(currentPage);
             }
         }
         
@@ -1038,7 +1222,7 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                loadSetCards();
+                loadSetCards(currentPage);
             }
         }
         
@@ -1052,7 +1236,7 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                loadSetCards();
+                loadSetCards(currentPage);
             }
         }
 
@@ -1080,6 +1264,14 @@
                 }
             }
             
+            // Check banned abilities
+            const oracleText = card.oracle_text ? card.oracle_text.toLowerCase() : "";
+            for (const bannedAbility of bannedAbilities) {
+                if (oracleText.includes(bannedAbility.toLowerCase())) {
+                    return true;
+                }
+            }
+            
             // Check if card is from a legal set
             let cardSetName = card.set_name;
             if (cardSetName === "Limited Edition Beta") {
@@ -1097,8 +1289,8 @@
 
             // Damage spell rules
             if (card.type_line.includes("Instant") || card.type_line.includes("Sorcery")) {
-                if (card.oracle_text && card.oracle_text.toLowerCase().includes("damage")) {
-                    const damageMatch = card.oracle_text.match(/deal[s]? (\d+) damage/i);
+                if (oracleText.includes("damage")) {
+                    const damageMatch = oracleText.match(/deal[s]? (\d+) damage/i);
                     if (damageMatch) {
                         const damage = parseInt(damageMatch[1]);
                         const cmc = card.cmc;
@@ -1109,18 +1301,18 @@
                 }
                 
                 // Improved kill spell rules - now properly handles conditional removal
-                if (card.oracle_text && card.oracle_text.toLowerCase().includes("destroy target")) {
+                if (oracleText.includes("destroy target")) {
                     // Check if it's conditional removal
                     const isConditional = (
-                        card.oracle_text.toLowerCase().includes("with") ||
-                        card.oracle_text.toLowerCase().includes("unless") ||
-                        card.oracle_text.toLowerCase().includes("if") ||
-                        card.oracle_text.toLowerCase().includes("non") ||
-                        card.oracle_text.toLowerCase().includes("can't") ||
-                        card.oracle_text.toLowerCase().includes("without") ||
-                        card.oracle_text.toLowerCase().includes("equal") ||
-                        card.oracle_text.toLowerCase().includes("less") ||
-                        card.oracle_text.toLowerCase().includes("greater")
+                        oracleText.includes("with") ||
+                        oracleText.includes("unless") ||
+                        oracleText.includes("if") ||
+                        oracleText.includes("non") ||
+                        oracleText.includes("can't") ||
+                        oracleText.includes("without") ||
+                        oracleText.includes("equal") ||
+                        oracleText.includes("less") ||
+                        oracleText.includes("greater")
                     );
                     
                     // Unconditional removal must cost 5 or more
@@ -1130,13 +1322,13 @@
                 }
                 
                 // Counter spell rules
-                if (card.oracle_text && card.oracle_text.toLowerCase().includes("counter target")) {
+                if (oracleText.includes("counter target")) {
                     // Check if it's conditional
                     const isConditional = (
-                        card.oracle_text.toLowerCase().includes("unless") ||
-                        card.oracle_text.toLowerCase().includes("if") ||
-                        card.oracle_text.toLowerCase().includes("unless its controller pays") ||
-                        card.oracle_text.toLowerCase().includes("that targets a")
+                        oracleText.includes("unless") ||
+                        oracleText.includes("if") ||
+                        oracleText.includes("unless its controller pays") ||
+                        oracleText.includes("that targets a")
                     );
                     
                     // Unconditional counters must cost 4 or more
@@ -1147,30 +1339,28 @@
             }
             
             // Board wipe rules
-            if (card.oracle_text && (card.oracle_text.toLowerCase().includes("destroy all") || 
-                card.oracle_text.toLowerCase().includes("exile all")) &&
+            if ((oracleText.includes("destroy all") || 
+                oracleText.includes("exile all")) &&
                 card.cmc < 6) {
                 return true;
             }
             
             // Land destruction rules
-            if (card.oracle_text && card.oracle_text.toLowerCase().includes("destroy target land") && 
+            if (oracleText.includes("destroy target land") && 
                 card.cmc < 4) {
                 return true;
             }
             
             // Land rules
             if (card.type_line.includes("Land")) {
-                if (card.oracle_text && (card.oracle_text.toLowerCase().includes("enters the battlefield untapped") ||
-                    card.oracle_text.toLowerCase().includes("add two or more mana"))) {
+                if (oracleText.includes("enters the battlefield untapped") ||
+                    oracleText.includes("add two or more mana")) {
                     return true;
                 }
             }
             
             // Mana rock rules
             if (card.type_line.includes("Artifact")) {
-                const oracleText = card.oracle_text ? card.oracle_text.toLowerCase() : "";
-                
                 if (oracleText.includes("add") && oracleText.includes("mana")) {
                     if (oracleText.match(/adds? \{.+\}.+and.+{.+}/) || 
                         oracleText.includes("two or more") ||
@@ -1262,6 +1452,13 @@
                 }
             });
             
+            // Enable Enter key in banned ability input
+            document.getElementById("newBannedAbility")?.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    addToBannedAbilities();
+                }
+            });
+            
             // Enable Enter key in force-legal card input
             document.getElementById("newForceLegalCard")?.addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
@@ -1285,4 +1482,4 @@
         };
     </script>
 </body>
-</html>
+    </html>
