@@ -346,53 +346,46 @@
         border-left: 3px solid #ff9800;
     }
 
-    /* ===== LOADING AND PAGINATION STYLES ===== */
-    .loading-spinner {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 3px solid rgba(255,255,255,.3);
-        border-radius: 50%;
-        border-top-color: #3498db;
-        animation: spin 1s ease-in-out infinite;
+    /* ===== EXCEPTION MANAGEMENT STYLES ===== */
+    .exception-section {
+        margin-top: 30px;
+        padding: 15px;
+        background: #f0f7ff;
+        border-radius: 5px;
+        border-left: 4px solid #3498db;
     }
     
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-    
-    .pagination {
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-        gap: 10px;
-    }
-    
-    .pagination button {
-        padding: 8px 15px;
-        background: #3498db;
-        color: white;
-        border: none;
+    .exception-item {
+        margin-bottom: 15px;
+        padding: 10px;
+        background: white;
         border-radius: 4px;
-        cursor: pointer;
     }
     
-    .pagination button:disabled {
-        background: #ccc;
-        cursor: not-allowed;
+    .exception-list {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px;
+        margin-top: 10px;
+        background: #f9f9f9;
     }
     
-    .filter-controls {
-        margin: 15px 0;
+    .exception-card {
         display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-    
-    .filter-controls label {
-        display: flex;
+        justify-content: space-between;
         align-items: center;
-        gap: 5px;
+        padding: 8px;
+        margin-bottom: 5px;
+        background: #e8f5e8;
+        border-radius: 3px;
+        border-left: 3px solid #2ecc71;
+    }
+    
+    .exception-card.banned {
+        background: #fde8e8;
+        border-left: 3px solid #e74c3c;
     }
     
     @media (max-width: 768px) {
@@ -409,10 +402,6 @@
         }
         
         .add-banned-form {
-            flex-direction: column;
-        }
-        
-        .filter-controls {
             flex-direction: column;
         }
     }
@@ -487,6 +476,15 @@
                 <h2>Banned Card Types</h2>
                 <div id="banned-types-list"></div>
                 
+                <h2>Exception Cards</h2>
+                <div id="exception-list">
+                    <p><strong>Force-Legal Cards:</strong> These cards are always legal regardless of other rules</p>
+                    <div id="force-legal-cards" class="exception-list"></div>
+                    
+                    <p><strong>Force-Banned Cards:</strong> These cards are always banned regardless of other rules</p>
+                    <div id="force-banned-cards" class="exception-list"></div>
+                </div>
+                
                 <h2>Legal Sets</h2>
                 <div id="legal-sets-list" class="legal-sets"></div>
             </div>
@@ -504,19 +502,8 @@
                 </select>
             </div>
             
-            <div class="filter-controls">
-                <label><input type="checkbox" id="filter-creatures" checked> Creatures</label>
-                <label><input type="checkbox" id="filter-instants" checked> Instants</label>
-                <label><input type="checkbox" id="filter-sorceries" checked> Sorceries</label>
-                <label><input type="checkbox" id="filter-enchantments" checked> Enchantments</label>
-                <label><input type="checkbox" id="filter-artifacts" checked> Artifacts</label>
-                <label><input type="checkbox" id="filter-lands" checked> Lands</label>
-                <label><input type="checkbox" id="filter-planeswalkers" checked> Planeswalkers</label>
-            </div>
-            
             <div id="set-info"></div>
             <div id="set-cards" class="card-gallery"></div>
-            <div id="pagination-controls" class="pagination"></div>
         </div>
         
         <!-- Graveyard Tab -->
@@ -601,6 +588,31 @@
                             <label for="ban-world">Ban all World cards</label>
                         </div>
                     </div>
+                    
+                    <div class="exception-section">
+                        <h3>Card Exceptions</h3>
+                        <p>Manage cards that are always legal or always banned regardless of other rules.</p>
+                        
+                        <div class="exception-item">
+                            <h4>Force-Legal Cards</h4>
+                            <p>These cards will always be legal even if they would normally be banned:</p>
+                            <div class="add-banned-form">
+                                <input type="text" id="newForceLegalCard" placeholder="Enter card name to force legal">
+                                <button onclick="addToForceLegalList()">Add to Force-Legal List</button>
+                            </div>
+                            <div id="force-legal-management" class="exception-list"></div>
+                        </div>
+                        
+                        <div class="exception-item">
+                            <h4>Force-Banned Cards</h4>
+                            <p>These cards will always be banned even if they would normally be legal:</p>
+                            <div class="add-banned-form">
+                                <input type="text" id="newForceBannedCard" placeholder="Enter card name to force ban">
+                                <button onclick="addToForceBannedList()">Add to Force-Banned List</button>
+                            </div>
+                            <div id="force-banned-management" class="exception-list"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -620,10 +632,26 @@
         // Banned card types
         let bannedCardTypes = JSON.parse(localStorage.getItem('bannedCardTypes')) || [];
 
-        // Save to localStorage whenever the list changes
-        function saveBannedCards() {
+        // Force-legal cards (exceptions to rules)
+        let forceLegalCards = JSON.parse(localStorage.getItem('forceLegalCards')) || [
+            "Sengir Autocrat", "Drudge Spell", "Essence Filter", "Vertigo",
+            "Total War", "Venomous Breath", "Kjeldoran Frostbeast", "Barbed Sextant",
+            "Ray of Revelation", "Envelope", "Wormfang Behemoth", "Laquatus's Disdain"
+        ];
+        
+        // Force-banned cards (exceptions to rules)
+        let forceBannedCards = JSON.parse(localStorage.getItem('forceBannedCards')) || [
+            "Circle of Protection: Black", "Circle of Protection: Green", 
+            "Circle of Protection: Red", "Circle of Protection: Blue", 
+            "Circle of Protection: White"
+        ];
+
+        // Save to localStorage whenever any list changes
+        function saveAllLists() {
             localStorage.setItem('hardBannedCards', JSON.stringify(hardBannedCards));
             localStorage.setItem('bannedCardTypes', JSON.stringify(bannedCardTypes));
+            localStorage.setItem('forceLegalCards', JSON.stringify(forceLegalCards));
+            localStorage.setItem('forceBannedCards', JSON.stringify(forceBannedCards));
         }
 
         // LEGAL SETS
@@ -659,26 +687,6 @@
             "Zendikar", "Zendikar Rising"
         ];
 
-        // Scryfall set codes for sets that don't match by name
-        const setCodeMap = {
-            "Limited Edition Beta": "leb",
-            "Magic 2010": "m10",
-            "Magic 2011": "m11",
-            "Magic 2012": "m12",
-            "Magic 2013": "m13",
-            "Magic 2014": "m14",
-            "Magic 2015": "m15",
-            "Core Set 2019": "m19",
-            "Core Set 2020": "m20",
-            "Core Set 2021": "m21"
-        };
-
-        // Variables for pagination
-        let currentPage = 1;
-        let totalPages = 1;
-        let allCards = [];
-        let filteredCards = [];
-
         // TAB SYSTEM
         function openTab(event, tabName) {
             // Hide all tab contents
@@ -710,6 +718,7 @@
                     document.getElementById('banned-management-content').style.display = 'block';
                     updateBannedManagementList();
                     updateBanTypeCheckboxes();
+                    updateExceptionManagementLists();
                 } else {
                     document.getElementById('password-section').style.display = 'block';
                     document.getElementById('banned-management-content').style.display = 'none';
@@ -726,6 +735,7 @@
                 document.getElementById('banned-management-content').style.display = 'block';
                 updateBannedManagementList();
                 updateBanTypeCheckboxes();
+                updateExceptionManagementLists();
             } else {
                 alert('Incorrect password. Access denied.');
                 passwordInput.value = '';
@@ -757,7 +767,7 @@
             } else {
                 bannedCardTypes = bannedCardTypes.filter(type => type !== cardType);
             }
-            saveBannedCards();
+            saveAllLists();
         }
 
         // POPULATE SET SELECTOR
@@ -784,156 +794,44 @@
             
             const setInfo = document.getElementById("set-info");
             const setCards = document.getElementById("set-cards");
-            const paginationControls = document.getElementById("pagination-controls");
             
-            setInfo.innerHTML = "<p>Loading cards... <span class='loading-spinner'></span></p>";
+            setInfo.innerHTML = "<p>Loading cards...</p>";
             setCards.innerHTML = "";
-            paginationControls.innerHTML = "";
             
             try {
-                // Get the set code for API query
-                let setCode = setCodeMap[setName] || setName.toLowerCase().replace(/[^a-z0-9]+/g, '');
-                
-                // We need to use the Scryfall API to search for cards in the set
-                // This approach will get all cards, not just the first page
-                let hasMore = true;
-                let nextPage = `https://api.scryfall.com/cards/search?q=e:${setCode}+order:set`;
-                allCards = [];
-                
-                while (hasMore) {
-                    const response = await fetch(nextPage);
-                    const data = await response.json();
-                    
-                    allCards = allCards.concat(data.data);
-                    
-                    hasMore = data.has_more;
-                    nextPage = data.next_page;
-                    
-                    // Add a small delay to be respectful to the API
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                // Handle Limited Edition Beta specially
+                let apiSetName = setName;
+                if (setName === "Limited Edition Beta") {
+                    apiSetName = "leb"; // Scryfall uses "leb" for Limited Edition Beta
                 }
                 
-                setInfo.innerHTML = `<h2>${setName} (${allCards.length} cards)</h2>`;
+                // We need to use the Scryfall API to search for cards in the set
+                const response = await fetch(`https://api.scryfall.com/cards/search?q=e:${encodeURIComponent(apiSetName.toLowerCase().replace(/[^a-z0-9]+/g, ''))}+order:set`);
+                const data = await response.json();
                 
-                // Apply filters and display first page
-                applyFilters();
+                setInfo.innerHTML = `<h2>${setName} (${data.data.length} cards)</h2>`;
                 
+                // Display cards
+                data.data.forEach(card => {
+                    const isBanned = isCardBanned(card);
+                    const status = isBanned ? "banned" : "legal";
+                    
+                    const cardElement = document.createElement("div");
+                    cardElement.className = "card-item";
+                    cardElement.innerHTML = `
+                        <img src="${card.image_uris ? card.image_uris.normal : (card.card_faces ? card.card_faces[0].image_uris.normal : '')}" alt="${card.name}">
+                        <div class="card-item-content">
+                            <h3>${card.name}</h3>
+                            <span class="card-status status-${status}">${status.toUpperCase()}</span>
+                        </div>
+                    `;
+                    
+                    setCards.appendChild(cardElement);
+                });
             } catch (error) {
                 setInfo.innerHTML = `<p>Error loading set: ${error.message}. Note: Some custom sets may not be available in the API.</p>`;
                 console.error("Error loading set:", error);
             }
-        }
-
-        // APPLY FILTERS TO CARDS
-        function applyFilters() {
-            const showCreatures = document.getElementById("filter-creatures").checked;
-            const showInstants = document.getElementById("filter-instants").checked;
-            const showSorceries = document.getElementById("filter-sorceries").checked;
-            const showEnchantments = document.getElementById("filter-enchantments").checked;
-            const showArtifacts = document.getElementById("filter-artifacts").checked;
-            const showLands = document.getElementById("filter-lands").checked;
-            const showPlaneswalkers = document.getElementById("filter-planeswalkers").checked;
-            
-            filteredCards = allCards.filter(card => {
-                const typeLine = card.type_line || "";
-                
-                if (!showCreatures && typeLine.includes("Creature")) return false;
-                if (!showInstants && typeLine.includes("Instant")) return false;
-                if (!showSorceries && typeLine.includes("Sorcery")) return false;
-                if (!showEnchantments && typeLine.includes("Enchantment")) return false;
-                if (!showArtifacts && typeLine.includes("Artifact")) return false;
-                if (!showLands && typeLine.includes("Land")) return false;
-                if (!showPlaneswalkers && typeLine.includes("Planeswalker")) return false;
-                
-                return true;
-            });
-            
-            // Reset to first page
-            currentPage = 1;
-            totalPages = Math.ceil(filteredCards.length / 20);
-            
-            // Display current page
-            displayCurrentPage();
-            
-            // Update pagination controls
-            updatePaginationControls();
-        }
-
-        // DISPLAY CURRENT PAGE OF CARDS
-        function displayCurrentPage() {
-            const setCards = document.getElementById("set-cards");
-            setCards.innerHTML = "";
-            
-            const startIndex = (currentPage - 1) * 20;
-            const endIndex = Math.min(startIndex + 20, filteredCards.length);
-            
-            for (let i = startIndex; i < endIndex; i++) {
-                const card = filteredCards[i];
-                const isBanned = isCardBanned(card);
-                const status = isBanned ? "banned" : "legal";
-                
-                const cardElement = document.createElement("div");
-                cardElement.className = "card-item";
-                
-                // Get image URL - handle double-faced cards
-                let imageUrl = "";
-                if (card.image_uris) {
-                    imageUrl = card.image_uris.normal;
-                } else if (card.card_faces && card.card_faces[0].image_uris) {
-                    imageUrl = card.card_faces[0].image_uris.normal;
-                }
-                
-                cardElement.innerHTML = `
-                    ${imageUrl ? `<img src="${imageUrl}" alt="${card.name}">` : ''}
-                    <div class="card-item-content">
-                        <h3>${card.name}</h3>
-                        <div>${card.type_line}</div>
-                        <div>${card.mana_cost || ''}</div>
-                        <span class="card-status status-${status}">${status.toUpperCase()}</span>
-                    </div>
-                `;
-                
-                setCards.appendChild(cardElement);
-            }
-        }
-
-        // UPDATE PAGINATION CONTROLS
-        function updatePaginationControls() {
-            const paginationControls = document.getElementById("pagination-controls");
-            paginationControls.innerHTML = "";
-            
-            if (totalPages <= 1) return;
-            
-            const prevButton = document.createElement("button");
-            prevButton.textContent = "Previous";
-            prevButton.disabled = currentPage === 1;
-            prevButton.onclick = () => {
-                if (currentPage > 1) {
-                    currentPage--;
-                    displayCurrentPage();
-                    updatePaginationControls();
-                }
-            };
-            
-            const nextButton = document.createElement("button");
-            nextButton.textContent = "Next";
-            nextButton.disabled = currentPage === totalPages;
-            nextButton.onclick = () => {
-                if (currentPage < totalPages) {
-                    currentPage++;
-                    displayCurrentPage();
-                    updatePaginationControls();
-                }
-            };
-            
-            const pageInfo = document.createElement("span");
-            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-            pageInfo.style.margin = "0 15px";
-            pageInfo.style.lineHeight = "35px";
-            
-            paginationControls.appendChild(prevButton);
-            paginationControls.appendChild(pageInfo);
-            paginationControls.appendChild(nextButton);
         }
 
         // UPDATE GRAVEYARD DISPLAY
@@ -957,6 +855,45 @@
             } else {
                 bannedTypesList.innerHTML = "<p>No card types are currently banned.</p>";
             }
+            
+            // Update exception lists
+            updateExceptionLists();
+        }
+        
+        // UPDATE EXCEPTION LISTS IN GUIDELINES
+        function updateExceptionLists() {
+            const forceLegalList = document.getElementById("force-legal-cards");
+            forceLegalList.innerHTML = forceLegalCards.map(card => `
+                <div class="exception-card">
+                    <span>${card}</span>
+                </div>
+            `).join("");
+            
+            const forceBannedList = document.getElementById("force-banned-cards");
+            forceBannedList.innerHTML = forceBannedCards.map(card => `
+                <div class="exception-card banned">
+                    <span>${card}</span>
+                </div>
+            `).join("");
+        }
+        
+        // UPDATE EXCEPTION MANAGEMENT LISTS
+        function updateExceptionManagementLists() {
+            const forceLegalManagement = document.getElementById("force-legal-management");
+            forceLegalManagement.innerHTML = forceLegalCards.map(card => `
+                <div class="exception-card">
+                    <span>${card}</span>
+                    <button class="remove-btn" onclick="removeFromForceLegalList('${card.replace(/'/g, "\\'")}')">Remove</button>
+                </div>
+            `).join("");
+            
+            const forceBannedManagement = document.getElementById("force-banned-management");
+            forceBannedManagement.innerHTML = forceBannedCards.map(card => `
+                <div class="exception-card banned">
+                    <span>${card}</span>
+                    <button class="remove-btn" onclick="removeFromForceBannedList('${card.replace(/'/g, "\\'")}')">Remove</button>
+                </div>
+            `).join("");
         }
         
         // UPDATE BANNED MANAGEMENT LIST
@@ -1000,7 +937,7 @@
             hardBannedCards.push(newCard);
             // Sort alphabetically after adding
             hardBannedCards.sort((a, b) => a.localeCompare(b));
-            saveBannedCards();
+            saveAllLists();
             updateBannedList();
             updateGraveyardDisplay();
             updateBannedManagementList();
@@ -1010,15 +947,14 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                applyFilters();
-                displayCurrentPage();
+                loadSetCards();
             }
         }
         
         // REMOVE FROM BANNED LIST
         function removeFromBannedList(cardName) {
             hardBannedCards = hardBannedCards.filter(card => card !== cardName);
-            saveBannedCards();
+            saveAllLists();
             updateBannedList();
             updateGraveyardDisplay();
             updateBannedManagementList();
@@ -1026,14 +962,113 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                applyFilters();
-                displayCurrentPage();
+                loadSetCards();
+            }
+        }
+        
+        // ADD TO FORCE-LEGAL LIST
+        function addToForceLegalList() {
+            const newCardInput = document.getElementById("newForceLegalCard");
+            const newCard = newCardInput.value.trim();
+            
+            if (!newCard) {
+                alert("Please enter a card name");
+                return;
+            }
+            
+            if (forceLegalCards.includes(newCard)) {
+                alert("This card is already in the force-legal list");
+                return;
+            }
+            
+            forceLegalCards.push(newCard);
+            // Sort alphabetically after adding
+            forceLegalCards.sort((a, b) => a.localeCompare(b));
+            saveAllLists();
+            updateExceptionLists();
+            updateExceptionManagementLists();
+            
+            newCardInput.value = "";
+            
+            // If we're on the playlist tab and cards are loaded, refresh them
+            if (document.getElementById("playlist").classList.contains("active") && 
+                document.getElementById("setSelect").value) {
+                loadSetCards();
+            }
+        }
+        
+        // REMOVE FROM FORCE-LEGAL LIST
+        function removeFromForceLegalList(cardName) {
+            forceLegalCards = forceLegalCards.filter(card => card !== cardName);
+            saveAllLists();
+            updateExceptionLists();
+            updateExceptionManagementLists();
+            
+            // If we're on the playlist tab and cards are loaded, refresh them
+            if (document.getElementById("playlist").classList.contains("active") && 
+                document.getElementById("setSelect").value) {
+                loadSetCards();
+            }
+        }
+        
+        // ADD TO FORCE-BANNED LIST
+        function addToForceBannedList() {
+            const newCardInput = document.getElementById("newForceBannedCard");
+            const newCard = newCardInput.value.trim();
+            
+            if (!newCard) {
+                alert("Please enter a card name");
+                return;
+            }
+            
+            if (forceBannedCards.includes(newCard)) {
+                alert("This card is already in the force-banned list");
+                return;
+            }
+            
+            forceBannedCards.push(newCard);
+            // Sort alphabetically after adding
+            forceBannedCards.sort((a, b) => a.localeCompare(b));
+            saveAllLists();
+            updateExceptionLists();
+            updateExceptionManagementLists();
+            
+            newCardInput.value = "";
+            
+            // If we're on the playlist tab and cards are loaded, refresh them
+            if (document.getElementById("playlist").classList.contains("active") && 
+                document.getElementById("setSelect").value) {
+                loadSetCards();
+            }
+        }
+        
+        // REMOVE FROM FORCE-BANNED LIST
+        function removeFromForceBannedList(cardName) {
+            forceBannedCards = forceBannedCards.filter(card => card !== cardName);
+            saveAllLists();
+            updateExceptionLists();
+            updateExceptionManagementLists();
+            
+            // If we're on the playlist tab and cards are loaded, refresh them
+            if (document.getElementById("playlist").classList.contains("active") && 
+                document.getElementById("setSelect").value) {
+                loadSetCards();
             }
         }
 
         // CHECK IF CARD IS BANNED
         function isCardBanned(card) {
-            // Check hard ban list first
+            // Check force-banned list first (highest priority)
+            if (forceBannedCards.includes(card.name)) {
+                return true;
+            }
+            
+            // Check force-legal list second (overrides all other rules)
+            if (forceLegalCards.includes(card.name)) {
+                return false;
+            }
+            
+            // Check hard ban list
             if (hardBannedCards.includes(card.name)) {
                 return true;
             }
@@ -1203,7 +1238,6 @@
             // Ensure Juzam Djinn is in the banned list
             if (!hardBannedCards.includes("Juzam Djinn")) {
                 hardBannedCards.push("Juzam Djinn");
-                saveBannedCards();
             }
             
             // Sort banned cards alphabetically
@@ -1228,19 +1262,27 @@
                 }
             });
             
+            // Enable Enter key in force-legal card input
+            document.getElementById("newForceLegalCard")?.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    addToForceLegalList();
+                }
+            });
+            
+            // Enable Enter key in force-banned card input
+            document.getElementById("newForceBannedCard")?.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    addToForceBannedList();
+                }
+            });
+            
             // Enable Enter key in password input
             document.getElementById("adminPassword")?.addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
                     checkPassword();
                 }
             });
-            
-            // Add event listeners to filter checkboxes
-            const filterCheckboxes = document.querySelectorAll('.filter-controls input');
-            filterCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', applyFilters);
-            });
         };
     </script>
 </body>
-    </html>
+</html>
