@@ -998,76 +998,86 @@
         }
 
         // LOAD CARDS FOR SELECTED SET
-        async function loadSetCards() {
-            const setName = document.getElementById("setSelect").value;
-            if (!setName) {
-                alert("Please select a set first");
-                return;
-            }
-            
-            const setInfo = document.getElementById("set-info");
-            const setCards = document.getElementById("set-cards");
-            
-            setInfo.innerHTML = "<p>Loading cards... <span class='loading'></span></p>";
-            setCards.innerHTML = "";
-            
-            try {
-                // Get the set code for the API
-                const setCode = getSetCode(setName);
-                
-                // We need to use the Scryfall API to search for cards in the set
-                const apiUrl = `https://api.scryfall.com/cards/search?q=e:${setCode}+order:set`;
-                
-                console.log("Loading set:", setName);
-                console.log("API URL:", apiUrl);
-                
-                const response = await fetch(apiUrl);
-                
-                // Check if response is successful
-                if (!response.ok) {
-                    throw new Error(`API returned ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                
-                // Validate response structure
-                if (!data || data.object === "error") {
-                    throw new Error(data.details || "Invalid API response");
-                }
-                
-                if (!data.data || !Array.isArray(data.data)) {
-                    throw new Error("Invalid API response structure - data is not an array");
-                }
-                
-                if (data.total_cards === 0) {
-                    throw new Error("No cards found for this set");
-                }
-                
-                // Store all cards
-                allCards = data.data;
-                filteredCards = [...allCards];
-                totalPages = Math.ceil(filteredCards.length / cardsPerPage);
-                currentPage = 1;
-                
-                setInfo.innerHTML = `<h2>${setName} (${allCards.length} cards)</h2>`;
-                
-                // Display pagination
-                updatePagination();
-                
-                // Apply filters and display cards
-                filterCards();
-            } catch (error) {
-                console.error("Error loading set:", error);
-                setInfo.innerHTML = `
-                    <div class="error-message">
-                        <h3>Error loading "${setName}"</h3>
-                        <p>${error.message}</p>
-                        <p>This set might not be available in the Scryfall API or may have a different name.</p>
-                    </div>
-                `;
-            }
-        }
+        <script>
+// ... (previous code remains the same until the loadSetCards function)
 
+// LOAD CARDS FOR SELECTED SET - FIXED VERSION
+async function loadSetCards() {
+    const setName = document.getElementById("setSelect").value;
+    if (!setName) {
+        alert("Please select a set first");
+        return;
+    }
+    
+    const setInfo = document.getElementById("set-info");
+    const setCards = document.getElementById("set-cards");
+    
+    setInfo.innerHTML = "<p>Loading cards... <span class='loading'></span></p>";
+    setCards.innerHTML = "";
+    
+    try {
+        // Get the set code for the API
+        const setCode = getSetCode(setName);
+        
+        // We need to use the Scryfall API to search for cards in the set
+        const apiUrl = `https://api.scryfall.com/cards/search?q=e:${setCode}+order:set`;
+        
+        console.log("Loading set:", setName);
+        console.log("API URL:", apiUrl);
+        
+        const response = await fetch(apiUrl);
+        
+        // Check if response is successful
+        if (!response.ok) {
+            throw new Error(`API returned ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Validate response structure
+        if (!data || data.object === "error") {
+            throw new Error(data.details || "Invalid API response");
+        }
+        
+        if (!data.data || !Array.isArray(data.data)) {
+            throw new Error("Invalid API response structure - data is not an array");
+        }
+        
+        if (data.total_cards === 0) {
+            throw new Error("No cards found for this set");
+        }
+        
+        // Store all cards - FIXED: Ensure we have a proper array
+        allCards = Array.isArray(data.data) ? data.data : [];
+        filteredCards = [...allCards];
+        totalPages = Math.ceil(filteredCards.length / cardsPerPage);
+        currentPage = 1;
+        
+        setInfo.innerHTML = `<h2>${setName} (${allCards.length} cards)</h2>`;
+        
+        // Display pagination
+        updatePagination();
+        
+        // Apply filters and display cards
+        filterCards();
+    } catch (error) {
+        console.error("Error loading set:", error);
+        setInfo.innerHTML = `
+            <div class="error-message">
+                <h3>Error loading "${setName}"</h3>
+                <p>${error.message}</p>
+                <p>This set might not be available in the Scryfall API or may have a different name.</p>
+            </div>
+        `;
+        
+        // Reset cards arrays to prevent errors
+        allCards = [];
+        filteredCards = [];
+    }
+}
+
+// ... (rest of the code remains the same)
+</script>
         // FILTER CARDS BY TYPE
         function filterCards() {
             const setCards = document.getElementById("set-cards");
@@ -1740,4 +1750,5 @@
         };
     </script>
 </body>
-    </html>
+</html>
+
