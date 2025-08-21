@@ -463,6 +463,15 @@
         animation: spin 1s ease-in-out infinite;
     }
     
+    .error-message {
+        background: #ffe6e6;
+        border: 1px solid #ffcccc;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 15px 0;
+        color: #cc0000;
+    }
+    
     @keyframes spin {
         to { transform: rotate(360deg); }
     }
@@ -839,8 +848,26 @@
             "Legends": "leg",
             "The Dark": "drk",
             "Fallen Empires": "fem",
-            "Homelands": "hml"
-            // Add more mappings as needed
+            "Homelands": "hml",
+            "Revised Edition": "3ed",
+            "Unlimited Edition": "2ed",
+            "Fourth Edition": "4ed",
+            "Fifth Edition": "5ed",
+            "Sixth Edition": "6ed",
+            "Seventh Edition": "7ed",
+            "Eighth Edition": "8ed",
+            "Ninth Edition": "9ed",
+            "Tenth Edition": "10e",
+            "Magic 2010": "m10",
+            "Magic 2011": "m11",
+            "Magic 2012": "m12",
+            "Magic 2013": "m13",
+            "Magic 2014": "m14",
+            "Magic 2015": "m15",
+            "Magic Origins": "ori",
+            "Core Set 2019": "m19",
+            "Core Set 2020": "m20",
+            "Core Set 2021": "m21"
         };
 
         // Pagination variables
@@ -958,20 +985,22 @@
 
         // GET SET CODE FOR SCRYFALL API
         function getSetCode(setName) {
-            // Check if we have a mapping for this set name
+            // Check if we have a direct mapping for this set name
             if (setCodeMapping[setName]) {
                 return setCodeMapping[setName];
             }
             
-            // For sets without a specific mapping, create a code by taking the first letter of each word
-            // This is a fallback and might not work for all sets
-            return setName.split(' ').map(word => word[0]).join('').toLowerCase();
+            // For sets without specific mapping, create a URL-friendly version
+            return setName.toLowerCase()
+                .replace(/[^a-z0-9]+/g, '') // Remove special characters
+                .replace(/'/g, '')           // Remove apostrophes
+                .substring(0, 5);            // Limit length
         }
 
         // LOAD CARDS FOR SELECTED SET
-        async function loadSetCards(page = 1, url = null) {
+        async function loadSetCards() {
             const setName = document.getElementById("setSelect").value;
-            if (!setName && !url) {
+            if (!setName) {
                 alert("Please select a set first");
                 return;
             }
@@ -983,48 +1012,39 @@
             setCards.innerHTML = "";
             
             try {
-                let apiUrl;
+                // Get the set code for the API
+                const setCode = getSetCode(setName);
                 
-                if (url) {
-                    // Use the provided URL (for pagination)
-                    apiUrl = url;
-                } else {
-                    // Handle Limited Edition Beta specially
-                    let apiSetName = setName;
-                    if (setName === "Limited Edition Beta") {
-                        apiSetName = "leb";
-                    }
-                    
-                    // Get the set code for the API
-                    const setCode = getSetCode(setName);
-                    
-                    // We need to use the Scryfall API to search for cards in the set
-                    apiUrl = `https://api.scryfall.com/cards/search?q=e:${encodeURIComponent(setCode)}+order:set`;
-                }
+                // We need to use the Scryfall API to search for cards in the set
+                const apiUrl = `https://api.scryfall.com/cards/search?q=e:${setCode}+order:set`;
+                
+                console.log("Loading set:", setName);
+                console.log("API URL:", apiUrl);
                 
                 const response = await fetch(apiUrl);
+                
+                // Check if response is successful
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
                 
-                // Store pagination info
-                nextPageUrl = data.has_more ? data.next_page : null;
-                prevPageUrl = data.has_more ? data.next_page : null;
-                
-                // Store all cards for pagination
-                if (page === 1) {
-                    allCards = data.data;
-                } else {
-                    allCards = allCards.concat(data.data);
+                // Validate response structure
+                if (!data || data.object === "error") {
+                    throw new Error(data.details || "Invalid API response");
                 }
                 
-                // If there are more pages, load them recursively
-                if (data.has_more && page < 5) { // Limit to 5 pages to avoid too many requests
-                    setTimeout(() => {
-                        loadSetCards(page + 1, data.next_page);
-                    }, 100); // Small delay to respect API rate limits
-                    setInfo.innerHTML = `<p>Loading page ${page} of ${setName}... <span class='loading'></span></p>`;
-                    return;
+                if (!data.data || !Array.isArray(data.data)) {
+                    throw new Error("Invalid API response structure - data is not an array");
                 }
                 
+                if (data.total_cards === 0) {
+                    throw new Error("No cards found for this set");
+                }
+                
+                // Store all cards
+                allCards = data.data;
                 filteredCards = [...allCards];
                 totalPages = Math.ceil(filteredCards.length / cardsPerPage);
                 currentPage = 1;
@@ -1037,8 +1057,14 @@
                 // Apply filters and display cards
                 filterCards();
             } catch (error) {
-                setInfo.innerHTML = `<p>Error loading set: ${error.message}. Note: Some custom sets may not be available in the API.</p>`;
                 console.error("Error loading set:", error);
+                setInfo.innerHTML = `
+                    <div class="error-message">
+                        <h3>Error loading "${setName}"</h3>
+                        <p>${error.message}</p>
+                        <p>This set might not be available in the Scryfall API or may have a different name.</p>
+                    </div>
+                `;
             }
         }
 
@@ -1268,7 +1294,7 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                loadSetCards(currentPage);
+                loadSetCards();
             }
         }
         
@@ -1283,7 +1309,7 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                loadSetCards(currentPage);
+                loadSetCards();
             }
         }
         
@@ -1312,7 +1338,7 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                loadSetCards(currentPage);
+                loadSetCards();
             }
         }
         
@@ -1326,7 +1352,7 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                loadSetCards(currentPage);
+                loadSetCards();
             }
         }
         
@@ -1357,7 +1383,7 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                loadSetCards(currentPage);
+                loadSetCards();
             }
         }
         
@@ -1371,7 +1397,7 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                loadSetCards(currentPage);
+                loadSetCards();
             }
         }
         
@@ -1402,7 +1428,7 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                loadSetCards(currentPage);
+                loadSetCards();
             }
         }
         
@@ -1416,7 +1442,7 @@
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
-                loadSetCards(currentPage);
+                loadSetCards();
             }
         }
 
