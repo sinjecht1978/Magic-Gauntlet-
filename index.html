@@ -537,11 +537,7 @@
                     <li><strong>Land Destruction:</strong> Must cost 4+ mana</li>
                     <li><strong>Mana Rocks:</strong> Under 3 CMC must enter tapped, can only produce 1 mana</li>
                     <li><strong>Set Restrictions:</strong> Only cards from approved sets are legal</li>
-                    <li><strong>Creature Power/Toughness:</strong> Creatures with power and toughness 5 or higher must cost 5+ mana AND have equal power and toughness (e.g., 5/5, 6/6)</li>
                 </ul>
-                
-                <h2>Hard Banned Cards</h2>
-                <div id="banned-list"></div>
                 
                 <h2>Banned Card Types</h2>
                 <div id="banned-types-list"></div>
@@ -616,7 +612,7 @@
         <!-- Graveyard Tab -->
         <div id="graveyard" class="tab-content">
             <h1>Graveyard (Banned Cards)</h1>
-            <div id="graveyard-cards" class="card-gallery"></div>
+            <!-- Content removed as requested -->
         </div>
         
         <!-- Banned Management Tab -->
@@ -1056,17 +1052,12 @@
         // UPDATE GRAVEYARD DISPLAY
         function updateGraveyardDisplay() {
             const graveyard = document.getElementById("graveyard-cards");
-            graveyard.innerHTML = hardBannedCards.map(card => `
-                <div class="banned-card">
-                    <h3>${card}</h3>
-                </div>
-            `).join("");
+            graveyard.innerHTML = ""; // Empty as requested
         }
 
         // UPDATE BANNED LIST IN GUIDELINES
         function updateBannedList() {
-            const bannedList = document.getElementById("banned-list");
-            bannedList.innerHTML = "<p>" + hardBannedCards.map(card => `"${card}"`).join(", ") + "</p>";
+            // Removed the banned card list from guidelines as requested
             
             const bannedTypesList = document.getElementById("banned-types-list");
             if (bannedCardTypes.length > 0) {
@@ -1388,21 +1379,6 @@
                 return false;
             }
 
-            // NEW: Creature power/toughness rule - BOTH must be 5 or higher AND equal
-            if (card.type_line && card.type_line.includes("Creature")) {
-                // Check if BOTH power AND toughness are 5 or higher AND equal
-                const power = parseInt(card.power);
-                const toughness = parseInt(card.toughness);
-                
-                if (!isNaN(power) && !isNaN(toughness) && 
-                    power >= 5 && toughness >= 5 && power === toughness) {
-                    // If CMC is 4 or less, it's banned
-                    if (card.cmc <= 4) {
-                        return true;
-                    }
-                }
-            }
-
             // Damage spell rules
             if (card.type_line.includes("Instant") || card.type_line.includes("Sorcery")) {
                 if (oracleText.includes("damage")) {
@@ -1637,4 +1613,4 @@
         };
     </script>
 </body>
-</html>
+    </html>
