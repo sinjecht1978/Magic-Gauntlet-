@@ -1002,7 +1002,7 @@
 // ... (previous code remains the same until the loadSetCards function)
 
 // LOAD CARDS FOR SELECTED SET - FIXED VERSION
-async function loadSetCards() {
+  async function loadSetCards(page = 1) {
     const setName = document.getElementById("setSelect").value;
     if (!setName) {
         alert("Please select a set first");
@@ -1012,67 +1012,92 @@ async function loadSetCards() {
     const setInfo = document.getElementById("set-info");
     const setCards = document.getElementById("set-cards");
     
-    setInfo.innerHTML = "<p>Loading cards... <span class='loading'></span></p>";
+    setInfo.innerHTML = "<p>Loading cards...</p>";
     setCards.innerHTML = "";
     
     try {
-        // Get the set code for the API
-        const setCode = getSetCode(setName);
+        // Handle Limited Edition Beta specially
+        let apiSetName = setName;
+        if (setName === "Limited Edition Beta") {
+            apiSetName = "leb";
+        }
+        
+        // Create a URL-friendly set code
+        const setCode = apiSetName.toLowerCase().replace(/[^a-z0-9]+/g, '');
         
         // We need to use the Scryfall API to search for cards in the set
-        const apiUrl = `https://api.scryfall.com/cards/search?q=e:${setCode}+order:set`;
+        let url = `https://api.scryfall.com/cards/search?q=e:${setCode}+order:set`;
+        let allCardsData = [];
         
-        console.log("Loading set:", setName);
-        console.log("API URL:", apiUrl);
-        
-        const response = await fetch(apiUrl);
-        
-        // Check if response is successful
-        if (!response.ok) {
-            throw new Error(`API returned ${response.status}: ${response.statusText}`);
+        // Keep fetching until we have all pages
+        while (url) {
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.data && data.data.length > 0) {
+                allCardsData = allCardsData.concat(data.data);
+            }
+            
+            // Check if there are more pages
+            url = data.has_more ? data.next_page : null;
+            
+            // Add a small delay to respect Scryfall's API rate limits
+            if (url) await new Promise(resolve => setTimeout(resolve, 100));
         }
         
-        const data = await response.json();
-        
-        // Validate response structure
-        if (!data || data.object === "error") {
-            throw new Error(data.details || "Invalid API response");
-        }
-        
-        if (!data.data || !Array.isArray(data.data)) {
-            throw new Error("Invalid API response structure - data is not an array");
-        }
-        
-        if (data.total_cards === 0) {
-            throw new Error("No cards found for this set");
-        }
-        
-        // Store all cards - FIXED: Ensure we have a proper array
-        allCards = Array.isArray(data.data) ? data.data : [];
-        filteredCards = [...allCards];
-        totalPages = Math.ceil(filteredCards.length / cardsPerPage);
-        currentPage = 1;
+        // Store all cards for pagination
+        allCards = allCardsData;
+        totalPages = Math.ceil(allCards.length / cardsPerPage);
+        currentPage = page;
         
         setInfo.innerHTML = `<h2>${setName} (${allCards.length} cards)</h2>`;
+        
+        if (allCards.length === 0) {
+            setInfo.innerHTML += `<p>No cards found for this set.</p>`;
+            return;
+        }
         
         // Display pagination
         updatePagination();
         
-        // Apply filters and display cards
-        filterCards();
-    } catch (error) {
-        console.error("Error loading set:", error);
-        setInfo.innerHTML = `
-            <div class="error-message">
-                <h3>Error loading "${setName}"</h3>
-                <p>${error.message}</p>
-                <p>This set might not be available in the Scryfall API or may have a different name.</p>
-            </div>
-        `;
+        // Get cards for current page
+        const startIndex = (currentPage - 1) * cardsPerPage;
+        const endIndex = Math.min(startIndex + cardsPerPage, allCards.length);
+        const pageCards = allCards.slice(startIndex, endIndex);
         
-        // Reset cards arrays to prevent errors
-        allCards = [];
-        filteredCards = [];
+        // Display cards
+        pageCards.forEach(card => {
+            const isBanned = isCardBanned(card);
+            const status = isBanned ? "banned" : "legal";
+            
+            // Get image URL - handle double-faced cards and cards without images
+            let imageUrl = '';
+            if (card.image_uris && card.image_uris.normal) {
+                imageUrl = card.image_uris.normal;
+            } else if (card.card_faces && card.card_faces[0].image_uris && card.card_faces[0].image_uris.normal) {
+                imageUrl = card.card_faces[0].image_uris.normal;
+            } else {
+                // Use a placeholder for cards without images
+                imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQwIiBoZWlnaHQ9IjMzNiIgdmlld0JveD0iMCAwIDI0MCAzMzYiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjI0MCIgaGVpZ2h0PSIzMzYiIGZpbGw9IiNFRUVFRUUiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOTk5OTk5Ij5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
+            }
+            
+            const cardElement = document.createElement("div");
+            cardElement.className = "card-item";
+            cardElement.innerHTML = `
+                <img src="${imageUrl}" alt="${card.name}">
+                <div class="card-item-content">
+                    <h3>${card.name}</h3>
+                    <span class="card-status status-${status}">${status.toUpperCase()}</span>
+                    <p class="card-rules-text">${card.type_line}</p>
+                    ${card.mana_cost ? `<p class="card-rules-text">${card.mana_cost}</p>` : ''}
+                </div>
+            `;
+            
+            setCards.appendChild(cardElement);
+        });
+    } catch (error) {
+        setInfo.innerHTML = `<p>Error loading set: ${error.message}. Note: Some custom sets may not be available in the API.</p>`;
+        console.error("Error loading set:", error);
     }
 }
 
