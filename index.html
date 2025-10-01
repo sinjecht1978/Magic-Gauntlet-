@@ -526,29 +526,13 @@
 <body>
     <div class="tab-container">
         <div class="tab-buttons">
-            <button class="tab-btn active" onclick="openTab(event, 'checker')">Card Checker</button>
-            <button class="tab-btn" onclick="openTab(event, 'guidelines')">Guidelines</button>
+            <button class="tab-btn active" onclick="openTab(event, 'guidelines')">Guidelines</button>
             <button class="tab-btn" onclick="openTab(event, 'playlist')">Playlist</button>
-            <button class="tab-btn" onclick="openTab(event, 'graveyard')">Graveyard</button>
             <button class="tab-btn" onclick="openTab(event, 'banned-management')">Manage Banned</button>
         </div>
         
-        <!-- Card Checker Tab -->
-        <div id="checker" class="tab-content active">
-            <h1>Magic Gauntlet Card Checker</h1>
-            <div id="checker-container">
-                <input type="text" id="searchInput" placeholder="Enter card name (e.g., Reprisal, Murder, Doom Blade)">
-                <button onclick="checkCard()">Check Card</button>
-                <div id="result"></div>
-                <div id="card-display" style="display:none;">
-                    <img id="card-image" class="card-image" src="" alt="Card Image">
-                    <div id="card-info" class="card-info"></div>
-                </div>
-            </div>
-        </div>
-        
         <!-- Guidelines Tab -->
-        <div id="guidelines" class="tab-content">
+        <div id="guidelines" class="tab-content active">
             <h1>Format Guidelines</h1>
             <div class="guidelines-container">
                 <h2>Core Rules</h2>
@@ -631,12 +615,6 @@
             <div id="pagination-top" class="pagination"></div>
             <div id="set-cards" class="card-gallery"></div>
             <div id="pagination-bottom" class="pagination"></div>
-        </div>
-        
-        <!-- Graveyard Tab -->
-        <div id="graveyard" class="tab-content">
-            <h1>Graveyard (Banned Cards)</h1>
-            <!-- Content removed as requested -->
         </div>
         
         <!-- Banned Management Tab -->
@@ -807,28 +785,28 @@
             localStorage.setItem('forceBannedCards', JSON.stringify(forceBannedCards));
         }
 
-        // LEGAL SETS
+        // LEGAL SETS - Updated with requested changes
         const legalSets = [
             "Adventures in the Forgotten Realms", "Aether Revolt", "Aetherdrift", "Alara Reborn", 
             "Alliances", "Amonkhet", "Antiquities", "Apocalypse", "Arabian Nights", 
             "Assassin's Creed", "Avacyn Restored", "Battle for Zendikar", 
             "Betrayers of Kamigawa", "Bloomburrow", "Born of the Gods", "Champions of Kamigawa", 
             "Coldsnap", "Conflux", "Core Set 2019", "Core Set 2020", "Core Set 2021", 
-            "Dark Ascension", "Darksteel", "Dominaria", "Dominaria: United", 
+            "Dark Ascension", "Darksteel", "Dissension", "Dominaria", "Dominaria: United", 
             "Dragons of Tarkir", "Dragon's Maze", "Duskmourn: House of Horror", "Edge of Eternities", 
             "Eldritch Moon", "Eventide", "Exodus", "Fallen Empires", "Fate Reforged", 
-            "Final Fantasy", "Fifth Dawn", "Future Sight", "Gatecrash", "Guilds of Ravnica", 
-            "Homelands", "Hour of Devastation", "Ice Age", "Ikoria: Lair of Behemoths", 
-            "Innistrad", "Innistrad: Crimson Vow", "Innistrad: Midnight Hunt", "Invasion", 
-            "Ixalan", "Judgment", "Journey into Nyx", "Kaladesh", "Kaldheim", 
+            "Final Fantasy", "Fifth Dawn", "Future Sight", "Gatecrash", "Guildpact", 
+            "Guilds of Ravnica", "Homelands", "Hour of Devastation", "Ice Age", 
+            "Ikoria: Lair of Behemoths", "Innistrad", "Innistrad: Crimson Vow", "Innistrad: Midnight Hunt", 
+            "Invasion", "Ixalan", "Judgment", "Journey into Nyx", "Kaladesh", "Kaldheim", 
             "Kamigawa: Neon Dynasty", "Khans of Tarkir", "Legends", "Legions", 
             "Limited Edition Beta", "Lorwyn", "Magic 2010", "Magic 2011", "Magic 2012", 
             "Magic 2013", "Magic 2014", "Magic 2015", "Magic Origins", "March of the Machine", 
             "March of the Machine: The Aftermath", "Mercadian Masques", "Mirage", 
-            "Mirrodin", "Mirrodin Besieged", "Morningtide", "MTG Lord of the Rings", 
+            "Mirrodin", "Mirrodin Besieged", "Morningtide", "The Lord of the Rings: Tales of Middle-earth", 
             "Murders at Karlov Manor", "Nemesis", "New Phyrexia", "Oath of the Gatewatch", 
             "Odyssey", "Onslaught", "Outlaws of Thunder Junction", "Phyrexia: All Will Be One", 
-            "Planechase", "Planar Chaos", "Planeshift", "Prophecy", "Ravnica Allegiance", 
+            "Planar Chaos", "Planeshift", "Prophecy", "Ravnica Allegiance", 
             "Ravnica: City of Guilds", "Return to Ravnica", "Rise of the Eldrazi", 
             "Rivals of Ixalan", "Saviors of Kamigawa", "Scars of Mirrodin", "Scourge", 
             "Shadows over Innistrad", "Shadowmoor", "Shards of Alara", "Streets of New Capenna", 
@@ -867,7 +845,8 @@
             "Magic Origins": "ori",
             "Core Set 2019": "m19",
             "Core Set 2020": "m20",
-            "Core Set 2021": "m21"
+            "Core Set 2021": "m21",
+            "The Lord of the Rings: Tales of Middle-earth": "ltr"
         };
 
         // Pagination variables
@@ -997,110 +976,105 @@
                 .substring(0, 5);            // Limit length
         }
 
-        // LOAD CARDS FOR SELECTED SET
-       
-// ... (previous code remains the same until the loadSetCards function)
-
-// LOAD CARDS FOR SELECTED SET - FIXED VERSION
-  async function loadSetCards(page = 1) {
-    const setName = document.getElementById("setSelect").value;
-    if (!setName) {
-        alert("Please select a set first");
-        return;
-    }
-    
-    const setInfo = document.getElementById("set-info");
-    const setCards = document.getElementById("set-cards");
-    
-    setInfo.innerHTML = "<p>Loading cards...</p>";
-    setCards.innerHTML = "";
-    
-    try {
-        // Handle Limited Edition Beta specially
-        let apiSetName = setName;
-        if (setName === "Limited Edition Beta") {
-            apiSetName = "leb";
-        }
-        
-        // Create a URL-friendly set code
-        const setCode = apiSetName.toLowerCase().replace(/[^a-z0-9]+/g, '');
-        
-        // We need to use the Scryfall API to search for cards in the set
-        let url = `https://api.scryfall.com/cards/search?q=e:${setCode}+order:set`;
-        let allCardsData = [];
-        
-        // Keep fetching until we have all pages
-        while (url) {
-            const response = await fetch(url);
-            const data = await response.json();
-            
-            if (data.data && data.data.length > 0) {
-                allCardsData = allCardsData.concat(data.data);
+        // LOAD CARDS FOR SELECTED SET - FIXED VERSION
+        async function loadSetCards(page = 1) {
+            const setName = document.getElementById("setSelect").value;
+            if (!setName) {
+                alert("Please select a set first");
+                return;
             }
             
-            // Check if there are more pages
-            url = data.has_more ? data.next_page : null;
+            const setInfo = document.getElementById("set-info");
+            const setCards = document.getElementById("set-cards");
             
-            // Add a small delay to respect Scryfall's API rate limits
-            if (url) await new Promise(resolve => setTimeout(resolve, 100));
-        }
-        
-        // Store all cards for pagination
-        allCards = allCardsData;
-        totalPages = Math.ceil(allCards.length / cardsPerPage);
-        currentPage = page;
-        
-        setInfo.innerHTML = `<h2>${setName} (${allCards.length} cards)</h2>`;
-        
-        if (allCards.length === 0) {
-            setInfo.innerHTML += `<p>No cards found for this set.</p>`;
-            return;
-        }
-        
-        // Display pagination
-        updatePagination();
-        
-        // Get cards for current page
-        const startIndex = (currentPage - 1) * cardsPerPage;
-        const endIndex = Math.min(startIndex + cardsPerPage, allCards.length);
-        const pageCards = allCards.slice(startIndex, endIndex);
-        
-        // Display cards
-        pageCards.forEach(card => {
-            const isBanned = isCardBanned(card);
-            const status = isBanned ? "banned" : "legal";
+            setInfo.innerHTML = "<p>Loading cards...</p>";
+            setCards.innerHTML = "";
             
-            // Get image URL - handle double-faced cards and cards without images
-            let imageUrl = '';
-            if (card.image_uris && card.image_uris.normal) {
-                imageUrl = card.image_uris.normal;
-            } else if (card.card_faces && card.card_faces[0].image_uris && card.card_faces[0].image_uris.normal) {
-                imageUrl = card.card_faces[0].image_uris.normal;
-            } else {
-                // Use a placeholder for cards without images
-                imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQwIiBoZWlnaHQ9IjMzNiIgdmlld0JveD0iMCAwIDI0MCAzMzYiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjI0MCIgaGVpZ2h0PSIzMzYiIGZpbGw9IiNFRUVFRUUiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOTk5OTk5Ij5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
+            try {
+                // Handle Limited Edition Beta specially
+                let apiSetName = setName;
+                if (setName === "Limited Edition Beta") {
+                    apiSetName = "leb";
+                }
+                
+                // Create a URL-friendly set code
+                const setCode = apiSetName.toLowerCase().replace(/[^a-z0-9]+/g, '');
+                
+                // We need to use the Scryfall API to search for cards in the set
+                let url = `https://api.scryfall.com/cards/search?q=e:${setCode}+order:set`;
+                let allCardsData = [];
+                
+                // Keep fetching until we have all pages
+                while (url) {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    if (data.data && data.data.length > 0) {
+                        allCardsData = allCardsData.concat(data.data);
+                    }
+                    
+                    // Check if there are more pages
+                    url = data.has_more ? data.next_page : null;
+                    
+                    // Add a small delay to respect Scryfall's API rate limits
+                    if (url) await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                // Store all cards for pagination
+                allCards = allCardsData;
+                totalPages = Math.ceil(allCards.length / cardsPerPage);
+                currentPage = page;
+                
+                setInfo.innerHTML = `<h2>${setName} (${allCards.length} cards)</h2>`;
+                
+                if (allCards.length === 0) {
+                    setInfo.innerHTML += `<p>No cards found for this set.</p>`;
+                    return;
+                }
+                
+                // Display pagination
+                updatePagination();
+                
+                // Get cards for current page
+                const startIndex = (currentPage - 1) * cardsPerPage;
+                const endIndex = Math.min(startIndex + cardsPerPage, allCards.length);
+                const pageCards = allCards.slice(startIndex, endIndex);
+                
+                // Display cards
+                pageCards.forEach(card => {
+                    const isBanned = isCardBanned(card);
+                    const status = isBanned ? "banned" : "legal";
+                    
+                    // Get image URL - handle double-faced cards and cards without images
+                    let imageUrl = '';
+                    if (card.image_uris && card.image_uris.normal) {
+                        imageUrl = card.image_uris.normal;
+                    } else if (card.card_faces && card.card_faces[0].image_uris && card.card_faces[0].image_uris.normal) {
+                        imageUrl = card.card_faces[0].image_uris.normal;
+                    } else {
+                        // Use a placeholder for cards without images
+                        imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQwIiBoZWlnaHQ9IjMzNiIgdmlld0JveD0iMCAwIDI0MCAzMzYiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjI0MCIgaGVpZ2h0PSIzMzYiIGZpbGw9IiNFRUVFRUUiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOTk5OTk5Ij5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
+                    }
+                    
+                    const cardElement = document.createElement("div");
+                    cardElement.className = "card-item";
+                    cardElement.innerHTML = `
+                        <img src="${imageUrl}" alt="${card.name}">
+                        <div class="card-item-content">
+                            <h3>${card.name}</h3>
+                            <span class="card-status status-${status}">${status.toUpperCase()}</span>
+                            <p class="card-rules-text">${card.type_line}</p>
+                            ${card.mana_cost ? `<p class="card-rules-text">${card.mana_cost}</p>` : ''}
+                        </div>
+                    `;
+                    
+                    setCards.appendChild(cardElement);
+                });
+            } catch (error) {
+                setInfo.innerHTML = `<p>Error loading set: ${error.message}. Note: Some custom sets may not be available in the API.</p>`;
+                console.error("Error loading set:", error);
             }
-            
-            const cardElement = document.createElement("div");
-            cardElement.className = "card-item";
-            cardElement.innerHTML = `
-                <img src="${imageUrl}" alt="${card.name}">
-                <div class="card-item-content">
-                    <h3>${card.name}</h3>
-                    <span class="card-status status-${status}">${status.toUpperCase()}</span>
-                    <p class="card-rules-text">${card.type_line}</p>
-                    ${card.mana_cost ? `<p class="card-rules-text">${card.mana_cost}</p>` : ''}
-                </div>
-            `;
-            
-            setCards.appendChild(cardElement);
-        });
-    } catch (error) {
-        setInfo.innerHTML = `<p>Error loading set: ${error.message}. Note: Some custom sets may not be available in the API.</p>`;
-        console.error("Error loading set:", error);
-    }
-}
-
+        }
 
         // FILTER CARDS BY TYPE
         function filterCards() {
@@ -1195,12 +1169,6 @@
             if (page < 1 || page > totalPages) return;
             currentPage = page;
             filterCards();
-        }
-
-        // UPDATE GRAVEYARD DISPLAY
-        function updateGraveyardDisplay() {
-            const graveyard = document.getElementById("graveyard-cards");
-            graveyard.innerHTML = ""; // Empty as requested
         }
 
         // UPDATE BANNED LIST IN GUIDELINES
@@ -1320,7 +1288,6 @@
             hardBannedCards.sort((a, b) => a.localeCompare(b));
             saveAllLists();
             updateBannedList();
-            updateGraveyardDisplay();
             updateBannedManagementList();
             
             newCardInput.value = "";
@@ -1337,7 +1304,6 @@
             hardBannedCards = hardBannedCards.filter(card => card !== cardName);
             saveAllLists();
             updateBannedList();
-            updateGraveyardDisplay();
             updateBannedManagementList();
             
             // If we're on the playlist tab and cards are loaded, refresh them
@@ -1620,78 +1586,14 @@
             return false;
         }
 
-        async function checkCard() {
-            const input = document.getElementById("searchInput").value.trim();
-            const resultDiv = document.getElementById("result");
-            const cardDisplay = document.getElementById("card-display");
-            const cardImage = document.getElementById("card-image");
-            const cardInfo = document.getElementById("card-info");
-            
-            if (!input) {
-                resultDiv.textContent = "Please enter a card name";
-                resultDiv.className = "";
-                cardDisplay.style.display = "none";
-                return;
-            }
-
-            try {
-                const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(input)}`);
-                const card = await response.json();
-                
-                // Get image URL - handle double-faced cards
-                let imageUrl = '';
-                if (card.image_uris) {
-                    imageUrl = card.image_uris.normal;
-                } else if (card.card_faces && card.card_faces[0].image_uris) {
-                    imageUrl = card.card_faces[0].image_uris.normal;
-                }
-                
-                if (imageUrl) {
-                    cardImage.src = imageUrl;
-                    cardDisplay.style.display = "block";
-                } else {
-                    cardDisplay.style.display = "none";
-                }
-                
-                cardInfo.innerHTML = `
-                    <strong>${card.name}</strong><br>
-                    <em>${card.type_line}</em><br>
-                    <strong>Mana Cost:</strong> ${card.mana_cost} (CMC: ${card.cmc})<br>
-                    <strong>Set:</strong> ${card.set_name}
-                `;
-                
-                const isBanned = isCardBanned(card);
-                if (isBanned) {
-                    resultDiv.textContent = "BANNED";
-                    resultDiv.className = "banned";
-                } else {
-                    resultDiv.textContent = "LEGAL";
-                    resultDiv.className = "legal";
-                }
-            } catch (error) {
-                resultDiv.textContent = "Card not found or error occurred";
-                resultDiv.className = "";
-                cardDisplay.style.display = "none";
-                console.error("Error fetching card:", error);
-            }
-        }
-
         // INITIALIZE ON LOAD
         window.onload = function() {
             // Sort banned cards alphabetically
             hardBannedCards.sort((a, b) => a.localeCompare(b));
             
             updateBannedList();
-            updateGraveyardDisplay();
             updateLegalSetsList();
             populateSetSelector();
-            
-            // Enable Enter key in search
-            document.getElementById("searchInput").addEventListener("keypress", function(event) {
-                if (event.key === "Enter") {
-                    checkCard();
-                }
-            });
             
             // Enable Enter key in banned card input
             document.getElementById("newBannedCard")?.addEventListener("keypress", function(event) {
@@ -1774,5 +1676,4 @@
         };
     </script>
 </body>
-</html>
-
+    </html>
