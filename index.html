@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magic Gauntlet Hub - Fixed</title>
+    <title>Magic Gauntlet - Your Bad Cards Are Worth Real Money Now</title>
     <style>
     /* ===== BASE STYLES ===== */
     body {
@@ -13,6 +13,27 @@
         background: #f5f7fa;
         color: #333;
         line-height: 1.6;
+    }
+    
+    /* ===== CASH PRIZE DISPLAY ===== */
+    .cash-prize {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #f9c74f, #f8961e);
+        color: #000;
+        padding: 15px 25px;
+        border-radius: 10px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        z-index: 1000;
+        text-align: center;
+    }
+    
+    .cash-prize .amount {
+        font-size: 1.8rem;
+        display: block;
     }
     
     /* ===== TAB SYSTEM ===== */
@@ -56,85 +77,110 @@
         display: block;
     }
     
-    /* ===== CARD CHECKER STYLES ===== */
-    #checker-container {
-        padding: 30px;
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    /* ===== LANDING PAGE STYLES ===== */
+    .landing-hero {
         text-align: center;
-    }
-    
-    #searchInput {
-        width: 70%;
-        padding: 12px 15px;
-        border: 2px solid #ddd;
-        border-radius: 6px;
-        font-size: 1rem;
-        transition: border 0.3s;
-    }
-    
-    #searchInput:focus {
-        border-color: #3498db;
-        outline: none;
-    }
-    
-    #checker-container button {
-        background: #3498db;
+        padding: 60px 20px;
+        background: linear-gradient(135deg, #2c3e50, #3498db);
         color: white;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+    
+    .landing-hero h1 {
+        font-size: 3.5rem;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .landing-hero h2 {
+        font-size: 1.8rem;
+        margin-bottom: 30px;
+        font-weight: 300;
+    }
+    
+    .signup-form {
+        max-width: 500px;
+        margin: 0 auto;
+        background: rgba(255,255,255,0.1);
+        padding: 30px;
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 12px 15px;
         border: none;
-        padding: 12px 25px;
         border-radius: 6px;
         font-size: 1rem;
-        cursor: pointer;
-        transition: background 0.3s;
-        margin: 5px;
+        box-sizing: border-box;
     }
     
-    #checker-container button:hover {
-        background: #2980b9;
-    }
-    
-    #result {
-        margin-top: 25px;
-        padding: 15px;
+    .cta-button {
+        display: inline-block;
+        background: #f9c74f;
+        color: #000;
+        padding: 15px 30px;
         font-size: 1.2rem;
         font-weight: bold;
-        border-radius: 6px;
+        text-decoration: none;
+        border-radius: 50px;
         transition: all 0.3s;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        border: none;
+        cursor: pointer;
+        width: 100%;
     }
     
-    .banned {
-        background: #e74c3c;
-        color: white;
-        box-shadow: 0 3px 6px rgba(231, 76, 60, 0.2);
+    .cta-button:hover {
+        background: #f8961e;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
     }
     
-    .legal {
-        background: #2ecc71;
-        color: white;
-        box-shadow: 0 3px 6px rgba(46, 204, 113, 0.2);
+    /* ===== RULES STYLES ===== */
+    .rules-section {
+        margin-bottom: 30px;
     }
     
-    .card-image {
-        max-width: 100%;
-        height: auto;
-        border-radius: 5px;
-        margin-top: 10px;
+    .rules-section h2 {
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 10px;
+        margin-top: 0;
     }
     
-    .card-info {
-        text-align: left;
-        margin-top: 10px;
+    .rules-list {
+        padding-left: 20px;
     }
     
-    /* ===== GRAVEYARD STYLES ===== */
-    .banned-card {
-        background: #f8d7da;
-        padding: 15px;
+    .rules-list li {
         margin-bottom: 10px;
+    }
+    
+    /* ===== GUIDELINES STYLES ===== */
+    .guidelines-list {
+        list-style-type: none;
+        padding: 0;
+    }
+    
+    .guidelines-list li {
+        background: #f8f9fa;
+        margin-bottom: 10px;
+        padding: 15px;
         border-radius: 5px;
-        border-left: 4px solid #dc3545;
+        border-left: 4px solid #3498db;
     }
     
     /* ===== PLAYLIST STYLES ===== */
@@ -206,11 +252,6 @@
         margin-top: 10px;
     }
     
-    .set-not-legal {
-        background: #ff9800;
-        color: white;
-    }
-    
     /* ===== FILTER STYLES ===== */
     .card-filters {
         margin: 20px 0;
@@ -264,44 +305,6 @@
         text-align: center;
         margin: 10px 0;
         font-weight: bold;
-    }
-    
-    /* ===== EXAMPLES SECTION ===== */
-    .examples {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        margin-top: 30px;
-    }
-    
-    .example-card {
-        flex: 1;
-        min-width: 300px;
-        background: white;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    }
-    
-    .example-card h3 {
-        border-bottom: 2px solid #3498db;
-        padding-bottom: 10px;
-        margin-top: 0;
-    }
-    
-    /* ===== LEGAL SETS STYLES ===== */
-    .legal-sets-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 10px;
-        margin-top: 15px;
-    }
-    
-    .legal-set-item {
-        background: #f0f8ff;
-        padding: 10px;
-        border-radius: 5px;
-        border-left: 3px solid #3498db;
     }
     
     /* ===== BANNED MANAGEMENT STYLES ===== */
@@ -452,6 +455,88 @@
         border-left: 4px solid #ff9800;
     }
     
+    /* ===== SET MANAGEMENT STYLES ===== */
+    .set-management {
+        margin-top: 30px;
+        padding: 15px;
+        background: #e8f5e9;
+        border-radius: 5px;
+        border-left: 4px solid #2ecc71;
+    }
+    
+    .set-management-form {
+        display: flex;
+        margin-bottom: 20px;
+        gap: 10px;
+    }
+    
+    .set-management-form input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    .set-management-form button {
+        background: #2ecc71;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .set-list-container {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .set-list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background: white;
+        margin-bottom: 2px;
+        border-left: 4px solid #2ecc71;
+    }
+    
+    /* ===== CASH PRIZE MANAGEMENT STYLES ===== */
+    .cash-prize-management {
+        margin-top: 30px;
+        padding: 15px;
+        background: #fff3cd;
+        border-radius: 5px;
+        border-left: 4px solid #ffc107;
+    }
+    
+    .cash-prize-form {
+        display: flex;
+        margin-bottom: 20px;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .cash-prize-form input {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: 150px;
+    }
+    
+    .cash-prize-form button {
+        background: #ffc107;
+        color: #000;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    
     /* ===== LOADING STYLES ===== */
     .loading {
         display: inline-block;
@@ -481,10 +566,6 @@
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         }
         
-        .examples {
-            flex-direction: column;
-        }
-        
         .legal-sets-grid {
             grid-template-columns: 1fr;
         }
@@ -496,6 +577,22 @@
         .card-filters {
             flex-direction: column;
             align-items: flex-start;
+        }
+        
+        .landing-hero h1 {
+            font-size: 2.5rem;
+        }
+        
+        .landing-hero h2 {
+            font-size: 1.4rem;
+        }
+        
+        .cash-prize {
+            position: relative;
+            top: auto;
+            right: auto;
+            margin: 20px auto;
+            width: fit-content;
         }
     }
     
@@ -509,10 +606,6 @@
             width: 100%;
         }
         
-        #checker-container button {
-            width: 100%;
-        }
-        
         .card-gallery {
             grid-template-columns: 1fr;
         }
@@ -520,51 +613,122 @@
         #setSelect {
             width: 100%;
         }
+        
+        .set-management-form {
+            flex-direction: column;
+        }
+        
+        .cash-prize-form {
+            flex-direction: column;
+            align-items: flex-start;
+        }
     }
     </style>
 </head>
 <body>
+    <!-- Cash Prize Display -->
+    <div class="cash-prize">
+        <span>Current Prize</span>
+        <span class="amount" id="cashPrizeAmount">$50.00</span>
+    </div>
+
     <div class="tab-container">
         <div class="tab-buttons">
-            <button class="tab-btn active" onclick="openTab(event, 'guidelines')">Guidelines</button>
+            <button class="tab-btn active" onclick="openTab(event, 'landing')">Home</button>
+            <button class="tab-btn" onclick="openTab(event, 'rules')">Rules</button>
+            <button class="tab-btn" onclick="openTab(event, 'guidelines')">Guidelines</button>
             <button class="tab-btn" onclick="openTab(event, 'playlist')">Playlist</button>
-            <button class="tab-btn" onclick="openTab(event, 'banned-management')">Manage Banned</button>
+            <button class="tab-btn" onclick="openTab(event, 'banned-management')">Admin</button>
+        </div>
+        
+        <!-- Landing Tab -->
+        <div id="landing" class="tab-content active">
+            <div class="landing-hero">
+                <h1>YOUR BAD CARDS ARE WORTH REAL MONEY NOW.</h1>
+                <h2>Free entry. Cash prizes. Join the Gauntlet now!</h2>
+                
+                <div class="signup-form">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" placeholder="Enter your email to join the challenge">
+                    </div>
+                    <button class="cta-button" onclick="signUp()">JOIN THE GAUNTLET</button>
+                    <p style="margin-top: 20px;">Already signed up? <a href="#" onclick="openTab(event, 'rules')" style="color: #f9c74f; text-decoration: underline;">Learn how to play</a></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Rules Tab -->
+        <div id="rules" class="tab-content">
+            <h1>The Gauntlet Challenge: Official Rules</h1>
+            
+            <div class="rules-section">
+                <h2>The Goal</h2>
+                <p>Survive the Gauntlet with at least one deck remaining. You win the cash prize by defeating 10 Gauntlet decks in total across your 3 decks.</p>
+            </div>
+            
+            <div class="rules-section">
+                <h2>Deck Construction</h2>
+                <ul class="rules-list">
+                    <li>Build 3 decks, each with a minimum of 60 cards and a 15-card sideboard.</li>
+                    <li>You cannot have more than 4 copies of any single card across all your decks and sideboards combined (basic lands excluded).</li>
+                    <li>All decks must be built using the legal card pool on this site.</li>
+                </ul>
+            </div>
+            
+            <div class="rules-section">
+                <h2>The Cash Prize</h2>
+                <p>The prize pot grows by $10 after every fallen challenger.</p>
+            </div>
+            
+            <div class="rules-section">
+                <h2>The Challenger's Advantages</h2>
+                <ul class="rules-list">
+                    <li>You decide who plays first in the first game of every match.</li>
+                    <li>You choose which of your decks to send into each battle.</li>
+                </ul>
+            </div>
+            
+            <div class="rules-section">
+                <h2>Match Rules</h2>
+                <ul class="rules-list">
+                    <li>Each battle against a Gauntlet deck is a best-two-out-of-three games match.</li>
+                    <li>After each game in a match, players may use their sideboards.</li>
+                    <li>When a Gauntlet deck is defeated, it is removed from the Gauntlet.</li>
+                </ul>
+            </div>
+            
+            <div class="rules-section">
+                <h2>The First-Match Safety Net (The "Tag")</h2>
+                <ul class="rules-list">
+                    <li>This rule applies only during your first match of the Gauntlet.</li>
+                    <li>If you lose the first game of this match, you may use a one-time "Tag".</li>
+                    <li>Using the Tag allows you to immediately swap to a different one of your decks to finish the current match.</li>
+                    <li>If you lose this match after using your Tag, the Gauntlet Master will eliminate one of your three decks. This can be any deck, even one not yet played.</li>
+                </ul>
+            </div>
+            
+            <div class="rules-section">
+                <h2>Losing the Gauntlet</h2>
+                <p>You lose the Gauntlet when your final deck is eliminated.</p>
+            </div>
         </div>
         
         <!-- Guidelines Tab -->
-        <div id="guidelines" class="tab-content active">
+        <div id="guidelines" class="tab-content">
             <h1>Format Guidelines</h1>
-            <div class="guidelines-container">
-                <h2>Core Rules</h2>
-                <ul>
-                    <li><strong>Damage Spells:</strong> Can't deal more damage than their CMC</li>
-                    <li><strong>Kill Spells:</strong> Unconditional removal must cost 5+ mana</li>
-                    <li><strong>Conditional Removal:</strong> Spells with restrictions are legal at lower costs</li>
-                    <li><strong>Counterspells:</strong> Unconditional counters must cost 4+ mana</li>
-                    <li><strong>Board Wipes:</strong> Must cost 6+ mana</li>
-                    <li><strong>Land Destruction:</strong> Must cost 4+ mana</li>
-                    <li><strong>Mana Rocks:</strong> Under 3 CMC must enter tapped, can only produce 1 mana</li>
-                    <li><strong>Set Restrictions:</strong> Only cards from approved sets are legal</li>
-                </ul>
-                
-                <h2>Banned Card Types</h2>
-                <div id="banned-types-list"></div>
-                
-                <h2>Banned Abilities</h2>
-                <div id="banned-abilities-list"></div>
-                
-                <h2>Exception Cards</h2>
-                <div id="exception-list">
-                    <p><strong>Force-Legal Cards:</strong> These cards are always legal regardless of other rules</p>
-                    <div id="force-legal-cards" class="exception-list"></div>
-                    
-                    <p><strong>Force-Banned Cards:</strong> These cards are always banned regardless of other rules</p>
-                    <div id="force-banned-cards" class="exception-list"></div>
-                </div>
-                
-                <h2>Legal Sets</h2>
-                <div id="legal-sets-list" class="legal-sets"></div>
-            </div>
+            <p>These are the core rules for deck construction in the Magic Gauntlet format:</p>
+            
+            <ul class="guidelines-list">
+                <li><strong>Damage Spells:</strong> Can't deal more damage than their CMC</li>
+                <li><strong>Kill Spells:</strong> Unconditional removal must cost 5+ mana</li>
+                <li><strong>Conditional Removal:</strong> Spells with restrictions are legal at lower costs</li>
+                <li><strong>Counterspells:</strong> Unconditional counters must cost 4+ mana</li>
+                <li><strong>Board Wipes:</strong> Must cost 6+ mana</li>
+                <li><strong>Land Destruction:</strong> Must cost 4+ mana</li>
+                <li><strong>Mana Rocks:</strong> Under 3 CMC must enter tapped, can only produce 1 mana</li>
+                <li><strong>Set Restrictions:</strong> Only cards from approved sets are legal</li>
+            </ul>
         </div>
         
         <!-- Playlist Tab -->
@@ -619,7 +783,7 @@
         
         <!-- Banned Management Tab -->
         <div id="banned-management" class="tab-content">
-            <h1>Manage Banned Cards</h1>
+            <h1>Admin Panel</h1>
             
             <div id="password-section" class="password-prompt">
                 <h3>Admin Access Required</h3>
@@ -628,6 +792,30 @@
             </div>
             
             <div id="banned-management-content" style="display: none;">
+                <div class="cash-prize-management">
+                    <h3>Cash Prize Management</h3>
+                    <p>Set the current cash prize amount:</p>
+                    <div class="cash-prize-form">
+                        <input type="text" id="cashPrizeInput" value="50.00">
+                        <button onclick="updateCashPrize()">Update Prize</button>
+                    </div>
+                </div>
+                
+                <div class="set-management">
+                    <h3>Set Management</h3>
+                    <p>Add or remove sets from the legal sets list:</p>
+                    
+                    <div class="set-management-form">
+                        <input type="text" id="newSetCode" placeholder="Enter set code (e.g. msm for Marvel's Spider-Man)">
+                        <button onclick="addSetByCode()">Add Set</button>
+                    </div>
+                    
+                    <h4>Legal Sets List</h4>
+                    <div class="set-list-container">
+                        <div id="set-management-list"></div>
+                    </div>
+                </div>
+                
                 <p>Add or remove cards from the hard banned list. Changes will be reflected across all sections.</p>
                 
                 <div class="banned-management">
@@ -776,17 +964,11 @@
             "Circle of Protection: White"
         ];
 
-        // Save to localStorage whenever any list changes
-        function saveAllLists() {
-            localStorage.setItem('hardBannedCards', JSON.stringify(hardBannedCards));
-            localStorage.setItem('bannedCardTypes', JSON.stringify(bannedCardTypes));
-            localStorage.setItem('bannedAbilities', JSON.stringify(bannedAbilities));
-            localStorage.setItem('forceLegalCards', JSON.stringify(forceLegalCards));
-            localStorage.setItem('forceBannedCards', JSON.stringify(forceBannedCards));
-        }
+        // Cash prize - Load from localStorage or use default
+        let cashPrize = localStorage.getItem('cashPrize') || "50.00";
 
         // LEGAL SETS - Updated with requested changes
-        const legalSets = [
+        let legalSets = JSON.parse(localStorage.getItem('legalSets')) || [
             "Adventures in the Forgotten Realms", "Aether Revolt", "Aetherdrift", "Alara Reborn", 
             "Alliances", "Amonkhet", "Antiquities", "Apocalypse", "Arabian Nights", 
             "Assassin's Creed", "Avacyn Restored", "Battle for Zendikar", 
@@ -846,7 +1028,8 @@
             "Core Set 2019": "m19",
             "Core Set 2020": "m20",
             "Core Set 2021": "m21",
-            "The Lord of the Rings: Tales of Middle-earth": "ltr"
+            "The Lord of the Rings: Tales of Middle-earth": "ltr",
+            "Marvel's Spider-Man": "msm"
         };
 
         // Pagination variables
@@ -857,6 +1040,22 @@
         let totalPages = 1;
         let nextPageUrl = null;
         let prevPageUrl = null;
+
+        // Save to localStorage whenever any list changes
+        function saveAllLists() {
+            localStorage.setItem('hardBannedCards', JSON.stringify(hardBannedCards));
+            localStorage.setItem('bannedCardTypes', JSON.stringify(bannedCardTypes));
+            localStorage.setItem('bannedAbilities', JSON.stringify(bannedAbilities));
+            localStorage.setItem('forceLegalCards', JSON.stringify(forceLegalCards));
+            localStorage.setItem('forceBannedCards', JSON.stringify(forceBannedCards));
+            localStorage.setItem('legalSets', JSON.stringify(legalSets));
+            localStorage.setItem('cashPrize', cashPrize);
+        }
+
+        // Update cash prize display
+        function updateCashPrizeDisplay() {
+            document.getElementById('cashPrizeAmount').textContent = `$${cashPrize}`;
+        }
 
         // TAB SYSTEM
         function openTab(event, tabName) {
@@ -891,11 +1090,26 @@
                     updateBanTypeCheckboxes();
                     updateBannedAbilitiesList();
                     updateExceptionManagementLists();
+                    updateSetManagementList();
+                    document.getElementById('cashPrizeInput').value = cashPrize;
                 } else {
                     document.getElementById('password-section').style.display = 'block';
                     document.getElementById('banned-management-content').style.display = 'none';
                 }
             }
+        }
+
+        // SIGN UP FUNCTION
+        function signUp() {
+            const email = document.getElementById('email').value;
+            if (!email || !email.includes('@')) {
+                alert('Please enter a valid email address');
+                return;
+            }
+            
+            // In a real implementation, you would send this to a server
+            alert(`Thank you for signing up! We've sent a confirmation email to ${email}`);
+            document.getElementById('email').value = '';
         }
 
         // CHECK ADMIN PASSWORD
@@ -909,10 +1123,26 @@
                 updateBanTypeCheckboxes();
                 updateBannedAbilitiesList();
                 updateExceptionManagementLists();
+                updateSetManagementList();
+                document.getElementById('cashPrizeInput').value = cashPrize;
             } else {
                 alert('Incorrect password. Access denied.');
                 passwordInput.value = '';
             }
+        }
+        
+        // UPDATE CASH PRIZE
+        function updateCashPrize() {
+            const newPrize = document.getElementById('cashPrizeInput').value;
+            if (!newPrize || isNaN(parseFloat(newPrize))) {
+                alert('Please enter a valid amount');
+                return;
+            }
+            
+            cashPrize = parseFloat(newPrize).toFixed(2);
+            saveAllLists();
+            updateCashPrizeDisplay();
+            alert(`Cash prize updated to $${cashPrize}`);
         }
         
         // UPDATE BAN TYPE CHECKBOXES
@@ -1170,24 +1400,6 @@
             currentPage = page;
             filterCards();
         }
-
-        // UPDATE BANNED LIST IN GUIDELINES
-        function updateBannedList() {
-            // Removed the banned card list from guidelines as requested
-            
-            const bannedTypesList = document.getElementById("banned-types-list");
-            if (bannedCardTypes.length > 0) {
-                bannedTypesList.innerHTML = "<p>" + bannedCardTypes.map(type => `All ${type} cards`).join(", ") + "</p>";
-            } else {
-                bannedTypesList.innerHTML = "<p>No card types are currently banned.</p>";
-            }
-            
-            // Update banned abilities list
-            updateBannedAbilitiesList();
-            
-            // Update exception lists
-            updateExceptionLists();
-        }
         
         // UPDATE BANNED ABILITIES LIST
         function updateBannedAbilitiesList() {
@@ -1207,23 +1419,6 @@
                 bannedAbilitiesList.innerHTML = "<p>No abilities are currently banned.</p>";
                 bannedAbilitiesManagement.innerHTML = "";
             }
-        }
-        
-        // UPDATE EXCEPTION LISTS IN GUIDELINES
-        function updateExceptionLists() {
-            const forceLegalList = document.getElementById("force-legal-cards");
-            forceLegalList.innerHTML = forceLegalCards.map(card => `
-                <div class="exception-card">
-                    <span>${card}</span>
-                </div>
-            `).join("");
-            
-            const forceBannedList = document.getElementById("force-banned-cards");
-            forceBannedList.innerHTML = forceBannedCards.map(card => `
-                <div class="exception-card banned">
-                    <span>${card}</span>
-                </div>
-            `).join("");
         }
         
         // UPDATE EXCEPTION MANAGEMENT LISTS
@@ -1259,13 +1454,18 @@
             `).join("");
         }
         
-        // UPDATE LEGAL SETS LIST IN GUIDELINES
-        function updateLegalSetsList() {
-            const legalSetsList = document.getElementById("legal-sets-list");
-            legalSetsList.innerHTML = `<p><strong>${legalSets.length} Legal Sets:</strong></p>
-                <div class="legal-sets-grid">
-                    ${legalSets.map(set => `<div class="legal-set-item">${set}</div>`).join("")}
-                </div>`;
+        // UPDATE SET MANAGEMENT LIST
+        function updateSetManagementList() {
+            // Sort the sets alphabetically
+            legalSets.sort((a, b) => a.localeCompare(b));
+            
+            const setManagementList = document.getElementById("set-management-list");
+            setManagementList.innerHTML = legalSets.map(set => `
+                <div class="set-list-item">
+                    <span>${set}</span>
+                    <button class="remove-btn" onclick="removeFromLegalSets('${set.replace(/'/g, "\\'")}')">Remove</button>
+                </div>
+            `).join("");
         }
 
         // ADD TO BANNED LIST
@@ -1287,7 +1487,6 @@
             // Sort alphabetically after adding
             hardBannedCards.sort((a, b) => a.localeCompare(b));
             saveAllLists();
-            updateBannedList();
             updateBannedManagementList();
             
             newCardInput.value = "";
@@ -1303,7 +1502,6 @@
         function removeFromBannedList(cardName) {
             hardBannedCards = hardBannedCards.filter(card => card !== cardName);
             saveAllLists();
-            updateBannedList();
             updateBannedManagementList();
             
             // If we're on the playlist tab and cards are loaded, refresh them
@@ -1330,7 +1528,6 @@
             
             bannedAbilities.push(newAbility);
             saveAllLists();
-            updateBannedList();
             updateBannedAbilitiesList();
             
             newAbilityInput.value = "";
@@ -1346,7 +1543,6 @@
         function removeFromBannedAbilities(ability) {
             bannedAbilities = bannedAbilities.filter(a => a !== ability);
             saveAllLists();
-            updateBannedList();
             updateBannedAbilitiesList();
             
             // If we're on the playlist tab and cards are loaded, refresh them
@@ -1375,7 +1571,6 @@
             // Sort alphabetically after adding
             forceLegalCards.sort((a, b) => a.localeCompare(b));
             saveAllLists();
-            updateExceptionLists();
             updateExceptionManagementLists();
             
             newCardInput.value = "";
@@ -1391,7 +1586,6 @@
         function removeFromForceLegalList(cardName) {
             forceLegalCards = forceLegalCards.filter(card => card !== cardName);
             saveAllLists();
-            updateExceptionLists();
             updateExceptionManagementLists();
             
             // If we're on the playlist tab and cards are loaded, refresh them
@@ -1420,7 +1614,6 @@
             // Sort alphabetically after adding
             forceBannedCards.sort((a, b) => a.localeCompare(b));
             saveAllLists();
-            updateExceptionLists();
             updateExceptionManagementLists();
             
             newCardInput.value = "";
@@ -1436,13 +1629,76 @@
         function removeFromForceBannedList(cardName) {
             forceBannedCards = forceBannedCards.filter(card => card !== cardName);
             saveAllLists();
-            updateExceptionLists();
             updateExceptionManagementLists();
             
             // If we're on the playlist tab and cards are loaded, refresh them
             if (document.getElementById("playlist").classList.contains("active") && 
                 document.getElementById("setSelect").value) {
                 loadSetCards();
+            }
+        }
+        
+        // ADD SET BY CODE
+        async function addSetByCode() {
+            const setCodeInput = document.getElementById("newSetCode");
+            const setCode = setCodeInput.value.trim();
+            
+            if (!setCode) {
+                alert("Please enter a set code");
+                return;
+            }
+            
+            try {
+                // Fetch set data from Scryfall API
+                const response = await fetch(`https://api.scryfall.com/sets/${setCode}`);
+                const setData = await response.json();
+                
+                if (setData.object === 'error') {
+                    alert(`Error: ${setData.details}`);
+                    return;
+                }
+                
+                const setName = setData.name;
+                
+                if (legalSets.includes(setName)) {
+                    alert("This set is already in the legal sets list");
+                    return;
+                }
+                
+                // Add the set to the legal sets
+                legalSets.push(setName);
+                // Sort alphabetically after adding
+                legalSets.sort((a, b) => a.localeCompare(b));
+                saveAllLists();
+                updateSetManagementList();
+                populateSetSelector();
+                
+                setCodeInput.value = "";
+                alert(`Successfully added "${setName}" to legal sets`);
+                
+                // If we're on the playlist tab, refresh the set selector
+                if (document.getElementById("playlist").classList.contains("active")) {
+                    populateSetSelector();
+                }
+            } catch (error) {
+                alert(`Error fetching set data: ${error.message}`);
+                console.error("Error fetching set data:", error);
+            }
+        }
+        
+        // REMOVE FROM LEGAL SETS
+        function removeFromLegalSets(setName) {
+            legalSets = legalSets.filter(set => set !== setName);
+            saveAllLists();
+            updateSetManagementList();
+            populateSetSelector();
+            
+            // If we're on the playlist tab and the removed set was selected, clear the selection
+            if (document.getElementById("playlist").classList.contains("active") && 
+                document.getElementById("setSelect").value === setName) {
+                document.getElementById("setSelect").value = "";
+                document.getElementById("set-info").innerHTML = "";
+                document.getElementById("set-cards").innerHTML = "";
             }
         }
 
@@ -1591,39 +1847,48 @@
             // Sort banned cards alphabetically
             hardBannedCards.sort((a, b) => a.localeCompare(b));
             
-            updateBannedList();
-            updateLegalSetsList();
+            // Update cash prize display
+            updateCashPrizeDisplay();
+            
             populateSetSelector();
             
-            // Enable Enter key in banned card input
+            // Enable Enter key in various inputs
             document.getElementById("newBannedCard")?.addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
                     addToBannedList();
                 }
             });
             
-            // Enable Enter key in banned ability input
             document.getElementById("newBannedAbility")?.addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
                     addToBannedAbilities();
                 }
             });
             
-            // Enable Enter key in force-legal card input
             document.getElementById("newForceLegalCard")?.addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
                     addToForceLegalList();
                 }
             });
             
-            // Enable Enter key in force-banned card input
             document.getElementById("newForceBannedCard")?.addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
                     addToForceBannedList();
                 }
             });
             
-            // Enable Enter key in password input
+            document.getElementById("newSetCode")?.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    addSetByCode();
+                }
+            });
+            
+            document.getElementById("cashPrizeInput")?.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    updateCashPrize();
+                }
+            });
+            
             document.getElementById("adminPassword")?.addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
                     checkPassword();
