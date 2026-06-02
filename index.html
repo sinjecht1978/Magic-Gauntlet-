@@ -120,7 +120,6 @@
         flex-direction: row;
         gap: 28px;
         align-items: flex-start;
-        margin-top: 12px;
         flex-wrap: wrap;
     }
     
@@ -272,7 +271,7 @@
     .remove-btn { background: #e53e3e; color: white; border: none; border-radius: 40px; padding: 4px 12px; cursor: pointer; font-size: 0.8rem; }
     .remove-btn:hover { background: #c53030; }
     .password-prompt { background: #fef9e3; padding: 16px; border-radius: 20px; margin-bottom: 20px; }
-    .ban-type-section, .ability-ban-section, .exception-section, .set-management, .cash-prize-management { background: white; padding: 16px; border-radius: 20px; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .ban-type-section, .ability-ban-section, .exception-section, .set-management, .cash-prize-management, .share-section { background: white; padding: 16px; border-radius: 20px; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
     .ban-type-item { margin: 8px 0; padding: 6px; background: #f8fafc; border-radius: 12px; }
     .exception-list { max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 8px; margin-top: 10px; background: #fafcff; }
     .exception-card { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; margin: 4px 0; background: #e8f5e8; border-radius: 40px; }
@@ -280,7 +279,10 @@
     .add-banned-form { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
     .add-banned-form input { flex: 1; padding: 8px 12px; border-radius: 40px; border: 1px solid #cbd5e1; font-size: 0.9rem; }
     .add-banned-form button { background: #2c5282; color: white; border: none; padding: 8px 16px; border-radius: 40px; cursor: pointer; font-weight: 600; }
-    .scrollable-list-container { max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 16px; margin-top: 10px; background: #f8fafc; }
+    .scrollable-list-container { max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 16px; margin-top: 10px; background: #f8fafc; padding: 8px; }
+    .share-link-box { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+    .share-link-box input { flex: 2; padding: 10px; border-radius: 40px; border: 1px solid #cbd5e1; font-family: monospace; font-size: 0.8rem; }
+    .copy-btn { background: #38a169; color: white; border: none; padding: 8px 16px; border-radius: 40px; cursor: pointer; }
     
     @media (max-width: 860px) {
         .deck-builder-wrapper { flex-direction: column; }
@@ -333,7 +335,7 @@
             <ul class="guidelines-list"><li><strong>Damage Spells:</strong> Can't deal more damage than their CMC</li><li><strong>Kill Spells:</strong> Unconditional removal costs 5+ mana; conditional removal is legal at lower costs</li><li><strong>Counterspells:</strong> Unconditional counters must cost 4+ mana</li><li><strong>Board Wipes:</strong> Must cost 6+ mana</li><li><strong>Land Destruction:</strong> Must cost 4+ mana</li><li><strong>Mana Rocks:</strong> Under 3 CMC must enter tapped, can only produce 1 mana</li><li><strong>Set Restrictions:</strong> Only cards from approved sets are legal</li><li><strong>General:</strong> Cards that violate these guidelines are automatically banned by the system.</li></ul>
         </div>
         
-        <!-- PLAYLIST + DECK BUILDER with Global Search (FILTERED TO LEGAL SETS ONLY) -->
+        <!-- PLAYLIST + DECK BUILDER -->
         <div id="playlist" class="tab-content">
             <h1 style="margin-top:0">📖 Deck Builder</h1>
             
@@ -360,7 +362,7 @@
             <div id="browseModePanel">
                 <div class="set-selector">
                     <select id="setSelect"><option value="">-- Choose a Set --</option></select>
-                    <button class="load-btn" onclick="loadSetCards()">Browse Set</button>
+                    <button class="load-btn" onclick="loadSetCards(1)">Browse Set</button>
                 </div>
                 <div id="pagination-top" class="pagination"></div>
                 <div id="set-info" style="margin-bottom: 12px;"></div>
@@ -398,6 +400,14 @@
                 <button onclick="checkPassword()">Unlock</button>
             </div>
             <div id="banned-management-content" style="display:none;">
+                <div class="share-section">
+                    <h3>🔗 Share Full Banlist</h3>
+                    <p>Copy the link below to share your current banlist, legal sets, and restrictions. Anyone with this link can view (but not edit) the complete format rules.</p>
+                    <div class="share-link-box">
+                        <input type="text" id="shareableBanlistUrl" readonly value="">
+                        <button class="copy-btn" onclick="copyShareableLink()">📋 Copy Link</button>
+                    </div>
+                </div>
                 <div class="cash-prize-management"><h3>💰 Cash Prize</h3><div class="add-banned-form"><input type="text" id="cashPrizeInput" value="50.00"><button onclick="updateCashPrize()">Set Prize</button></div></div>
                 <div class="set-management"><h3>📌 Legal Sets</h3><div class="add-banned-form"><input type="text" id="newSetCode" placeholder="set code (e.g. ltr)"><button onclick="addSetByCode()">Add Set</button></div><div class="scrollable-list-container"><div id="set-management-list"></div></div></div>
                 <div class="ban-type-section"><h3>🚫 Banned Cards</h3><div class="add-banned-form"><input type="text" id="newBannedCard" placeholder="Enter card name"><button onclick="addToBannedList()">Ban Card</button></div><div class="scrollable-list-container"><div id="banned-management-list"></div></div></div>
@@ -434,6 +444,11 @@
         let searchTotalPages = 1;
         let currentMode = "browse";
         
+        // Browse persistence state - saves current set and page
+        let savedBrowseSet = localStorage.getItem('savedBrowseSet') || "";
+        let savedBrowsePage = parseInt(localStorage.getItem('savedBrowsePage')) || 1;
+        let cachedSetCards = {}; // Cache cards by set name
+        
         function saveAllLists() {
             localStorage.setItem('hardBannedCards', JSON.stringify(hardBannedCards));
             localStorage.setItem('bannedCardTypes', JSON.stringify(bannedCardTypes));
@@ -442,7 +457,9 @@
             localStorage.setItem('forceBannedCards', JSON.stringify(forceBannedCards));
             localStorage.setItem('legalSets', JSON.stringify(legalSets));
             localStorage.setItem('cashPrize', cashPrize);
+            updateShareableLink();
         }
+        
         function updateCashPrizeDisplay() { document.getElementById('cashPrizeAmount').innerText = `$${parseFloat(cashPrize).toFixed(2)}`; }
         
         // Enhanced isCardBanned with full rules
@@ -469,7 +486,57 @@
             return false;
         }
         
-        // ========== GLOBAL SEARCH FUNCTION - FILTERED TO LEGAL SETS ONLY ==========
+        // ========== SHAREABLE BANLIST FUNCTION ==========
+        function generateBanlistExport() {
+            const exportData = {
+                hardBannedCards: hardBannedCards,
+                bannedCardTypes: bannedCardTypes,
+                bannedAbilities: bannedAbilities,
+                forceLegalCards: forceLegalCards,
+                forceBannedCards: forceBannedCards,
+                legalSets: legalSets,
+                cashPrize: cashPrize
+            };
+            return btoa(unescape(encodeURIComponent(JSON.stringify(exportData))));
+        }
+        
+        function updateShareableLink() {
+            const linkInput = document.getElementById('shareableBanlistUrl');
+            if (linkInput) {
+                const url = new URL(window.location.href);
+                url.searchParams.set('banlist', generateBanlistExport());
+                linkInput.value = url.toString();
+            }
+        }
+        
+        function copyShareableLink() {
+            const inp = document.getElementById('shareableBanlistUrl');
+            inp.select();
+            document.execCommand('copy');
+            alert('Banlist link copied! Share it to let others see the current format rules.');
+        }
+        
+        function loadSharedBanlistFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const encoded = params.get('banlist');
+            if (encoded) {
+                try {
+                    const data = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+                    if (data.hardBannedCards) hardBannedCards = data.hardBannedCards;
+                    if (data.bannedCardTypes) bannedCardTypes = data.bannedCardTypes;
+                    if (data.bannedAbilities) bannedAbilities = data.bannedAbilities;
+                    if (data.forceLegalCards) forceLegalCards = data.forceLegalCards;
+                    if (data.forceBannedCards) forceBannedCards = data.forceBannedCards;
+                    if (data.legalSets) legalSets = data.legalSets;
+                    if (data.cashPrize) cashPrize = data.cashPrize;
+                    saveAllLists();
+                    updateCashPrizeDisplay();
+                    console.log("Banlist loaded from shared link");
+                } catch(e) { console.error("Failed to load banlist from URL", e); }
+            }
+        }
+        
+        // ========== GLOBAL SEARCH FUNCTION ==========
         async function globalSearchCards(page = 1) {
             const query = document.getElementById("globalSearchInput").value.trim();
             if (!query) {
@@ -495,15 +562,11 @@
                     if (url) await new Promise(r => setTimeout(r, 90));
                 }
                 
-                // CRITICAL FIX: Filter to ONLY cards from legal sets
-                // Also remove duplicates (same card name from multiple printings - keep the first one we find)
                 const legalSetCards = [];
                 const seenCardNames = new Set();
                 
                 for (const card of allResults) {
-                    // Check if card's set is in legalSets
                     if (card.set_name && legalSets.includes(card.set_name)) {
-                        // Avoid duplicate card names from different printings
                         if (!seenCardNames.has(card.name)) {
                             seenCardNames.add(card.name);
                             legalSetCards.push(card);
@@ -568,19 +631,7 @@
                 container.appendChild(cardDiv);
             });
             
-            // Attach event listeners for search results
-            document.querySelectorAll('#searchResults .add-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const cardName = btn.getAttribute('data-name');
-                    if (btn.getAttribute('data-banned') === 'true') { alert(`${cardName} is banned in Gauntlet format.`); return; }
-                    const parentDiv = btn.closest('.card-item');
-                    const qtyInput = parentDiv.querySelector('.qty-selector');
-                    let qty = parseInt(qtyInput?.value) || 1;
-                    if (qty < 1) qty = 1; if (qty > 4) qty = 4;
-                    const zone = parentDiv.querySelector('.zone-select').value;
-                    addCardToDeck(cardName, qty, zone);
-                });
-            });
+            attachAddButtonEvents();
         }
         
         function updateSearchPagination() {
@@ -602,6 +653,29 @@
             }
         }
         
+        function attachAddButtonEvents() {
+            document.querySelectorAll('.add-btn').forEach(btn => {
+                btn.removeEventListener('click', handleAddClick);
+                btn.addEventListener('click', handleAddClick);
+            });
+        }
+        
+        function handleAddClick(e) {
+            const btn = e.currentTarget;
+            const cardName = btn.getAttribute('data-name');
+            if (btn.getAttribute('data-banned') === 'true') { 
+                alert(`${cardName} is banned in Gauntlet format.`); 
+                return; 
+            }
+            const parentDiv = btn.closest('.card-item');
+            const qtyInput = parentDiv.querySelector('.qty-selector');
+            let qty = parseInt(qtyInput?.value) || 1;
+            if (qty < 1) qty = 1; 
+            if (qty > 4) qty = 4;
+            const zone = parentDiv.querySelector('.zone-select').value;
+            addCardToDeck(cardName, qty, zone);
+        }
+        
         // ========== MODE TOGGLE ==========
         function setMode(mode) {
             currentMode = mode;
@@ -621,6 +695,11 @@
                 searchModeBtn.classList.remove("active");
                 browseModeBtn.classList.add("active");
                 populateSetSelector();
+                // Restore saved browse state when switching to browse mode
+                if (savedBrowseSet && legalSets.includes(savedBrowseSet)) {
+                    document.getElementById("setSelect").value = savedBrowseSet;
+                    loadSetCards(savedBrowsePage);
+                }
             }
         }
         
@@ -637,9 +716,28 @@
         async function loadSetCards(page = 1) {
             const setName = document.getElementById("setSelect").value;
             if (!setName) { alert("Please select a set"); return; }
+            
+            // Save current browse state
+            savedBrowseSet = setName;
+            savedBrowsePage = page;
+            localStorage.setItem('savedBrowseSet', savedBrowseSet);
+            localStorage.setItem('savedBrowsePage', savedBrowsePage);
+            
             const infoDiv = document.getElementById("set-info");
             infoDiv.innerHTML = "<p>🌀 Loading cards...</p>";
             document.getElementById("set-cards").innerHTML = "";
+            
+            // Check cache first
+            if (cachedSetCards[setName]) {
+                allDisplayCards = cachedSetCards[setName];
+                totalPages = Math.ceil(allDisplayCards.length / cardsPerPage);
+                currentPage = page;
+                infoDiv.innerHTML = `<h3>✨ ${setName} (${allDisplayCards.length} cards)</h3>`;
+                renderBrowseCards();
+                updateBrowsePagination();
+                return;
+            }
+            
             try {
                 let setCode = setName.toLowerCase().replace(/[^a-z0-9]+/g, '');
                 let url = `https://api.scryfall.com/cards/search?q=e:${setCode}+order:set&unique=cards`;
@@ -651,13 +749,16 @@
                     url = data.has_more ? data.next_page : null;
                     if (url) await new Promise(r => setTimeout(r, 90));
                 }
+                cachedSetCards[setName] = all;
                 allDisplayCards = all;
                 totalPages = Math.ceil(allDisplayCards.length / cardsPerPage);
                 currentPage = page;
                 infoDiv.innerHTML = `<h3>✨ ${setName} (${allDisplayCards.length} cards)</h3>`;
                 renderBrowseCards();
                 updateBrowsePagination();
-            } catch (err) { infoDiv.innerHTML = `<p class="error-message">⚠️ Error: ${err.message}</p>`; }
+            } catch (err) { 
+                infoDiv.innerHTML = `<p class="error-message">⚠️ Error: ${err.message}</p>`; 
+            }
         }
         
         function renderBrowseCards() {
@@ -666,6 +767,7 @@
             container.innerHTML = "";
             const start = (currentPage - 1) * cardsPerPage;
             const pageCards = allDisplayCards.slice(start, start + cardsPerPage);
+            
             pageCards.forEach(card => {
                 const banned = isCardBanned(card);
                 const statusClass = banned ? "banned" : "legal";
@@ -673,21 +775,26 @@
                 const cardDiv = document.createElement("div");
                 cardDiv.className = "card-item";
                 const safeId = card.name.replace(/[^a-z0-9]/gi, '_');
-                cardDiv.innerHTML = `<img src="${imgUrl}" alt="${card.name}"><div class="card-item-content"><h3>${escapeHtml(card.name)}</h3><span class="card-status status-${statusClass}">${banned ? 'BANNED' : 'LEGAL'}</span><p class="card-rules-text">${card.type_line || ''}</p><div class="card-actions"><input type="number" min="1" max="4" value="1" class="qty-selector" id="qty-${safeId}"><button class="add-btn" data-name="${escapeAttr(card.name)}" data-banned="${banned}">+ Add</button><select class="zone-select"><option value="main">Deck</option><option value="side">Sideboard</option></select></div></div></div>`;
+                cardDiv.innerHTML = `
+                    <img src="${imgUrl}" alt="${card.name}" loading="lazy">
+                    <div class="card-item-content">
+                        <h3>${escapeHtml(card.name)}</h3>
+                        <span class="card-status status-${statusClass}">${banned ? 'BANNED' : 'LEGAL'}</span>
+                        <p class="card-rules-text">${card.type_line || ''}</p>
+                        <div class="card-actions">
+                            <input type="number" min="1" max="4" value="1" class="qty-selector" id="qty-${safeId}">
+                            <button class="add-btn" data-name="${escapeAttr(card.name)}" data-banned="${banned}">+ Add</button>
+                            <select class="zone-select">
+                                <option value="main">Deck</option>
+                                <option value="side">Sideboard</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
                 container.appendChild(cardDiv);
             });
-            document.querySelectorAll('#set-cards .add-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const cardName = btn.getAttribute('data-name');
-                    if (btn.getAttribute('data-banned') === 'true') { alert(`${cardName} is banned.`); return; }
-                    const parentDiv = btn.closest('.card-item');
-                    const qtyInput = parentDiv.querySelector('.qty-selector');
-                    let qty = parseInt(qtyInput?.value) || 1;
-                    if (qty < 1) qty = 1; if (qty > 4) qty = 4;
-                    const zone = parentDiv.querySelector('.zone-select').value;
-                    addCardToDeck(cardName, qty, zone);
-                });
-            });
+            
+            attachAddButtonEvents();
         }
         
         function updateBrowsePagination() {
@@ -699,7 +806,15 @@
             if(pagBottom) pagBottom.innerHTML = html;
         }
         
-        function changeBrowsePage(page) { if(page>=1 && page<=totalPages){ currentPage=page; renderBrowseCards(); updateBrowsePagination(); } }
+        function changeBrowsePage(page) { 
+            if(page >= 1 && page <= totalPages) { 
+                currentPage = page; 
+                savedBrowsePage = page;
+                localStorage.setItem('savedBrowsePage', savedBrowsePage);
+                renderBrowseCards(); 
+                updateBrowsePagination(); 
+            } 
+        }
         
         // ========== DECK MANAGEMENT ==========
         function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
@@ -745,43 +860,96 @@
         function exportDeckEmail() { let body = `MY GAUNTLET DECK%0A%0A--- MAIN DECK ---%0A${Object.keys(mainDeck).map(c=>`${mainDeck[c]} ${c}`).join('%0A')}%0A%0A--- SIDEBOARD ---%0A${Object.keys(sideboard).map(c=>`${sideboard[c]} ${c}`).join('%0A')}`; window.location.href = `mailto:?subject=My Gauntlet Deck&body=${body}`; }
         
         // ========== ADMIN FUNCTIONS ==========
-        function checkPassword() { let pwd=document.getElementById('adminPassword'); if(pwd.value===ADMIN_PASSWORD){ sessionStorage.setItem('adminAuthenticated','true'); document.getElementById('password-section').style.display='none'; document.getElementById('banned-management-content').style.display='block'; updateAllAdminLists(); document.getElementById('cashPrizeInput').value=cashPrize; } else alert('Wrong password'); pwd.value=''; }
-        function updateAllAdminLists() { updateBannedManagementList(); updateSetManagementList(); updateBanTypesUI(); updateBannedAbilitiesUI(); updateExceptionLists(); }
+        function checkPassword() { let pwd=document.getElementById('adminPassword'); if(pwd.value===ADMIN_PASSWORD){ sessionStorage.setItem('adminAuthenticated','true'); document.getElementById('password-section').style.display='none'; document.getElementById('banned-management-content').style.display='block'; updateAllAdminLists(); document.getElementById('cashPrizeInput').value=cashPrize; updateShareableLink(); } else alert('Wrong password'); pwd.value=''; }
+        
+        function updateAllAdminLists() { 
+            updateBannedManagementList(); 
+            updateSetManagementList(); 
+            updateBanTypesUI(); 
+            updateBannedAbilitiesUI(); 
+            updateExceptionLists(); 
+        }
+        
         function updateCashPrize() { let val=document.getElementById('cashPrizeInput').value; if(val && !isNaN(parseFloat(val))){ cashPrize=parseFloat(val).toFixed(2); saveAllLists(); updateCashPrizeDisplay(); alert(`Prize updated to $${cashPrize}`); } }
-        function addToBannedList() { let inp=document.getElementById('newBannedCard'); if(inp.value.trim()){ hardBannedCards.push(inp.value.trim()); saveAllLists(); updateBannedManagementList(); inp.value=''; if(currentMode==='browse' && document.getElementById('setSelect').value) loadSetCards(); else if(currentMode==='search' && currentSearchResults.length) renderSearchResults(); } }
-        function updateBannedManagementList() { let cont=document.getElementById('banned-management-list'); if(cont) cont.innerHTML=hardBannedCards.map(c=>`<div class='banned-list-item'><span>${c}</span><button class='remove-btn' onclick='removeFromBannedList("${c.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}")'>Remove</button></div>`).join(''); }
-        function removeFromBannedList(card){ hardBannedCards=hardBannedCards.filter(c=>c!==card); saveAllLists(); updateBannedManagementList(); if(currentMode==='browse' && document.getElementById('setSelect').value) loadSetCards(); else if(currentMode==='search' && currentSearchResults.length) renderSearchResults(); }
-        function updateSetManagementList() { let cont=document.getElementById('set-management-list'); if(cont) cont.innerHTML=legalSets.map(s=>`<div class='set-list-item'><span>${s}</span><button class='remove-btn' onclick='removeFromLegalSets("${s.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}")'>Remove</button></div>`).join(''); }
+        
+        function addToBannedList() { let inp=document.getElementById('newBannedCard'); if(inp.value.trim()){ hardBannedCards.push(inp.value.trim()); saveAllLists(); updateBannedManagementList(); refreshAfterBanChange(); inp.value=''; } }
+        
+        function updateBannedManagementList() { let cont=document.getElementById('banned-management-list'); if(cont) cont.innerHTML = hardBannedCards.map((c,idx) => `<div class='banned-list-item'><span>${escapeHtml(c)}</span><button class='remove-btn' onclick='removeFromBannedList(${idx})'>Remove</button></div>`).join(''); }
+        
+        function removeFromBannedList(idx){ hardBannedCards.splice(idx,1); saveAllLists(); updateBannedManagementList(); refreshAfterBanChange(); }
+        
+        function updateSetManagementList() { let cont=document.getElementById('set-management-list'); if(cont) cont.innerHTML = legalSets.map((s,idx) => `<div class='set-list-item'><span>${escapeHtml(s)}</span><button class='remove-btn' onclick='removeFromLegalSets(${idx})'>Remove</button></div>`).join(''); }
+        
         async function addSetByCode() { let code=document.getElementById('newSetCode').value.trim(); if(!code) return; try{ let res=await fetch(`https://api.scryfall.com/sets/${code}`); let data=await res.json(); if(data.object==='error') throw new Error(data.details); if(!legalSets.includes(data.name)){ legalSets.push(data.name); legalSets.sort(); saveAllLists(); updateSetManagementList(); populateSetSelector(); alert(`Added ${data.name}`); } else alert('Set exists'); } catch(e){ alert('Invalid set code'); } }
-        function removeFromLegalSets(setName){ legalSets=legalSets.filter(s=>s!==setName); saveAllLists(); updateSetManagementList(); populateSetSelector(); if(currentMode==='browse' && document.getElementById('setSelect').value===setName) document.getElementById('setSelect').value=''; }
+        
+        function removeFromLegalSets(idx){ legalSets.splice(idx,1); saveAllLists(); updateSetManagementList(); populateSetSelector(); if(savedBrowseSet && !legalSets.includes(savedBrowseSet)) { savedBrowseSet = ""; localStorage.setItem('savedBrowseSet', ''); } refreshAfterBanChange(); }
         
         const cardTypeOptions = ["Planeswalker","Scheme","Conspiracy","Phenomenon","Vanguard","Dungeon","Town","Attraction","Plane","Tribal","Snow","World","Class","Saga"];
-        function updateBanTypesUI() { let cont = document.getElementById('ban-types-list'); if(!cont) return; cont.innerHTML = cardTypeOptions.map(type => `<div class="ban-type-item"><label><input type="checkbox" class="ban-type-checkbox" data-type="${type}" ${bannedCardTypes.includes(type) ? 'checked' : ''}> Ban all ${type} cards</label></div>`).join(''); document.querySelectorAll('.ban-type-checkbox').forEach(cb => { cb.addEventListener('change', function() { let cardType = this.getAttribute('data-type'); if(this.checked) { if(!bannedCardTypes.includes(cardType)) bannedCardTypes.push(cardType); } else { bannedCardTypes = bannedCardTypes.filter(t => t !== cardType); } saveAllLists(); if(currentMode==='browse' && document.getElementById('setSelect').value) loadSetCards(); else if(currentMode==='search' && currentSearchResults.length) renderSearchResults(); }); }); }
         
-        function updateBannedAbilitiesUI() { let cont = document.getElementById('banned-abilities-management'); if(cont) cont.innerHTML = bannedAbilities.map(ab => `<div class='exception-card banned'><span>"${ab}"</span><button class='remove-btn' onclick='removeFromBannedAbilities("${ab.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}")'>Remove</button></div>`).join(''); }
-        function addToBannedAbilities() { let inp = document.getElementById('newBannedAbility'); if(inp.value.trim()){ bannedAbilities.push(inp.value.trim().toLowerCase()); saveAllLists(); updateBannedAbilitiesUI(); inp.value=''; if(currentMode==='browse' && document.getElementById('setSelect').value) loadSetCards(); else if(currentMode==='search' && currentSearchResults.length) renderSearchResults(); } }
-        function removeFromBannedAbilities(ab) { bannedAbilities = bannedAbilities.filter(a => a !== ab); saveAllLists(); updateBannedAbilitiesUI(); if(currentMode==='browse' && document.getElementById('setSelect').value) loadSetCards(); else if(currentMode==='search' && currentSearchResults.length) renderSearchResults(); }
+        function updateBanTypesUI() { let cont = document.getElementById('ban-types-list'); if(!cont) return; cont.innerHTML = cardTypeOptions.map(type => `<div class="ban-type-item"><label><input type="checkbox" class="ban-type-checkbox" data-type="${type}" ${bannedCardTypes.includes(type) ? 'checked' : ''}> Ban all ${type} cards</label></div>`).join(''); document.querySelectorAll('.ban-type-checkbox').forEach(cb => { cb.addEventListener('change', function() { let cardType = this.getAttribute('data-type'); if(this.checked) { if(!bannedCardTypes.includes(cardType)) bannedCardTypes.push(cardType); } else { bannedCardTypes = bannedCardTypes.filter(t => t !== cardType); } saveAllLists(); refreshAfterBanChange(); }); }); }
         
-        function updateExceptionLists() { let fl = document.getElementById('force-legal-management'); if(fl) fl.innerHTML = forceLegalCards.map(c => `<div class='exception-card'><span>${c}</span><button class='remove-btn' onclick='removeFromForceLegalList("${c.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}")'>Remove</button></div>`).join(''); let fb = document.getElementById('force-banned-management'); if(fb) fb.innerHTML = forceBannedCards.map(c => `<div class='exception-card banned'><span>${c}</span><button class='remove-btn' onclick='removeFromForceBannedList("${c.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}")'>Remove</button></div>`).join(''); }
-        function addToForceLegalList() { let inp = document.getElementById('newForceLegalCard'); if(inp.value.trim()){ forceLegalCards.push(inp.value.trim()); saveAllLists(); updateExceptionLists(); inp.value=''; if(currentMode==='browse' && document.getElementById('setSelect').value) loadSetCards(); else if(currentMode==='search' && currentSearchResults.length) renderSearchResults(); } }
-        function removeFromForceLegalList(card) { forceLegalCards = forceLegalCards.filter(c => c !== card); saveAllLists(); updateExceptionLists(); if(currentMode==='browse' && document.getElementById('setSelect').value) loadSetCards(); else if(currentMode==='search' && currentSearchResults.length) renderSearchResults(); }
-        function addToForceBannedList() { let inp = document.getElementById('newForceBannedCard'); if(inp.value.trim()){ forceBannedCards.push(inp.value.trim()); saveAllLists(); updateExceptionLists(); inp.value=''; if(currentMode==='browse' && document.getElementById('setSelect').value) loadSetCards(); else if(currentMode==='search' && currentSearchResults.length) renderSearchResults(); } }
-        function removeFromForceBannedList(card) { forceBannedCards = forceBannedCards.filter(c => c !== card); saveAllLists(); updateExceptionLists(); if(currentMode==='browse' && document.getElementById('setSelect').value) loadSetCards(); else if(currentMode==='search' && currentSearchResults.length) renderSearchResults(); }
+        function updateBannedAbilitiesUI() { let cont = document.getElementById('banned-abilities-management'); if(cont) cont.innerHTML = bannedAbilities.map((ab,idx) => `<div class='exception-card banned'><span>"${escapeHtml(ab)}"</span><button class='remove-btn' onclick='removeFromBannedAbilities(${idx})'>Remove</button></div>`).join(''); }
+        
+        function addToBannedAbilities() { let inp = document.getElementById('newBannedAbility'); if(inp.value.trim()){ bannedAbilities.push(inp.value.trim().toLowerCase()); saveAllLists(); updateBannedAbilitiesUI(); refreshAfterBanChange(); inp.value=''; } }
+        
+        function removeFromBannedAbilities(idx) { bannedAbilities.splice(idx,1); saveAllLists(); updateBannedAbilitiesUI(); refreshAfterBanChange(); }
+        
+        function updateExceptionLists() { let fl = document.getElementById('force-legal-management'); if(fl) fl.innerHTML = forceLegalCards.map((c,idx) => `<div class='exception-card'><span>${escapeHtml(c)}</span><button class='remove-btn' onclick='removeFromForceLegalList(${idx})'>Remove</button></div>`).join(''); let fb = document.getElementById('force-banned-management'); if(fb) fb.innerHTML = forceBannedCards.map((c,idx) => `<div class='exception-card banned'><span>${escapeHtml(c)}</span><button class='remove-btn' onclick='removeFromForceBannedList(${idx})'>Remove</button></div>`).join(''); }
+        
+        function addToForceLegalList() { let inp = document.getElementById('newForceLegalCard'); if(inp.value.trim()){ forceLegalCards.push(inp.value.trim()); saveAllLists(); updateExceptionLists(); refreshAfterBanChange(); inp.value=''; } }
+        
+        function removeFromForceLegalList(idx) { forceLegalCards.splice(idx,1); saveAllLists(); updateExceptionLists(); refreshAfterBanChange(); }
+        
+        function addToForceBannedList() { let inp = document.getElementById('newForceBannedCard'); if(inp.value.trim()){ forceBannedCards.push(inp.value.trim()); saveAllLists(); updateExceptionLists(); refreshAfterBanChange(); inp.value=''; } }
+        
+        function removeFromForceBannedList(idx) { forceBannedCards.splice(idx,1); saveAllLists(); updateExceptionLists(); refreshAfterBanChange(); }
+        
+        function refreshAfterBanChange() {
+            // Refresh current view
+            if (currentMode === 'browse' && savedBrowseSet && legalSets.includes(savedBrowseSet)) {
+                loadSetCards(savedBrowsePage);
+            } else if (currentMode === 'search' && currentSearchResults.length) {
+                renderSearchResults();
+            }
+        }
         
         function openTab(event, tabName) {
             document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
             document.getElementById(tabName).classList.add('active');
             event.currentTarget.classList.add('active');
+            
             if(tabName === 'playlist'){ 
-                if (currentMode === 'browse') populateSetSelector(); 
+                if (currentMode === 'browse') {
+                    populateSetSelector();
+                    // Restore saved browse state when returning to playlist
+                    if (savedBrowseSet && legalSets.includes(savedBrowseSet)) {
+                        document.getElementById("setSelect").value = savedBrowseSet;
+                        loadSetCards(savedBrowsePage);
+                    }
+                }
                 refreshDeckDisplay(); 
             }
-            if(tabName === 'banned-management'){ let auth = sessionStorage.getItem('adminAuthenticated')==='true'; if(auth){ document.getElementById('password-section').style.display='none'; document.getElementById('banned-management-content').style.display='block'; updateAllAdminLists(); document.getElementById('cashPrizeInput').value=cashPrize; } else { document.getElementById('password-section').style.display='block'; document.getElementById('banned-management-content').style.display='none'; } }
+            if(tabName === 'banned-management'){ 
+                let auth = sessionStorage.getItem('adminAuthenticated')==='true'; 
+                if(auth){ 
+                    document.getElementById('password-section').style.display='none'; 
+                    document.getElementById('banned-management-content').style.display='block'; 
+                    updateAllAdminLists(); 
+                    document.getElementById('cashPrizeInput').value=cashPrize;
+                    updateShareableLink();
+                } else { 
+                    document.getElementById('password-section').style.display='block'; 
+                    document.getElementById('banned-management-content').style.display='none'; 
+                } 
+            }
         }
+        
         function signUp() { let email=document.getElementById('email').value; if(!email||!email.includes('@')) alert('Valid email required'); else alert(`🔥 Welcome! Confirmation sent to ${email}`); }
         
+        // ========== INITIALIZATION ==========
         window.onload = () => {
+            loadSharedBanlistFromUrl();
             updateCashPrizeDisplay();
             populateSetSelector();
             loadSavedDecks();
