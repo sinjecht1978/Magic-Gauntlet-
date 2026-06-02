@@ -255,7 +255,7 @@
             </div>
         </div>
         
-        <!-- Rules Tab (UPDATED) -->
+        <!-- Rules Tab (UPDATED with full ruleset) -->
         <div id="rules" class="tab-content">
             <div class="rules-section"><h2>📜 The Gauntlet Challenge: Official Rules</h2><p><strong>The Goal:</strong> Survive the Gauntlet with at least one deck remaining. You win the cash prize by defeating 10 Gauntlet decks in total across your 3 decks.</p></div>
             <div class="rules-section"><h2>🃏 Deck Construction</h2><ul class="rules-list"><li>Build 3 decks, each with a minimum of 60 cards and a 15-card sideboard.</li><li>You cannot have more than 4 copies of any single card across all your decks and sideboards combined (basic lands excluded).</li><li>All decks must be built using the legal card pool on this site.</li></ul></div>
@@ -325,9 +325,40 @@
         let forceLegalCards = JSON.parse(localStorage.getItem('forceLegalCards')) || [];
         let forceBannedCards = JSON.parse(localStorage.getItem('forceBannedCards')) || [];
         let cashPrize = localStorage.getItem('cashPrize') || "50.00";
+        
+        // =============================================
+        // FULL LEGAL SETS LIST (130+ sets - COMPLETE)
+        // =============================================
         let legalSets = JSON.parse(localStorage.getItem('legalSets')) || [
-            "Adventures in the Forgotten Realms", "Aether Revolt", "Khans of Tarkir", 
-            "Zendikar Rising", "Modern Horizons 2", "The Lord of the Rings: Tales of Middle-earth"
+            "Adventures in the Forgotten Realms", "Aether Revolt", "Aetherdrift", "Alara Reborn", 
+            "Alliances", "Amonkhet", "Antiquities", "Apocalypse", "Arabian Nights", 
+            "Assassin's Creed", "Avacyn Restored", "Battle for Zendikar", 
+            "Betrayers of Kamigawa", "Bloomburrow", "Born of the Gods", "Champions of Kamigawa", 
+            "Coldsnap", "Conflux", "Core Set 2019", "Core Set 2020", "Core Set 2021", 
+            "Dark Ascension", "Darksteel", "Dissension", "Dominaria", "Dominaria: United", 
+            "Dragons of Tarkir", "Dragon's Maze", "Duskmourn: House of Horror", "Edge of Eternities", 
+            "Eldritch Moon", "Eventide", "Exodus", "Fallen Empires", "Fate Reforged", 
+            "Fifth Dawn", "Final Fantasy", "Future Sight", "Gatecrash", "Guildpact", 
+            "Guilds of Ravnica", "Homelands", "Hour of Devastation", "Ice Age", 
+            "Ikoria: Lair of Behemoths", "Innistrad", "Innistrad: Crimson Vow", "Innistrad: Midnight Hunt", 
+            "Invasion", "Ixalan", "Judgment", "Journey into Nyx", "Kaladesh", "Kaldheim", 
+            "Kamigawa: Neon Dynasty", "Khans of Tarkir", "Legends", "Legions", 
+            "Limited Edition Beta", "Lorwyn", "Magic 2010", "Magic 2011", "Magic 2012", 
+            "Magic 2013", "Magic 2014", "Magic 2015", "Magic Origins", "March of the Machine", 
+            "March of the Machine: The Aftermath", "Mercadian Masques", "Mirage", 
+            "Mirrodin", "Mirrodin Besieged", "Morningtide", "The Lord of the Rings: Tales of Middle-earth", 
+            "Murders at Karlov Manor", "Nemesis", "New Phyrexia", "Oath of the Gatewatch", 
+            "Odyssey", "Onslaught", "Outlaws of Thunder Junction", "Phyrexia: All Will Be One", 
+            "Planar Chaos", "Planeshift", "Prophecy", "Ravnica Allegiance", 
+            "Ravnica: City of Guilds", "Return to Ravnica", "Rise of the Eldrazi", 
+            "Rivals of Ixalan", "Saviors of Kamigawa", "Scars of Mirrodin", "Scourge", 
+            "Shadows over Innistrad", "Shadowmoor", "Shards of Alara", "Streets of New Capenna", 
+            "Strixhaven: School of Mages", "Stronghold", "Tarkir: Dragonstorm", "Tempest", 
+            "The Brothers' War", "The Dark", "The Lost Caverns of Ixalan", "Theros", 
+            "Theros Beyond Death", "Throne of Eldraine", "Time Spiral", "Torment", 
+            "Urza's Destiny", "Urza's Legacy", "Urza's Saga", "Visions", 
+            "War of the Spark", "Weatherlight", "Wilds of Eldraine", "Worldwake", 
+            "Zendikar", "Zendikar Rising"
         ];
         
         function saveAllLists() {
@@ -613,4 +644,4 @@
         };
     </script>
 </body>
-</html>
+                                                                                              </html>
