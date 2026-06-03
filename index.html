@@ -6,16 +6,6 @@
     <title>Magic Gauntlet - Your Bad Cards Are Worth Real Money Now</title>
     <style>
     * { box-sizing: border-box; }
-    
-    /* Prevent pull-to-refresh and accidental refreshes */
-    html, body {
-        overscroll-behavior: none;
-        overscroll-behavior-y: none;
-        overscroll-behavior-x: none;
-        width: 100%;
-        height: 100%;
-    }
-    
     body {
         font-family: 'Segoe UI', Arial, sans-serif;
         margin: 0;
@@ -23,17 +13,12 @@
         background: #f5f7fa;
         color: #1e2a3e;
         line-height: 1.5;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
+    }
+    /* ONLY prevent pull-to-refresh - NO position:fixed */
+    body {
+        overscroll-behavior-y: none;
         touch-action: pan-y pinch-zoom;
-        position: relative;
     }
-    
-    /* Make sure all scrollable areas don't trigger refresh */
-    .deck-list, .scrollable-list-container, .card-gallery {
-        overscroll-behavior: contain;
-    }
-    
     .cash-prize {
         position: fixed;
         top: 20px;
@@ -303,42 +288,6 @@
     </div>
 
     <script>
-        // ===== PREVENT ACCIDENTAL PAGE REFRESH =====
-        let hasUnsavedChanges = false;
-        
-        // Prevent pull-to-refresh on mobile
-        document.addEventListener('touchmove', function(e) {
-            const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-            if (scrollTop === 0 && e.touches[0].clientY > 5) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-        
-        // Prevent Ctrl+R and F5
-        document.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
-                e.preventDefault();
-                alert('Use the "Copy Config Code" button to save changes before refreshing.');
-            }
-            if (e.key === 'F5') {
-                e.preventDefault();
-                alert('Use the "Copy Config Code" button to save changes before refreshing.');
-            }
-        });
-        
-        // Warn before leaving if there are unsaved changes
-        window.addEventListener('beforeunload', function(e) {
-            if (hasUnsavedChanges) {
-                e.preventDefault();
-                e.returnValue = 'You have unsaved Admin changes! Use "COPY CONFIG CODE" to save them permanently.';
-                return e.returnValue;
-            }
-        });
-        
-        function markUnsaved() {
-            hasUnsavedChanges = true;
-        }
-        
         // ========== LOAD EVERYTHING FROM EXTERNAL CONFIG FILE ==========
         let MASTER_BANLIST;
         
@@ -393,7 +342,6 @@ const GAUNTLET_CONFIG = {
 };`;
             
             navigator.clipboard.writeText(configCode).then(() => {
-                hasUnsavedChanges = false;
                 const statusDiv = document.getElementById('copyStatus');
                 statusDiv.style.display = 'block';
                 statusDiv.innerHTML = '✅ CONFIG CODE COPIED! Now paste it into gauntlet-config.js and refresh.';
@@ -751,7 +699,6 @@ const GAUNTLET_CONFIG = {
                 cashPrize = parseFloat(val).toFixed(2); 
                 saveToLocal(); 
                 updateCashPrizeDisplay(); 
-                markUnsaved();
                 alert(`Prize updated to $${cashPrize}`); 
             } 
         };
@@ -764,7 +711,6 @@ const GAUNTLET_CONFIG = {
                 updateBannedManagementList(); 
                 refreshUI(); 
                 inp.value = ''; 
-                markUnsaved();
             } 
         };
         
@@ -773,7 +719,6 @@ const GAUNTLET_CONFIG = {
             saveToLocal(); 
             updateBannedManagementList(); 
             refreshUI(); 
-            markUnsaved();
         };
         
         window.removeFromLegalSets = function(idx) { 
@@ -782,7 +727,6 @@ const GAUNTLET_CONFIG = {
             updateSetManagementList(); 
             populateSetSelector(); 
             refreshUI(); 
-            markUnsaved();
         };
         
         window.addSetByCode = async function() { 
@@ -798,7 +742,6 @@ const GAUNTLET_CONFIG = {
                     saveToLocal(); 
                     updateSetManagementList(); 
                     populateSetSelector(); 
-                    markUnsaved();
                     alert(`Added ${data.name}`); 
                 } else alert('Set already exists'); 
             } catch(e) { alert('Invalid set code'); } 
@@ -812,7 +755,6 @@ const GAUNTLET_CONFIG = {
                 updateBannedAbilitiesUI(); 
                 refreshUI(); 
                 inp.value = ''; 
-                markUnsaved();
             } 
         };
         
@@ -821,7 +763,6 @@ const GAUNTLET_CONFIG = {
             saveToLocal(); 
             updateBannedAbilitiesUI(); 
             refreshUI(); 
-            markUnsaved();
         };
         
         window.addToForceLegalList = function() { 
@@ -832,7 +773,6 @@ const GAUNTLET_CONFIG = {
                 updateExceptionLists(); 
                 refreshUI(); 
                 inp.value=''; 
-                markUnsaved();
             } 
         };
         
@@ -841,7 +781,6 @@ const GAUNTLET_CONFIG = {
             saveToLocal(); 
             updateExceptionLists(); 
             refreshUI(); 
-            markUnsaved();
         };
         
         window.addToForceBannedList = function() { 
@@ -852,7 +791,6 @@ const GAUNTLET_CONFIG = {
                 updateExceptionLists(); 
                 refreshUI(); 
                 inp.value=''; 
-                markUnsaved();
             } 
         };
         
@@ -861,7 +799,6 @@ const GAUNTLET_CONFIG = {
             saveToLocal(); 
             updateExceptionLists(); 
             refreshUI(); 
-            markUnsaved();
         };
         
         function updateBannedManagementList() { 
@@ -897,7 +834,6 @@ const GAUNTLET_CONFIG = {
                     else { bannedCardTypes = bannedCardTypes.filter(v=>v!==t); } 
                     saveToLocal(); 
                     refreshUI(); 
-                    markUnsaved();
                 }); 
             }); 
         }
@@ -964,4 +900,4 @@ const GAUNTLET_CONFIG = {
         setInterval(autoSaveDecks, 1500);
     </script>
 </body>
-</html>
+                                                                                                  </html>
