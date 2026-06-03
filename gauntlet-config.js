@@ -1,6 +1,6 @@
 // ========== GAUNTLET CONFIGURATION ==========
 const GAUNTLET_CONFIG = {
-    version: "2026.06.03.0612",
+    version: "2026.06.03.1407",
     hardBannedCards: [
     "Sol Ring",
     "Lightning Bolt",
@@ -124,7 +124,17 @@ const GAUNTLET_CONFIG = {
     "Island Sanctuary",
     "Karma",
     "Savannah Lions",
-    "Swords to Plowshares"
+    "Swords to Plowshares",
+    "Power Sink",
+    "Braingeyser",
+    "Control Magic",
+    "Copy Artifact",
+    "Lord of Atlantis",
+    "Mana Short",
+    "Stasis",
+    "Time Walk",
+    "Timetwister",
+    "Bad Moon"
 ],
     bannedCardTypes: [
     "Planeswalker",
@@ -137,11 +147,15 @@ const GAUNTLET_CONFIG = {
     bannedAbilities: [
     "slivers",
     "infect",
-    "venture into the dungeon"
+    "venture into the dungeon",
+    "ante"
 ],
     forceLegalCards: [
     "Siren's Call",
-    "Disenchant"
+    "Disenchant",
+    "Psychic Venom",
+    "Spell Blast",
+    "Steal Artifact"
 ],
     forceBannedCards: [],
     legalSets: [
