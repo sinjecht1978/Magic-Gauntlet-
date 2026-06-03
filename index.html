@@ -172,7 +172,7 @@
         .cash-prize { position: relative; top: 0; right: 0; margin: 16px auto; width: fit-content; }
     }
     </style>
-    <!-- LOAD EXTERNAL CONFIG - Using window for better compatibility -->
+    <!-- LOAD EXTERNAL CONFIG -->
     <script src="gauntlet-config.js"></script>
 </head>
 <body>
@@ -299,10 +299,9 @@
             console.log("✅ Loaded config from window.GAUNTLET_CONFIG");
         } else {
             console.error("❌ gauntlet-config.js not found! Please make sure the config file is in the same folder.");
-            console.log("Available window properties:", Object.keys(window).filter(k => k.includes('GAUNTLET')));
             MASTER_BANLIST = {
                 version: "error",
-                hardBannedCards: ["Sol Ring", "Lightning Bolt"], // Fallback defaults
+                hardBannedCards: ["Sol Ring", "Lightning Bolt"],
                 bannedCardTypes: ["Planeswalker", "Dungeon", "Class", "Saga", "Scheme", "Conspiracy"],
                 bannedAbilities: ["slivers", "infect", "venture into the dungeon", "ante"],
                 forceLegalCards: [],
@@ -322,8 +321,6 @@
         let legalSets = [...MASTER_BANLIST.legalSets];
         let cashPrize = MASTER_BANLIST.cashPrize;
         
-        console.log(`📊 Loaded ${hardBannedCards.length} banned cards, ${legalSets.length} legal sets`);
-        
         let mainDeck = {}, sideboard = {};
         let allDisplayCards = [], currentPage = 1, cardsPerPage = 24, totalPages = 1;
         let currentSearchResults = [], searchCurrentPage = 1, searchTotalPages = 1, currentMode = "browse";
@@ -331,7 +328,9 @@
         let savedBrowsePage = parseInt(localStorage.getItem('savedBrowsePage')) || 1;
         let cachedSetCards = {};
         
-        // Copy current config to clipboard - FIXED to output correct format
+        console.log(`📊 Loaded ${hardBannedCards.length} banned cards, ${legalSets.length} legal sets`);
+        
+        // Copy current config to clipboard
         window.copyConfigToClipboard = function() {
             const date = new Date();
             const versionString = `${date.getFullYear()}.${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getDate()).padStart(2,'0')}.${String(date.getHours()).padStart(2,'0')}${String(date.getMinutes()).padStart(2,'0')}`;
@@ -566,7 +565,6 @@ if (typeof window !== 'undefined') {
                 return;
             }
             try {
-                // Try to get set code from name - this is a best effort
                 let searchQuery = `e:"${setName}"`;
                 let url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}+order:set&unique=cards`;
                 let all = [];
@@ -837,9 +835,8 @@ if (typeof window !== 'undefined') {
         window.removeFromForceLegalList = function(idx) { 
             forceLegalCards.splice(idx,1); 
             saveToLocal(); 
-                updateExceptionLists(); 
-                refreshUI(); 
-            } 
+            updateExceptionLists(); 
+            refreshUI(); 
         };
         
         window.addToForceBannedList = function() { 
@@ -950,7 +947,7 @@ if (typeof window !== 'undefined') {
         }
         
         // Initialize
-        loadFromLocal(); // Load any saved admin changes
+        loadFromLocal();
         updateCashPrizeDisplay();
         populateSetSelector();
         loadSavedDecks();
