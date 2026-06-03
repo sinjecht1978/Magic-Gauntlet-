@@ -14,7 +14,6 @@
         color: #1e2a3e;
         line-height: 1.5;
     }
-    /* ONLY prevent pull-to-refresh - NO position:fixed */
     body {
         overscroll-behavior-y: none;
         touch-action: pan-y pinch-zoom;
@@ -173,7 +172,7 @@
         .cash-prize { position: relative; top: 0; right: 0; margin: 16px auto; width: fit-content; }
     }
     </style>
-    <!-- LOAD EXTERNAL CONFIG -->
+    <!-- LOAD EXTERNAL CONFIG - Using window for better compatibility -->
     <script src="gauntlet-config.js"></script>
 </head>
 <body>
@@ -291,21 +290,27 @@
         // ========== LOAD EVERYTHING FROM EXTERNAL CONFIG FILE ==========
         let MASTER_BANLIST;
         
+        // Try multiple ways to get the config
         if (typeof GAUNTLET_CONFIG !== 'undefined' && GAUNTLET_CONFIG) {
             MASTER_BANLIST = GAUNTLET_CONFIG;
-            console.log("✅ Loaded config from gauntlet-config.js");
+            console.log("✅ Loaded config from GAUNTLET_CONFIG (direct)");
+        } else if (typeof window.GAUNTLET_CONFIG !== 'undefined' && window.GAUNTLET_CONFIG) {
+            MASTER_BANLIST = window.GAUNTLET_CONFIG;
+            console.log("✅ Loaded config from window.GAUNTLET_CONFIG");
         } else {
-            alert("ERROR: gauntlet-config.js not found! Please make sure the config file is in the same folder.");
+            console.error("❌ gauntlet-config.js not found! Please make sure the config file is in the same folder.");
+            console.log("Available window properties:", Object.keys(window).filter(k => k.includes('GAUNTLET')));
             MASTER_BANLIST = {
                 version: "error",
-                hardBannedCards: [],
-                bannedCardTypes: [],
-                bannedAbilities: [],
+                hardBannedCards: ["Sol Ring", "Lightning Bolt"], // Fallback defaults
+                bannedCardTypes: ["Planeswalker", "Dungeon", "Class", "Saga", "Scheme", "Conspiracy"],
+                bannedAbilities: ["slivers", "infect", "venture into the dungeon", "ante"],
                 forceLegalCards: [],
                 forceBannedCards: [],
-                legalSets: [],
+                legalSets: ["Adventures in the Forgotten Realms", "Core Set 2021"],
                 cashPrize: "50.00"
             };
+            alert("⚠️ Warning: gauntlet-config.js not found! Using default settings.");
         }
         
         // Load everything from the config file
@@ -317,6 +322,8 @@
         let legalSets = [...MASTER_BANLIST.legalSets];
         let cashPrize = MASTER_BANLIST.cashPrize;
         
+        console.log(`📊 Loaded ${hardBannedCards.length} banned cards, ${legalSets.length} legal sets`);
+        
         let mainDeck = {}, sideboard = {};
         let allDisplayCards = [], currentPage = 1, cardsPerPage = 24, totalPages = 1;
         let currentSearchResults = [], searchCurrentPage = 1, searchTotalPages = 1, currentMode = "browse";
@@ -324,7 +331,7 @@
         let savedBrowsePage = parseInt(localStorage.getItem('savedBrowsePage')) || 1;
         let cachedSetCards = {};
         
-        // Copy current config to clipboard
+        // Copy current config to clipboard - FIXED to output correct format
         window.copyConfigToClipboard = function() {
             const date = new Date();
             const versionString = `${date.getFullYear()}.${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getDate()).padStart(2,'0')}.${String(date.getHours()).padStart(2,'0')}${String(date.getMinutes()).padStart(2,'0')}`;
@@ -339,7 +346,12 @@ const GAUNTLET_CONFIG = {
     forceBannedCards: ${JSON.stringify(forceBannedCards, null, 4)},
     legalSets: ${JSON.stringify(legalSets, null, 4)},
     cashPrize: "${cashPrize}"
-};`;
+};
+
+// ⭐ MAKE IT GLOBALLY ACCESSIBLE ⭐
+if (typeof window !== 'undefined') {
+    window.GAUNTLET_CONFIG = GAUNTLET_CONFIG;
+}`;
             
             navigator.clipboard.writeText(configCode).then(() => {
                 const statusDiv = document.getElementById('copyStatus');
@@ -353,13 +365,31 @@ const GAUNTLET_CONFIG = {
         };
         
         function saveToLocal() {
-            localStorage.setItem('hardBannedCards', JSON.stringify(hardBannedCards));
-            localStorage.setItem('legalSets', JSON.stringify(legalSets));
-            localStorage.setItem('cashPrize', cashPrize);
-            localStorage.setItem('bannedCardTypes', JSON.stringify(bannedCardTypes));
-            localStorage.setItem('bannedAbilities', JSON.stringify(bannedAbilities));
-            localStorage.setItem('forceLegalCards', JSON.stringify(forceLegalCards));
-            localStorage.setItem('forceBannedCards', JSON.stringify(forceBannedCards));
+            localStorage.setItem('gauntlet_hardBannedCards', JSON.stringify(hardBannedCards));
+            localStorage.setItem('gauntlet_legalSets', JSON.stringify(legalSets));
+            localStorage.setItem('gauntlet_cashPrize', cashPrize);
+            localStorage.setItem('gauntlet_bannedCardTypes', JSON.stringify(bannedCardTypes));
+            localStorage.setItem('gauntlet_bannedAbilities', JSON.stringify(bannedAbilities));
+            localStorage.setItem('gauntlet_forceLegalCards', JSON.stringify(forceLegalCards));
+            localStorage.setItem('gauntlet_forceBannedCards', JSON.stringify(forceBannedCards));
+        }
+        
+        function loadFromLocal() {
+            const hb = localStorage.getItem('gauntlet_hardBannedCards');
+            const ls = localStorage.getItem('gauntlet_legalSets');
+            const cp = localStorage.getItem('gauntlet_cashPrize');
+            const bct = localStorage.getItem('gauntlet_bannedCardTypes');
+            const ba = localStorage.getItem('gauntlet_bannedAbilities');
+            const fl = localStorage.getItem('gauntlet_forceLegalCards');
+            const fb = localStorage.getItem('gauntlet_forceBannedCards');
+            
+            if (hb) hardBannedCards = JSON.parse(hb);
+            if (ls) legalSets = JSON.parse(ls);
+            if (cp) cashPrize = cp;
+            if (bct) bannedCardTypes = JSON.parse(bct);
+            if (ba) bannedAbilities = JSON.parse(ba);
+            if (fl) forceLegalCards = JSON.parse(fl);
+            if (fb) forceBannedCards = JSON.parse(fb);
         }
         
         function updateCashPrizeDisplay() { 
@@ -384,25 +414,49 @@ const GAUNTLET_CONFIG = {
             }
         }
         
+        // FIXED isCardBanned function - only applies restrictions to instants/sorceries
         function isCardBanned(card) {
+            // Force exceptions first
             if (forceBannedCards.includes(card.name)) return true;
             if (forceLegalCards.includes(card.name)) return false;
+            
+            // Hard banned cards
             if (hardBannedCards.includes(card.name)) return true;
+            
+            // Banned card types
             if (card.type_line && bannedCardTypes.some(t => card.type_line.includes(t))) return true;
+            
+            // Banned abilities
             let oracle = (card.oracle_text || "").toLowerCase();
             if (bannedAbilities.some(ab => oracle.includes(ab.toLowerCase()))) return true;
+            
+            // Set restrictions
             if (card.set_name && !legalSets.includes(card.set_name)) return true;
+            
+            // ⭐ ONLY apply these restrictions to Instants and Sorceries
             if (card.type_line && (card.type_line.includes("Instant") || card.type_line.includes("Sorcery"))) {
+                // Damage spells: can't deal more damage than CMC
                 let dmgMatch = oracle.match(/deal[s]? (\d+) damage/i);
                 if (dmgMatch && parseInt(dmgMatch[1]) > (card.cmc || 0)) return true;
-                if (oracle.includes("destroy target") && !(oracle.includes("with")||oracle.includes("unless")||oracle.includes("non")) && (card.cmc||0) < 5) return true;
-                if (oracle.includes("counter target") && !oracle.includes("unless") && (card.cmc||0) < 4) return true;
+                
+                // Destroy spells: unconditional removal costs 5+ mana
+                if (oracle.includes("destroy target") && !(oracle.includes("with") || oracle.includes("unless") || oracle.includes("non")) && (card.cmc || 0) < 5) return true;
+                
+                // Counterspells: unconditional counters cost 4+ mana
+                if (oracle.includes("counter target") && !oracle.includes("unless") && (card.cmc || 0) < 4) return true;
             }
-            if ((oracle.includes("destroy all") || oracle.includes("exile all")) && (card.cmc||0) < 6) return true;
-            if (oracle.includes("destroy target land") && (card.cmc||0) < 4) return true;
+            
+            // Board wipes (applies to all card types including sorceries)
+            if ((oracle.includes("destroy all") || oracle.includes("exile all")) && (card.cmc || 0) < 6) return true;
+            
+            // Land destruction (applies to all card types)
+            if (oracle.includes("destroy target land") && (card.cmc || 0) < 4) return true;
+            
+            // Mana rocks (applies to artifacts only)
             if (card.type_line && card.type_line.includes("Artifact") && oracle.includes("add") && oracle.includes("mana")) {
-                if ((card.cmc||0) < 3 && !oracle.includes("enters the battlefield tapped")) return true;
+                if ((card.cmc || 0) < 3 && !oracle.includes("enters the battlefield tapped")) return true;
             }
+            
             return false;
         }
         
@@ -512,8 +566,9 @@ const GAUNTLET_CONFIG = {
                 return;
             }
             try {
-                let setCode = setName.toLowerCase().replace(/[^a-z0-9]+/g, '');
-                let url = `https://api.scryfall.com/cards/search?q=e:${setCode}+order:set&unique=cards`;
+                // Try to get set code from name - this is a best effort
+                let searchQuery = `e:"${setName}"`;
+                let url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}+order:set&unique=cards`;
                 let all = [];
                 while (url) {
                     let resp = await fetch(url);
@@ -529,7 +584,10 @@ const GAUNTLET_CONFIG = {
                 infoDiv.innerHTML = `<h3>✨ ${setName} (${all.length} cards)</h3>`;
                 renderBrowseCards();
                 updateBrowsePagination();
-            } catch (err) { infoDiv.innerHTML = `<p style="color:#c00;">Error: ${err.message}</p>`; }
+            } catch (err) { 
+                infoDiv.innerHTML = `<p style="color:#c00;">Error: ${err.message}</p>`;
+                console.error("Set load error:", err);
+            }
         };
         
         function renderBrowseCards() {
@@ -779,8 +837,9 @@ const GAUNTLET_CONFIG = {
         window.removeFromForceLegalList = function(idx) { 
             forceLegalCards.splice(idx,1); 
             saveToLocal(); 
-            updateExceptionLists(); 
-            refreshUI(); 
+                updateExceptionLists(); 
+                refreshUI(); 
+            } 
         };
         
         window.addToForceBannedList = function() { 
@@ -891,6 +950,7 @@ const GAUNTLET_CONFIG = {
         }
         
         // Initialize
+        loadFromLocal(); // Load any saved admin changes
         updateCashPrizeDisplay();
         populateSetSelector();
         loadSavedDecks();
@@ -898,6 +958,8 @@ const GAUNTLET_CONFIG = {
         refreshMasterBanlistDisplay();
         setMode("browse");
         setInterval(autoSaveDecks, 1500);
+        
+        console.log("✅ Gauntlet initialized with", hardBannedCards.length, "banned cards");
     </script>
 </body>
-                                                                                                  </html>
+</html>
