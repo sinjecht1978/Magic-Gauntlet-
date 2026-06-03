@@ -13,27 +13,23 @@
         background: #f5f7fa;
         color: #1e2a3e;
         line-height: 1.5;
-    }/* Prevent pull-to-refresh and accidental refreshes */
-html, body {
-    overscroll-behavior: none;
-    overscroll-behavior-y: none;
-    overscroll-behavior-x: none;
-    position: fixed;
-    overflow-y: auto;
-    width: 100%;
-    height: 100%;
-}
-
-/* But keep scrolling functional */
-body {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-/* Prevent refresh on touchmove at top of page */
-body {
-    touch-action: pan-y pinch-zoom;
-}
+    }
+    
+    /* ===== ADDED: Prevent pull-to-refresh ===== */
+    html, body {
+        overscroll-behavior: none;
+        overscroll-behavior-y: none;
+        overscroll-behavior-x: none;
+        width: 100%;
+        height: 100%;
+    }
+    body {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y pinch-zoom;
+    }
+    /* ===== END ADDED ===== */
+    
     .cash-prize {
         position: fixed;
         top: 20px;
@@ -188,32 +184,10 @@ body {
         .cash-prize { position: relative; top: 0; right: 0; margin: 16px auto; width: fit-content; }
     }
     </style>
-    <!-- ONLY LOAD EXTERNAL CONFIG - NO HARDCODED SETS OR BANS -->
+    <!-- LOAD EXTERNAL CONFIG -->
     <script src="gauntlet-config.js"></script>
 </head>
 <body>
-    // Prevent pull-to-refresh and accidental page refresh while scrolling
-document.addEventListener('touchmove', function(e) {
-    // Check if scrolled to top and trying to pull down
-    if (document.documentElement.scrollTop === 0 && e.touches[0].clientY > 0) {
-        // Allow scrolling but prevent pull-to-refresh
-        // This doesn't block normal scrolling, only the refresh trigger
-        e.preventDefault();
-    }
-}, { passive: false });
-
-// Prevent Ctrl+R or Cmd+R (optional - comment out if you want to keep refresh shortcut)
-document.addEventListener('keydown', function(e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
-        e.preventDefault();
-        alert('Use the "Copy Config Code" button to save changes before refreshing.');
-    }
-    // Also prevent F5
-    if (e.key === 'F5') {
-        e.preventDefault();
-        alert('Use the "Copy Config Code" button to save changes before refreshing.');
-    }
-});
     <div class="cash-prize">
         <span>🏆 GAUNTLET PRIZE 🏆</span>
         <span class="amount" id="cashPrizeAmount">$50.00</span>
@@ -325,16 +299,34 @@ document.addEventListener('keydown', function(e) {
     </div>
 
     <script>
-        // ========== LOAD EVERYTHING FROM EXTERNAL CONFIG FILE ==========
-        // NO HARDCODED SETS OR BANS - EVERYTHING COMES FROM gauntlet-config.js
+        // ===== ADDED: Prevent pull-to-refresh on mobile =====
+        document.addEventListener('touchmove', function(e) {
+            const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+            if (scrollTop === 0 && e.touches[0].clientY > 5) {
+                e.preventDefault();
+            }
+        }, { passive: false });
         
+        // Prevent Ctrl+R and F5 from refreshing (optional - remove if you want refresh to work)
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                alert('Use the "Copy Config Code" button to save changes before refreshing.');
+            }
+            if (e.key === 'F5') {
+                e.preventDefault();
+                alert('Use the "Copy Config Code" button to save changes before refreshing.');
+            }
+        });
+        // ===== END ADDED =====
+        
+        // ========== LOAD EVERYTHING FROM EXTERNAL CONFIG FILE ==========
         let MASTER_BANLIST;
         
         if (typeof GAUNTLET_CONFIG !== 'undefined' && GAUNTLET_CONFIG) {
             MASTER_BANLIST = GAUNTLET_CONFIG;
             console.log("✅ Loaded config from gauntlet-config.js");
         } else {
-            // Fallback - should never happen if config file exists
             alert("ERROR: gauntlet-config.js not found! Please make sure the config file is in the same folder.");
             MASTER_BANLIST = {
                 version: "error",
