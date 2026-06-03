@@ -1,5 +1,4 @@
 // ========== GAUNTLET CONFIGURATION - ALL 130+ SETS ==========
-const
 const GAUNTLET_CONFIG = {
   "version": "2026-06-03T01:53:38.592Z",
   "hardBannedCards": [
