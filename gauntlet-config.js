@@ -1,6 +1,6 @@
 // ========== GAUNTLET CONFIGURATION ==========
 const GAUNTLET_CONFIG = {
-    version: "2026.06.03.1407",
+    version: "2026.06.03.1444",
     hardBannedCards: [
     "Sol Ring",
     "Lightning Bolt",
@@ -134,7 +134,14 @@ const GAUNTLET_CONFIG = {
     "Stasis",
     "Time Walk",
     "Timetwister",
-    "Bad Moon"
+    "Bad Moon",
+    "Dark Ritual",
+    "Demonic Tutor",
+    "Hypnotic Specter",
+    "Lich",
+    "Mind Twist",
+    "Nether Shadow",
+    "Word of Command"
 ],
     bannedCardTypes: [
     "Planeswalker",
@@ -155,7 +162,34 @@ const GAUNTLET_CONFIG = {
     "Disenchant",
     "Psychic Venom",
     "Spell Blast",
-    "Steal Artifact"
+    "Steal Artifact",
+    "Animate Wall",
+    "Black Ward",
+    "Blessing",
+    "Blue Ward",
+    "Consecrate Land",
+    "Farmstead",
+    "Green Ward",
+    "Holy Armor",
+    "Holy Strength",
+    "Animate Artifact",
+    "Lance",
+    "Red Ward",
+    "White Ward",
+    "Power Leak",
+    "Creature Bond",
+    "Feedback",
+    "Invisibility",
+    "Flight",
+    "Phantasmal Terrain",
+    "Cursed Land",
+    "Evil Presence",
+    "Fear",
+    "Paralyze",
+    "Burrowing",
+    "Unholy Strength",
+    "Warp Artifact",
+    "Weakness"
 ],
     forceBannedCards: [],
     legalSets: [
