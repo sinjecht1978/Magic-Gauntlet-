@@ -168,7 +168,7 @@
         .cash-prize { position: relative; top: 0; right: 0; margin: 16px auto; width: fit-content; }
     }
     </style>
-    <!-- LOAD EXTERNAL CONFIGURATION FILE -->
+    <!-- ONLY LOAD EXTERNAL CONFIG - NO HARDCODED SETS OR BANS -->
     <script src="gauntlet-config.js"></script>
 </head>
 <body>
@@ -258,9 +258,7 @@
                     5️⃣ Save the file and refresh this page - changes become permanent!
                 </div>
                 
-                <!-- NEW COPY CONFIG BUTTON - HIGHLY VISIBLE -->
                 <button class="copy-config-btn" onclick="copyConfigToClipboard()">📋 COPY CONFIG CODE - PASTE INTO gauntlet-config.js</button>
-                
                 <div id="copyStatus" style="display:none; background: #38a169; color: white; padding: 10px; border-radius: 40px; text-align: center; margin: 10px 0;"></div>
             </div>
             
@@ -278,34 +276,37 @@
             </div>
             
             <div style="margin-top: 30px; background: #e2e8f0; border-radius: 16px; padding: 16px;">
-                <h3 style="margin: 0 0 10px 0;">📋 Current Config Preview</h3>
+                <h3 style="margin: 0 0 10px 0;">📋 Current Config (from gauntlet-config.js)</h3>
                 <div id="currentMasterBanlistDisplay" class="master-banlist-code" style="max-height: 300px; font-size: 11px;"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // ========== LOAD CONFIG FROM EXTERNAL FILE ==========
+        // ========== LOAD EVERYTHING FROM EXTERNAL CONFIG FILE ==========
+        // NO HARDCODED SETS OR BANS - EVERYTHING COMES FROM gauntlet-config.js
+        
         let MASTER_BANLIST;
         
         if (typeof GAUNTLET_CONFIG !== 'undefined' && GAUNTLET_CONFIG) {
             MASTER_BANLIST = GAUNTLET_CONFIG;
             console.log("✅ Loaded config from gauntlet-config.js");
         } else {
-            console.warn("⚠️ gauntlet-config.js not found, using defaults");
+            // Fallback - should never happen if config file exists
+            alert("ERROR: gauntlet-config.js not found! Please make sure the config file is in the same folder.");
             MASTER_BANLIST = {
-                version: "default",
-                hardBannedCards: ["Sol Ring", "Lightning Bolt", "Mana Crypt"],
+                version: "error",
+                hardBannedCards: [],
                 bannedCardTypes: [],
                 bannedAbilities: [],
                 forceLegalCards: [],
                 forceBannedCards: [],
-                legalSets: ["Adventures in the Forgotten Realms", "Aether Revolt"],
+                legalSets: [],
                 cashPrize: "50.00"
             };
         }
         
-        // Load from MASTER_BANLIST
+        // Load everything from the config file
         let hardBannedCards = [...MASTER_BANLIST.hardBannedCards];
         let bannedCardTypes = [...MASTER_BANLIST.bannedCardTypes];
         let bannedAbilities = [...MASTER_BANLIST.bannedAbilities];
@@ -321,7 +322,7 @@
         let savedBrowsePage = parseInt(localStorage.getItem('savedBrowsePage')) || 1;
         let cachedSetCards = {};
         
-        // ========== NEW COPY CONFIG FUNCTION ==========
+        // Copy current config to clipboard
         window.copyConfigToClipboard = function() {
             const date = new Date();
             const versionString = `${date.getFullYear()}.${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getDate()).padStart(2,'0')}.${String(date.getHours()).padStart(2,'0')}${String(date.getMinutes()).padStart(2,'0')}`;
@@ -343,9 +344,9 @@ const GAUNTLET_CONFIG = {
                 statusDiv.style.display = 'block';
                 statusDiv.innerHTML = '✅ CONFIG CODE COPIED! Now paste it into gauntlet-config.js and refresh.';
                 setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
-                alert('✅ Config code copied to clipboard!\n\nOpen gauntlet-config.js, select ALL, paste, save, and refresh.');
+                alert('✅ Config code copied!\n\nOpen gauntlet-config.js, select ALL, paste, save, and refresh.');
             }).catch(() => {
-                alert('❌ Failed to copy. Select the code below manually.');
+                alert('❌ Failed to copy.');
             });
         };
         
@@ -714,7 +715,7 @@ const GAUNTLET_CONFIG = {
         window.removeFromBannedList = function(idx) { 
             hardBannedCards.splice(idx,1); 
             saveToLocal(); 
-                updateBannedManagementList(); 
+            updateBannedManagementList(); 
             refreshUI(); 
         };
         
@@ -897,4 +898,4 @@ const GAUNTLET_CONFIG = {
         setInterval(autoSaveDecks, 1500);
     </script>
 </body>
-                    </html>
+    </html>
