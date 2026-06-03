@@ -1,6 +1,6 @@
 // ========== GAUNTLET CONFIGURATION ==========
 const GAUNTLET_CONFIG = {
-    version: "2026.06.02.2222",
+    version: "2026.06.02.2307",
     hardBannedCards: [
     "Sol Ring",
     "Lightning Bolt",
@@ -113,7 +113,8 @@ const GAUNTLET_CONFIG = {
     "Taiga",
     "Tropical Island",
     "Tundra",
-    "Underground Sea"
+    "Underground Sea",
+    "Balance"
 ],
     bannedCardTypes: [
     "Planeswalker",
@@ -128,7 +129,10 @@ const GAUNTLET_CONFIG = {
     "infect",
     "venture into the dungeon"
 ],
-    forceLegalCards: [],
+    forceLegalCards: [
+    "Siren's Call",
+    "Disenchant"
+],
     forceBannedCards: [],
     legalSets: [
     "Adventures in the Forgotten Realms",
