@@ -317,3 +317,8 @@ const GAUNTLET_CONFIG = {
 ],
     cashPrize: "50.00"
 };
+
+// ⭐ MAKE IT GLOBALLY ACCESSIBLE ⭐
+if (typeof window !== 'undefined') {
+    window.GAUNTLET_CONFIG = GAUNTLET_CONFIG;
+        }
