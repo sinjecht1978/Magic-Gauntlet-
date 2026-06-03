@@ -102,6 +102,8 @@
     .scrollable-list-container { max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 16px; margin-top: 10px; background: #f8fafc; padding: 8px; }
     .code-block-display { background: #1e2a3a; color: #f9c74f; padding: 16px; border-radius: 16px; font-family: monospace; font-size: 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 12px 0; }
     .copy-code-btn { background: #38a169; color: white; border: none; padding: 10px 20px; border-radius: 40px; cursor: pointer; font-weight: bold; }
+    .copy-config-btn { background: #f9c74f; color: #1e2a3e; border: none; padding: 12px 24px; border-radius: 40px; cursor: pointer; font-weight: bold; font-size: 1rem; margin-bottom: 20px; width: 100%; }
+    .copy-config-btn:hover { background: #f8961e; transform: scale(0.98); }
     .exception-card.banned { background: #fee2e2; }
     
     .master-banlist-highlight {
@@ -248,15 +250,18 @@
             <div class="master-banlist-highlight">
                 <div class="highlight-badge">⚡ CONFIGURATION FILE: gauntlet-config.js ⚡</div>
                 <div class="instruction-box">
-                    <strong>📌 HOW TO UPDATE SETTINGS:</strong><br><br>
-                    1️⃣ Open <strong>gauntlet-config.js</strong> in any text editor<br>
-                    2️⃣ Edit the settings (banned cards, legal sets, prize money, etc.)<br>
-                    3️⃣ Save the file and refresh this page<br>
-                    4️⃣ All changes apply immediately - no copy/paste needed!
+                    <strong>📌 HOW TO UPDATE YOUR GAUNTLET SETTINGS:</strong><br><br>
+                    1️⃣ Make temporary changes below (Ban cards, add sets, adjust prize, etc.)<br>
+                    2️⃣ Click <strong>"📋 COPY CONFIG CODE"</strong> button below<br>
+                    3️⃣ Open <strong>gauntlet-config.js</strong> in a text editor<br>
+                    4️⃣ Select ALL and PASTE the copied code<br>
+                    5️⃣ Save the file and refresh this page - changes become permanent!
                 </div>
-                <div class="instruction-box" style="background:#fef3c7; border-left-color:#f9c74f;">
-                    <strong>💡 TIP:</strong> To share your configuration with others, just send them your gauntlet-config.js file. The main HTML file never needs to change!
-                </div>
+                
+                <!-- NEW COPY CONFIG BUTTON - HIGHLY VISIBLE -->
+                <button class="copy-config-btn" onclick="copyConfigToClipboard()">📋 COPY CONFIG CODE - PASTE INTO gauntlet-config.js</button>
+                
+                <div id="copyStatus" style="display:none; background: #38a169; color: white; padding: 10px; border-radius: 40px; text-align: center; margin: 10px 0;"></div>
             </div>
             
             <div id="password-section" class="password-prompt">
@@ -273,7 +278,7 @@
             </div>
             
             <div style="margin-top: 30px; background: #e2e8f0; border-radius: 16px; padding: 16px;">
-                <h3 style="margin: 0 0 10px 0;">📋 Current Config (from gauntlet-config.js)</h3>
+                <h3 style="margin: 0 0 10px 0;">📋 Current Config Preview</h3>
                 <div id="currentMasterBanlistDisplay" class="master-banlist-code" style="max-height: 300px; font-size: 11px;"></div>
             </div>
         </div>
@@ -281,16 +286,12 @@
 
     <script>
         // ========== LOAD CONFIG FROM EXTERNAL FILE ==========
-        // The config is loaded from gauntlet-config.js via the script tag above
-        // Use the global GAUNTLET_CONFIG variable or fallback to defaults
-        
         let MASTER_BANLIST;
         
         if (typeof GAUNTLET_CONFIG !== 'undefined' && GAUNTLET_CONFIG) {
             MASTER_BANLIST = GAUNTLET_CONFIG;
             console.log("✅ Loaded config from gauntlet-config.js");
         } else {
-            // Fallback defaults in case config file is missing
             console.warn("⚠️ gauntlet-config.js not found, using defaults");
             MASTER_BANLIST = {
                 version: "default",
@@ -319,6 +320,34 @@
         let savedBrowseSet = localStorage.getItem('savedBrowseSet') || "";
         let savedBrowsePage = parseInt(localStorage.getItem('savedBrowsePage')) || 1;
         let cachedSetCards = {};
+        
+        // ========== NEW COPY CONFIG FUNCTION ==========
+        window.copyConfigToClipboard = function() {
+            const date = new Date();
+            const versionString = `${date.getFullYear()}.${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getDate()).padStart(2,'0')}.${String(date.getHours()).padStart(2,'0')}${String(date.getMinutes()).padStart(2,'0')}`;
+            
+            const configCode = `// ========== GAUNTLET CONFIGURATION ==========
+const GAUNTLET_CONFIG = {
+    version: "${versionString}",
+    hardBannedCards: ${JSON.stringify(hardBannedCards, null, 4)},
+    bannedCardTypes: ${JSON.stringify(bannedCardTypes, null, 4)},
+    bannedAbilities: ${JSON.stringify(bannedAbilities, null, 4)},
+    forceLegalCards: ${JSON.stringify(forceLegalCards, null, 4)},
+    forceBannedCards: ${JSON.stringify(forceBannedCards, null, 4)},
+    legalSets: ${JSON.stringify(legalSets, null, 4)},
+    cashPrize: "${cashPrize}"
+};`;
+            
+            navigator.clipboard.writeText(configCode).then(() => {
+                const statusDiv = document.getElementById('copyStatus');
+                statusDiv.style.display = 'block';
+                statusDiv.innerHTML = '✅ CONFIG CODE COPIED! Now paste it into gauntlet-config.js and refresh.';
+                setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
+                alert('✅ Config code copied to clipboard!\n\nOpen gauntlet-config.js, select ALL, paste, save, and refresh.');
+            }).catch(() => {
+                alert('❌ Failed to copy. Select the code below manually.');
+            });
+        };
         
         function saveToLocal() {
             localStorage.setItem('hardBannedCards', JSON.stringify(hardBannedCards));
@@ -685,7 +714,7 @@
         window.removeFromBannedList = function(idx) { 
             hardBannedCards.splice(idx,1); 
             saveToLocal(); 
-            updateBannedManagementList(); 
+                updateBannedManagementList(); 
             refreshUI(); 
         };
         
@@ -868,4 +897,4 @@
         setInterval(autoSaveDecks, 1500);
     </script>
 </body>
-    </html>
+                    </html>
