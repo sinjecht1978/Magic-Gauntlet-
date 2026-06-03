@@ -1,6 +1,6 @@
 // ========== GAUNTLET CONFIGURATION ==========
 const GAUNTLET_CONFIG = {
-    version: "2026.06.02.2307",
+    version: "2026.06.03.0612",
     hardBannedCards: [
     "Sol Ring",
     "Lightning Bolt",
@@ -114,7 +114,17 @@ const GAUNTLET_CONFIG = {
     "Tropical Island",
     "Tundra",
     "Underground Sea",
-    "Balance"
+    "Balance",
+    "Circle of Protection: Black",
+    "Circle of Protection: Blue",
+    "Circle of Protection: Green",
+    "Circle of Protection: Red",
+    "Circle of Protection: White",
+    "Ancestral Recall",
+    "Island Sanctuary",
+    "Karma",
+    "Savannah Lions",
+    "Swords to Plowshares"
 ],
     bannedCardTypes: [
     "Planeswalker",
