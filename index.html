@@ -13,7 +13,27 @@
         background: #f5f7fa;
         color: #1e2a3e;
         line-height: 1.5;
-    }
+    }/* Prevent pull-to-refresh and accidental refreshes */
+html, body {
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    overscroll-behavior-x: none;
+    position: fixed;
+    overflow-y: auto;
+    width: 100%;
+    height: 100%;
+}
+
+/* But keep scrolling functional */
+body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent refresh on touchmove at top of page */
+body {
+    touch-action: pan-y pinch-zoom;
+}
     .cash-prize {
         position: fixed;
         top: 20px;
@@ -172,6 +192,28 @@
     <script src="gauntlet-config.js"></script>
 </head>
 <body>
+    // Prevent pull-to-refresh and accidental page refresh while scrolling
+document.addEventListener('touchmove', function(e) {
+    // Check if scrolled to top and trying to pull down
+    if (document.documentElement.scrollTop === 0 && e.touches[0].clientY > 0) {
+        // Allow scrolling but prevent pull-to-refresh
+        // This doesn't block normal scrolling, only the refresh trigger
+        e.preventDefault();
+    }
+}, { passive: false });
+
+// Prevent Ctrl+R or Cmd+R (optional - comment out if you want to keep refresh shortcut)
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+        e.preventDefault();
+        alert('Use the "Copy Config Code" button to save changes before refreshing.');
+    }
+    // Also prevent F5
+    if (e.key === 'F5') {
+        e.preventDefault();
+        alert('Use the "Copy Config Code" button to save changes before refreshing.');
+    }
+});
     <div class="cash-prize">
         <span>🏆 GAUNTLET PRIZE 🏆</span>
         <span class="amount" id="cashPrizeAmount">$50.00</span>
