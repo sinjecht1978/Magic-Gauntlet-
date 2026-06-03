@@ -1,6 +1,6 @@
 // ========== GAUNTLET CONFIGURATION ==========
 const GAUNTLET_CONFIG = {
-    version: "2026.06.03.1444",
+    version: "2026.06.03.1627",
     hardBannedCards: [
     "Sol Ring",
     "Lightning Bolt",
@@ -141,7 +141,23 @@ const GAUNTLET_CONFIG = {
     "Lich",
     "Mind Twist",
     "Nether Shadow",
-    "Word of Command"
+    "Word of Command",
+    "Earthquake",
+    "Fork",
+    "Goblin King",
+    "Manabarbs",
+    "Raging River",
+    "Fastbond",
+    "Wheel of Fortune",
+    "Berserk",
+    "Birds of Paradise",
+    "Regrowth",
+    "Llanowar Elves",
+    "Black Vise",
+    "Verduran Enchantress",
+    "Ankh of Mishra",
+    "Basalt Monolith",
+    "Kormus Bell"
 ],
     bannedCardTypes: [
     "Planeswalker",
@@ -189,7 +205,21 @@ const GAUNTLET_CONFIG = {
     "Burrowing",
     "Unholy Strength",
     "Warp Artifact",
-    "Weakness"
+    "Weakness",
+    "Earthbind",
+    "Firebreathing",
+    "Flashfires",
+    "Shatter",
+    "Tunnel",
+    "Aspect of Wolf",
+    "Instill Energy",
+    "Lure",
+    "Regeneration",
+    "Tranquility",
+    "Tsunami",
+    "Wanderlust",
+    "Web",
+    "Wild Growth"
 ],
     forceBannedCards: [],
     legalSets: [
@@ -321,4 +351,4 @@ const GAUNTLET_CONFIG = {
 // ⭐ MAKE IT GLOBALLY ACCESSIBLE ⭐
 if (typeof window !== 'undefined') {
     window.GAUNTLET_CONFIG = GAUNTLET_CONFIG;
-        }
+}
