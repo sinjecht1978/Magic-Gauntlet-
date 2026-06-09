@@ -287,6 +287,43 @@
     </div>
 
     <script>
+        // ========== FIX: Set name to set code mapping for problematic set names ==========
+        // This mapping allows sets with colons and special characters to load correctly
+        const setNameToCode = {
+            // Sets with colons
+            "Ikoria: Lair of Behemoths": "iko",
+            "Duskmourn: House of Horror": "dsk",
+            "Innistrad: Crimson Vow": "vow",
+            "Innistrad: Midnight Hunt": "mid",
+            "Kamigawa: Neon Dynasty": "neo",
+            "March of the Machine: The Aftermath": "mat",
+            "Phyrexia: All Will Be One": "one",
+            "Ravnica: City of Guilds": "rav",
+            "Strixhaven: School of Mages": "stx",
+            // Additional common problematic sets
+            "Core Set 2021": "m21",
+            "Core Set 2020": "m20",
+            "Core Set 2019": "m19",
+            "Modern Horizons 2": "mh2",
+            "Modern Horizons": "mh1",
+            "The Brothers' War": "bro",
+            "Dominaria United": "dmu",
+            "Streets of New Capenna": "snc",
+            "Kamigawa: Neon Dynasty": "neo",
+            "Kaldheim": "khm",
+            "Zendikar Rising": "znr",
+            "Throne of Eldraine": "eld",
+            "Guilds of Ravnica": "grn",
+            "Ravnica Allegiance": "rna",
+            "War of the Spark": "war",
+            "Theros Beyond Death": "thb",
+            "Adventures in the Forgotten Realms": "afr",
+            "Innistrad: Double Feature": "dbl"
+        };
+        
+        // Also store reverse mapping for when we add sets by code
+        let setCodeToName = {};
+
         // ========== LOAD EVERYTHING FROM EXTERNAL CONFIG FILE ==========
         let MASTER_BANLIST;
         
@@ -546,44 +583,73 @@ if (typeof window !== 'undefined') {
             if (current && legalSets.includes(current)) sel.value = current;
         }
         
+        // ========== FIXED: loadSetCards now uses set codes for problematic sets ==========
         window.loadSetCards = async function(page = 1) {
-            const setName = document.getElementById("setSelect").value;
-            if (!setName) { alert("Select a set"); return; }
-            savedBrowseSet = setName; 
+            const selectedSet = document.getElementById("setSelect").value;
+            if (!selectedSet) { alert("Select a set"); return; }
+            
+            savedBrowseSet = selectedSet;
             savedBrowsePage = page;
             localStorage.setItem('savedBrowseSet', savedBrowseSet);
             localStorage.setItem('savedBrowsePage', savedBrowsePage);
+            
             const infoDiv = document.getElementById("set-info");
             infoDiv.innerHTML = "<p>🌀 Loading...</p>";
-            if (cachedSetCards[setName]) {
-                allDisplayCards = cachedSetCards[setName];
+            
+            // FIX: Check if we have a mapping for this set name to a set code
+            let setCode = setNameToCode[selectedSet];
+            let searchQuery;
+            
+            if (setCode) {
+                // Use the set:code format which handles colons and special characters perfectly
+                searchQuery = `set:${setCode}`;
+                console.log(`🔍 Using set code mapping: ${selectedSet} -> ${setCode}`);
+            } else {
+                // Fallback for sets without known issues (keep original behavior)
+                searchQuery = `e:"${selectedSet}"`;
+                console.log(`🔍 Using full name search: ${selectedSet}`);
+            }
+            
+            // Check cache
+            if (cachedSetCards[selectedSet]) {
+                allDisplayCards = cachedSetCards[selectedSet];
                 totalPages = Math.ceil(allDisplayCards.length / cardsPerPage);
                 currentPage = page;
-                infoDiv.innerHTML = `<h3>✨ ${setName} (${allDisplayCards.length} cards)</h3>`;
+                infoDiv.innerHTML = `<h3>✨ ${selectedSet} (${allDisplayCards.length} cards)</h3>`;
                 renderBrowseCards();
                 updateBrowsePagination();
                 return;
             }
+            
             try {
-                let searchQuery = `e:"${setName}"`;
-                let url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}+order:set&unique=cards`;
+                let url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}+order:set&unique=prints`;
                 let all = [];
                 while (url) {
                     let resp = await fetch(url);
                     let data = await resp.json();
-                    if (data.data) all = all.concat(data.data);
+                    if (data.data) {
+                        all = all.concat(data.data);
+                    } else if (data.object === 'error') {
+                        throw new Error(data.details);
+                    }
                     url = data.has_more ? data.next_page : null;
                     if (url) await new Promise(r => setTimeout(r, 90));
                 }
-                cachedSetCards[setName] = all;
+                
+                if (all.length === 0) {
+                    infoDiv.innerHTML = `<p style="color:#c00;">⚠️ No cards found for "${selectedSet}". Check if the set name/code is correct.</p>`;
+                    return;
+                }
+                
+                cachedSetCards[selectedSet] = all;
                 allDisplayCards = all;
                 totalPages = Math.ceil(all.length / cardsPerPage);
                 currentPage = page;
-                infoDiv.innerHTML = `<h3>✨ ${setName} (${all.length} cards)</h3>`;
+                infoDiv.innerHTML = `<h3>✨ ${selectedSet} (${all.length} cards)</h3>`;
                 renderBrowseCards();
                 updateBrowsePagination();
             } catch (err) { 
-                infoDiv.innerHTML = `<p style="color:#c00;">Error: ${err.message}</p>`;
+                infoDiv.innerHTML = `<p style="color:#c00;">Error loading set: ${err.message}</p>`;
                 console.error("Set load error:", err);
             }
         };
@@ -785,8 +851,9 @@ if (typeof window !== 'undefined') {
             refreshUI(); 
         };
         
+        // FIXED: addSetByCode now also stores the set code mapping for future use
         window.addSetByCode = async function() { 
-            let code = document.getElementById('newSetCode').value.trim(); 
+            let code = document.getElementById('newSetCode').value.trim().toLowerCase(); 
             if (!code) return; 
             try { 
                 let res = await fetch(`https://api.scryfall.com/sets/${code}`); 
@@ -795,12 +862,15 @@ if (typeof window !== 'undefined') {
                 if (!legalSets.includes(data.name)) { 
                     legalSets.push(data.name); 
                     legalSets.sort(); 
+                    // FIX: Store the mapping from set name to set code for future loads
+                    setNameToCode[data.name] = code;
+                    setCodeToName[code] = data.name;
                     saveToLocal(); 
                     updateSetManagementList(); 
                     populateSetSelector(); 
-                    alert(`Added ${data.name}`); 
+                    alert(`✅ Added ${data.name} (${code})\n\nThis set will now load correctly using set:${code} search.`); 
                 } else alert('Set already exists'); 
-            } catch(e) { alert('Invalid set code'); } 
+            } catch(e) { alert(`Invalid set code "${code}": ${e.message}`); } 
         };
         
         window.addToBannedAbilities = function() { 
@@ -835,8 +905,8 @@ if (typeof window !== 'undefined') {
         window.removeFromForceLegalList = function(idx) { 
             forceLegalCards.splice(idx,1); 
             saveToLocal(); 
-            updateExceptionLists(); 
-            refreshUI(); 
+                updateExceptionLists(); 
+                refreshUI(); 
         };
         
         window.addToForceBannedList = function() { 
@@ -957,6 +1027,7 @@ if (typeof window !== 'undefined') {
         setInterval(autoSaveDecks, 1500);
         
         console.log("✅ Gauntlet initialized with", hardBannedCards.length, "banned cards");
+        console.log("✅ Set name to code mapping loaded with", Object.keys(setNameToCode).length, "entries");
     </script>
 </body>
-</html>
+    </html>
