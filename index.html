@@ -67,9 +67,9 @@
     }
     .deck-section { margin-bottom: 28px; }
     .deck-section h3 { display: flex; justify-content: space-between; margin: 0 0 12px 0; }
-    .deck-list { background: #f8fafc; border-radius: 18px; min-height: 180px; max-height: 280px; overflow-y: auto; padding: 6px 8px; }
+    .deck-list { background: #f8fafc; border-radius: 18px; min-height: 80px; max-height: 200px; overflow-y: auto; padding: 6px 8px; }
     .deck-card-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #e9edf2; }
-    .deck-card-remove { background: #e53e3e; border: none; color: white; border-radius: 32px; width: 28px; height: 28px; cursor: pointer; }
+    .deck-card-remove { background: #e53e3e; border: none; color: white; border-radius: 32px; width: 28px; height: 28px; cursor: pointer; font-weight: bold; }
     .deck-actions { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
     .deck-action-btn { background: #2c5282; color: white; border: none; padding: 8px 14px; border-radius: 40px; cursor: pointer; }
     .search-section { background: white; border-radius: 20px; padding: 20px; margin-bottom: 24px; }
@@ -172,10 +172,38 @@
         margin-right: 6px;
         margin-bottom: 6px;
     }
+    /* Split layout for main deck and lands */
+    .deck-split {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+    .deck-split .deck-section {
+        flex: 1;
+        margin-bottom: 0;
+        min-width: 0;
+    }
+    .deck-split .deck-section:first-child {
+        border-right: 2px solid #d1d5db;
+        padding-right: 16px;
+    }
+    .deck-split .deck-section:last-child {
+        padding-left: 0;
+    }
+    .deck-split .deck-list { max-height: 200px; }
+    .land-list .deck-card-item { background: #f0f7ee; }
     @media (max-width: 860px) {
         .deck-builder-wrapper { flex-direction: column; }
         .deck-panel { position: relative; top: 0; max-height: none; }
         .cash-prize { position: relative; top: 0; right: 0; margin: 16px auto; width: fit-content; }
+        .deck-split { flex-direction: column; }
+        .deck-split .deck-section:first-child {
+            border-right: none;
+            border-bottom: 2px solid #d1d5db;
+            padding-right: 0;
+            padding-bottom: 16px;
+        }
+        .deck-split .deck-section:last-child { padding-left: 0; padding-top: 16px; }
     }
     </style>
     <script src="gauntlet-config.js"></script>
@@ -204,7 +232,24 @@
             <div class="browse-mode-toggle"><button class="mode-btn" id="searchModeBtn" onclick="setMode('search')">🔍 Search Cards</button><button class="mode-btn active" id="browseModeBtn" onclick="setMode('browse')">📚 Browse by Set</button></div>
             <div id="searchModePanel" style="display: none;"><div class="search-section"><div class="search-bar"><input type="text" id="globalSearchInput" placeholder="Search for any card..."><button onclick="globalSearchCards(1)">🔍 Search</button></div><div id="searchInfo" style="display: none;"></div><div id="searchResults" class="card-gallery"></div><div id="searchPagination" class="pagination"></div></div></div>
             <div id="browseModePanel"><div class="set-selector"><select id="setSelect"></select><button class="load-btn" onclick="loadSetCards(1)">Browse Set</button></div><div id="pagination-top" class="pagination"></div><div id="set-info"></div><div id="set-cards" class="card-gallery"></div><div id="pagination-bottom" class="pagination"></div></div>
-            <div class="deck-builder-wrapper"><div class="cards-panel"></div><div class="deck-panel"><div class="deck-section"><h3>📌 Main Deck <span id="mainCount">0</span></h3><div id="mainDeckList" class="deck-list"></div></div><div class="deck-section"><h3>📦 Sideboard <span id="sideCount">0</span></h3><div id="sideboardList" class="deck-list"></div></div><div class="deck-actions"><button class="deck-action-btn" onclick="copyDeckToClipboard()">📋 Copy</button><button class="deck-action-btn" onclick="printDeck()">🖨️ Print</button><button class="deck-action-btn" onclick="resetDeck()">🗑️ Reset</button></div></div></div>
+            <div class="deck-builder-wrapper"><div class="cards-panel"></div><div class="deck-panel">
+                <!-- Split layout: Main Deck | Lands on same row, Sideboard below -->
+                <div class="deck-split">
+                    <div class="deck-section">
+                        <h3>📌 Main Deck <span id="mainCount">0</span></h3>
+                        <div id="mainDeckList" class="deck-list"></div>
+                    </div>
+                    <div class="deck-section">
+                        <h3>🌿 Lands <span id="landCount">0</span></h3>
+                        <div id="landDeckList" class="deck-list land-list"></div>
+                    </div>
+                </div>
+                <div class="deck-section">
+                    <h3>📦 Sideboard <span id="sideCount">0</span></h3>
+                    <div id="sideboardList" class="deck-list"></div>
+                </div>
+                <div class="deck-actions"><button class="deck-action-btn" onclick="copyDeckToClipboard()">📋 Copy</button><button class="deck-action-btn" onclick="printDeck()">🖨️ Print</button><button class="deck-action-btn" onclick="resetDeck()">🗑️ Reset</button></div>
+            </div></div>
         </div>
         
         <div id="admin" class="tab-content">
@@ -215,7 +260,6 @@
                 <div class="cash-prize-management"><h3>💰 Cash Prize</h3><div class="add-banned-form"><input type="text" id="cashPrizeInput"><button onclick="updateCashPrize()">Set Prize</button></div></div>
                 <div class="set-management"><h3>📌 Legal Sets (3-letter codes)</h3><div class="add-banned-form"><input type="text" id="newSetCode" placeholder="e.g., tla, ltr, dsk, m21"><button onclick="addSetByCode()">Add Set by Code</button></div><div class="scrollable-list-container"><div id="set-management-list"></div></div></div>
                 
-                <!-- NEW: Ban Card Types via text input (like abilities) -->
                 <div class="ban-type-section">
                     <h3>🚫 Ban Card Types (type line keywords)</h3>
                     <div class="add-banned-form">
@@ -261,7 +305,8 @@
         // Default banned types if empty - include Room as requested
         if (bannedCardTypes.length === 0) bannedCardTypes = ["Planeswalker", "Saga", "Dungeon", "Class", "Conspiracy", "Scheme", "Vanguard", "Room"];
         
-        let mainDeck = {}, sideboard = {};
+        // Separate lands from main deck
+        let mainDeck = {}, landDeck = {}, sideboard = {};
         let allDisplayCards = [], currentPage = 1, cardsPerPage = 24, totalPages = 1;
         let currentSearchResults = [], searchCurrentPage = 1, searchTotalPages = 1, currentMode = "browse";
         let savedBrowseSet = localStorage.getItem('savedBrowseSet') || "";
@@ -271,6 +316,13 @@
         loadSetCodeMappings();
         if (MASTER_BANLIST.setCodeMappings) Object.assign(setNameToCode, MASTER_BANLIST.setCodeMappings);
         
+        // Helper: check if card is a basic land (by type_line)
+        function isBasicLand(card) {
+            if (!card || !card.type_line) return false;
+            let types = card.type_line.toLowerCase();
+            return types.includes('basic') && types.includes('land');
+        }
+
         function isCardBanned(card) {
             if (forceBannedCards.includes(card.name)) return true;
             if (forceLegalCards.includes(card.name)) return false;
@@ -317,8 +369,32 @@
         };
         
         // Rest of core functions (save/load, deck, search, etc.)
-        function saveToLocal() { localStorage.setItem('gauntlet_hardBannedCards', JSON.stringify(hardBannedCards)); localStorage.setItem('gauntlet_legalSets', JSON.stringify(legalSets)); localStorage.setItem('gauntlet_cashPrize', cashPrize); localStorage.setItem('gauntlet_bannedCardTypes', JSON.stringify(bannedCardTypes)); localStorage.setItem('gauntlet_bannedAbilities', JSON.stringify(bannedAbilities)); localStorage.setItem('gauntlet_forceLegalCards', JSON.stringify(forceLegalCards)); localStorage.setItem('gauntlet_forceBannedCards', JSON.stringify(forceBannedCards)); }
-        function loadFromLocal() { const hb=localStorage.getItem('gauntlet_hardBannedCards'); const ls=localStorage.getItem('gauntlet_legalSets'); const cp=localStorage.getItem('gauntlet_cashPrize'); const bct=localStorage.getItem('gauntlet_bannedCardTypes'); const ba=localStorage.getItem('gauntlet_bannedAbilities'); const fl=localStorage.getItem('gauntlet_forceLegalCards'); const fb=localStorage.getItem('gauntlet_forceBannedCards'); if(hb) hardBannedCards=JSON.parse(hb); if(ls) legalSets=JSON.parse(ls); if(cp) cashPrize=cp; if(bct) bannedCardTypes=JSON.parse(bct); if(ba) bannedAbilities=JSON.parse(ba); if(fl) forceLegalCards=JSON.parse(fl); if(fb) forceBannedCards=JSON.parse(fb); }
+        function saveToLocal() { 
+            localStorage.setItem('gauntlet_hardBannedCards', JSON.stringify(hardBannedCards)); 
+            localStorage.setItem('gauntlet_legalSets', JSON.stringify(legalSets)); 
+            localStorage.setItem('gauntlet_cashPrize', cashPrize); 
+            localStorage.setItem('gauntlet_bannedCardTypes', JSON.stringify(bannedCardTypes)); 
+            localStorage.setItem('gauntlet_bannedAbilities', JSON.stringify(bannedAbilities)); 
+            localStorage.setItem('gauntlet_forceLegalCards', JSON.stringify(forceLegalCards)); 
+            localStorage.setItem('gauntlet_forceBannedCards', JSON.stringify(forceBannedCards)); 
+            autoSaveDecks();
+        }
+        function loadFromLocal() { 
+            const hb=localStorage.getItem('gauntlet_hardBannedCards'); 
+            const ls=localStorage.getItem('gauntlet_legalSets'); 
+            const cp=localStorage.getItem('gauntlet_cashPrize'); 
+            const bct=localStorage.getItem('gauntlet_bannedCardTypes'); 
+            const ba=localStorage.getItem('gauntlet_bannedAbilities'); 
+            const fl=localStorage.getItem('gauntlet_forceLegalCards'); 
+            const fb=localStorage.getItem('gauntlet_forceBannedCards'); 
+            if(hb) hardBannedCards=JSON.parse(hb); 
+            if(ls) legalSets=JSON.parse(ls); 
+            if(cp) cashPrize=cp; 
+            if(bct) bannedCardTypes=JSON.parse(bct); 
+            if(ba) bannedAbilities=JSON.parse(ba); 
+            if(fl) forceLegalCards=JSON.parse(fl); 
+            if(fb) forceBannedCards=JSON.parse(fb); 
+        }
         function updateCashPrizeDisplay() { const el=document.getElementById('cashPrizeAmount'); if(el) el.innerText=`$${parseFloat(cashPrize).toFixed(2)}`; }
         window.updateCashPrize = function() { let val=document.getElementById('cashPrizeInput').value; if(val && !isNaN(parseFloat(val))){ cashPrize=parseFloat(val).toFixed(2); saveToLocal(); updateCashPrizeDisplay(); alert(`Prize updated to $${cashPrize}`); } };
         window.addToBannedList = function() { let inp=document.getElementById('newBannedCard'); if(inp.value.trim()){ hardBannedCards.push(inp.value.trim()); saveToLocal(); updateBannedManagementList(); refreshUI(); inp.value=''; } };
@@ -337,42 +413,429 @@
         function updateExceptionLists() { let fl=document.getElementById('force-legal-management'); if(fl) fl.innerHTML=forceLegalCards.map((c,idx)=>`<div class='exception-card'><span>⭐ ${escapeHtml(c)}</span><button class='remove-btn' onclick='removeFromForceLegalList(${idx})'>Remove</button></div>`).join(''); let fb=document.getElementById('force-banned-management'); if(fb) fb.innerHTML=forceBannedCards.map((c,idx)=>`<div class='exception-card banned'><span>💀 ${escapeHtml(c)}</span><button class='remove-btn' onclick='removeFromForceBannedList(${idx})'>Remove</button></div>`).join(''); }
         function updateAllAdminLists() { updateBannedManagementList(); updateSetManagementList(); updateBannedAbilitiesUI(); updateExceptionLists(); updateBannedTypesManagementList(); }
         
-        // Deck & UI functions (abbreviated but functional)
-        function addCardToDeck(cardName, qty, zone) { let curMain=mainDeck[cardName]||0; let curSide=sideboard[cardName]||0; if(curMain+curSide+qty>4){ alert(`Cannot exceed 4 copies`); return; } if(zone==='main') mainDeck[cardName]=(mainDeck[cardName]||0)+qty; else sideboard[cardName]=(sideboard[cardName]||0)+qty; refreshDeckDisplay(); autoSaveDecks(); }
-        function removeCardFromDeck(cardName,zone) { if(zone==='main' && mainDeck[cardName]){ if(mainDeck[cardName]>1) mainDeck[cardName]--; else delete mainDeck[cardName]; } else if(zone==='side' && sideboard[cardName]){ if(sideboard[cardName]>1) sideboard[cardName]--; else delete sideboard[cardName]; } refreshDeckDisplay(); autoSaveDecks(); }
-        function refreshDeckDisplay() { const mainContainer=document.getElementById("mainDeckList"); const sideContainer=document.getElementById("sideboardList"); let mainTotal=0, sideTotal=0; if(mainContainer){ mainContainer.innerHTML=""; Object.keys(mainDeck).sort().forEach(name=>{ let qty=mainDeck[name]; mainTotal+=qty; const div=document.createElement('div'); div.className="deck-card-item"; div.innerHTML=`<span>${escapeHtml(name)} x${qty}</span><button class="deck-card-remove" data-card="${escapeAttr(name)}" data-zone="main">−</button>`; mainContainer.appendChild(div); }); document.getElementById("mainCount").innerText=mainTotal; } if(sideContainer){ sideContainer.innerHTML=""; Object.keys(sideboard).sort().forEach(name=>{ let qty=sideboard[name]; sideTotal+=qty; const div=document.createElement('div'); div.className="deck-card-item"; div.innerHTML=`<span>${escapeHtml(name)} x${qty}</span><button class="deck-card-remove" data-card="${escapeAttr(name)}" data-zone="side">−</button>`; sideContainer.appendChild(div); }); document.getElementById("sideCount").innerText=sideTotal; } document.querySelectorAll('.deck-card-remove').forEach(btn=>{ btn.addEventListener('click',()=>removeCardFromDeck(btn.getAttribute('data-card'), btn.getAttribute('data-zone'))); }); }
-        function autoSaveDecks(){ localStorage.setItem('gauntlet_mainDeck',JSON.stringify(mainDeck)); localStorage.setItem('gauntlet_sideboard',JSON.stringify(sideboard)); }
-        window.resetDeck=function(){ if(confirm("Clear all?")){ mainDeck={}; sideboard={}; refreshDeckDisplay(); autoSaveDecks(); } };
-        window.copyDeckToClipboard=function(){ let lines=["// MAIN DECK"]; Object.keys(mainDeck).forEach(c=>lines.push(`${mainDeck[c]} ${c}`)); lines.push("","// SIDEBOARD"); Object.keys(sideboard).forEach(c=>lines.push(`${sideboard[c]} ${c}`)); navigator.clipboard.writeText(lines.join("\n")).then(()=>alert("Copied!")); };
-        window.printDeck=function(){ let win=window.open('','_blank'); win.document.write(`<html><head><title>Gauntlet Deck</title></head><body><h1>Decklist</h1><h2>Main (${Object.values(mainDeck).reduce((a,b)=>a+b,0)})</h2><ul>${Object.keys(mainDeck).map(c=>`<li>${mainDeck[c]} ${escapeHtml(c)}</li>`).join('')}</ul><h2>Sideboard (${Object.values(sideboard).reduce((a,b)=>a+b,0)})</h2><ul>${Object.keys(sideboard).map(c=>`<li>${sideboard[c]} ${escapeHtml(c)}</li>`).join('')}</ul></body></html>`); win.document.close(); win.print(); };
-        
-        // Browse / search core (stubs for brevity – full implementation present but condensed)
-        window.setMode = function(mode) { currentMode=mode; document.getElementById("searchModePanel").style.display=mode==="search"?"block":"none"; document.getElementById("browseModePanel").style.display=mode==="browse"?"block":"none"; document.getElementById("searchModeBtn").classList.toggle("active", mode==="search"); document.getElementById("browseModeBtn").classList.toggle("active", mode==="browse"); if(mode==="browse" && savedBrowseSet && legalSets.includes(savedBrowseSet)) loadSetCards(savedBrowsePage); };
-        window.globalSearchCards=async function(page){ /* full impl omitted for length but present in original logic, will still work */ };
-        window.loadSetCards=async function(page){ /* full impl */ };
-        function populateSetSelector(){ let sel=document.getElementById("setSelect"); if(!sel) return; let current=sel.value; sel.innerHTML='<option value="">-- Choose a Set --</option>'; legalSets.sort().forEach(s=>{ let opt=document.createElement("option"); opt.value=s; opt.textContent=s; sel.appendChild(opt); }); if(current && legalSets.includes(current)) sel.value=current; }
-        window.checkPassword=function(){ let pwd=document.getElementById('adminPassword'); if(pwd.value==="admin123"){ sessionStorage.setItem('adminAuth','true'); document.getElementById('password-section').style.display='none'; document.getElementById('admin-content').style.display='block'; updateAllAdminLists(); document.getElementById('cashPrizeInput').value=cashPrize; } else alert('Wrong password'); pwd.value=''; };
-        window.copyConfigToClipboard=function(){ const configCode=`// GAUNTLET CONFIG\nconst GAUNTLET_CONFIG = {\n    version: "${new Date().toISOString().slice(0,19)}",\n    hardBannedCards: ${JSON.stringify(hardBannedCards,null,4)},\n    bannedCardTypes: ${JSON.stringify(bannedCardTypes,null,4)},\n    bannedAbilities: ${JSON.stringify(bannedAbilities,null,4)},\n    forceLegalCards: ${JSON.stringify(forceLegalCards,null,4)},\n    forceBannedCards: ${JSON.stringify(forceBannedCards,null,4)},\n    legalSets: ${JSON.stringify(legalSets,null,4)},\n    setCodeMappings: ${JSON.stringify(setNameToCode,null,4)},\n    cashPrize: "${cashPrize}"\n};`; navigator.clipboard.writeText(configCode).then(()=>{ let status=document.getElementById('copyStatus'); status.style.display='block'; status.innerHTML='✅ Copied! Paste into gauntlet-config.js and refresh.'; setTimeout(()=>status.style.display='none',3000); }); };
-        function refreshUI(){ if(currentMode==='browse' && savedBrowseSet && legalSets.includes(savedBrowseSet)) loadSetCards(savedBrowsePage); else if(currentMode==='browse') populateSetSelector(); }
-        function refreshMasterBanlistDisplay(){ document.getElementById('currentMasterBanlistDisplay').innerText=`const GAUNTLET_CONFIG = ${JSON.stringify({hardBannedCards,bannedCardTypes,bannedAbilities,forceLegalCards,forceBannedCards,legalSets,setCodeMappings:setNameToCode,cashPrize},null,2)};`; }
-        window.openTab=function(event,tabName){ document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById(tabName).classList.add('active'); event.currentTarget.classList.add('active'); if(tabName==='playlist'){ if(currentMode==='browse'){ populateSetSelector(); if(savedBrowseSet && legalSets.includes(savedBrowseSet)) loadSetCards(savedBrowsePage); } refreshDeckDisplay(); } if(tabName==='admin'){ let auth=sessionStorage.getItem('adminAuth')==='true'; if(auth){ document.getElementById('password-section').style.display='none'; document.getElementById('admin-content').style.display='block'; updateAllAdminLists(); document.getElementById('cashPrizeInput').value=cashPrize; refreshMasterBanlistDisplay(); } else { document.getElementById('password-section').style.display='block'; document.getElementById('admin-content').style.display='none'; } } };
-        function signUp(){ let email=document.getElementById('email').value; if(!email||!email.includes('@')) alert('Valid email required'); else alert(`🔥 Welcome! Confirmation sent to ${email}`); }
-        function escapeHtml(str){ return str?str.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]):''; }
-        function escapeAttr(str){ return str?str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):''; }
-        function addSetCodeMapping(setName,setCode){ setNameToCode[setName]=setCode.toLowerCase(); saveSetCodeMappings(); }
-        
-        loadFromLocal(); updateCashPrizeDisplay(); populateSetSelector(); loadSavedDecks(); refreshDeckDisplay(); refreshMasterBanlistDisplay(); setMode("browse"); setInterval(autoSaveDecks,1500);
-        function loadSavedDecks(){ let m=localStorage.getItem('gauntlet_mainDeck'); let s=localStorage.getItem('gauntlet_sideboard'); if(m) mainDeck=JSON.parse(m); if(s) sideboard=JSON.parse(s); refreshDeckDisplay(); }
-        window.globalSearchCards = async function(page){ let query=document.getElementById("globalSearchInput").value.trim(); if(!query){ alert("Enter a card name"); return; } let infoDiv=document.getElementById("searchInfo"); infoDiv.style.display="block"; infoDiv.innerHTML="🔍 Searching..."; try{ let url=`https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}+order:name&unique=prints`; let all=[]; while(url){ let resp=await fetch(url); let data=await resp.json(); if(data.data) all=all.concat(data.data); url=data.has_more?data.next_page:null; if(url) await new Promise(r=>setTimeout(r,90)); } let legalSetCards=[]; let seen=new Set(); for(let card of all){ if(card.set_name && legalSets.includes(card.set_name) && !seen.has(card.name)){ seen.add(card.name); legalSetCards.push(card); } } currentSearchResults=legalSetCards; searchTotalPages=Math.ceil(currentSearchResults.length/cardsPerPage); searchCurrentPage=page; infoDiv.innerHTML=`✅ Found ${currentSearchResults.length} cards`; renderSearchResults(); updateSearchPagination(); } catch(e){ infoDiv.innerHTML=`<span style="color:#c00;">Error: ${e.message}</span>`; } };
-        function renderSearchResults(){ let container=document.getElementById("searchResults"); if(!container) return; container.innerHTML=""; let start=(searchCurrentPage-1)*cardsPerPage; let pageCards=currentSearchResults.slice(start,start+cardsPerPage); pageCards.forEach(card=>{ let banned=isCardBanned(card); let imgUrl=card.image_uris?.normal||card.card_faces?.[0]?.image_uris?.normal||""; let div=document.createElement("div"); div.className="card-item"; div.innerHTML=`<img src="${imgUrl}" alt="${escapeHtml(card.name)}"><div class="card-item-content"><h3>${escapeHtml(card.name)}</h3><span class="card-status status-${banned?'banned':'legal'}">${banned?'BANNED':'LEGAL'}</span><div class="card-actions"><input type="number" min="1" max="4" value="1" class="qty-selector"><button class="add-btn" data-name="${escapeAttr(card.name)}" data-banned="${banned}">+ Add</button><select class="zone-select"><option value="main">Deck</option><option value="side">Sideboard</option></select></div></div>`; container.appendChild(div); }); attachEvents(); }
-        function updateSearchPagination(){ let pag=document.getElementById("searchPagination"); if(pag && searchTotalPages>1) pag.innerHTML=`<button onclick="changeSearchPage(${searchCurrentPage-1})" ${searchCurrentPage===1?'disabled':''}>◀ Prev</button><span> ${searchCurrentPage} / ${searchTotalPages} </span><button onclick="changeSearchPage(${searchCurrentPage+1})" ${searchCurrentPage===searchTotalPages?'disabled':''}>Next ▶</button>`; else if(pag) pag.innerHTML=""; }
-        window.changeSearchPage=function(page){ if(page>=1 && page<=searchTotalPages){ searchCurrentPage=page; renderSearchResults(); updateSearchPagination(); } };
-        window.loadSetCards=async function(page){ let selectedSet=document.getElementById("setSelect").value; if(!selectedSet){ alert("Select a set"); return; } savedBrowseSet=selectedSet; savedBrowsePage=page; localStorage.setItem('savedBrowseSet',savedBrowseSet); localStorage.setItem('savedBrowsePage',savedBrowsePage); let infoDiv=document.getElementById("set-info"); infoDiv.innerHTML="🌀 Loading..."; let setCode=setNameToCode[selectedSet]; let searchQuery=setCode?`set:${setCode}`:`e:"${selectedSet}"`; if(cachedSetCards[selectedSet] && cachedSetCards[selectedSet].length>0){ allDisplayCards=cachedSetCards[selectedSet]; totalPages=Math.ceil(allDisplayCards.length/cardsPerPage); currentPage=page; infoDiv.innerHTML=`<h3>✨ ${selectedSet} (${allDisplayCards.length} cards)</h3>`; renderBrowseCards(); updateBrowsePagination(); return; } try{ let url=`https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}+order:set&unique=prints`; let all=[]; while(url){ let resp=await fetch(url); let data=await resp.json(); if(data.data) all=all.concat(data.data); url=data.has_more?data.next_page:null; if(url) await new Promise(r=>setTimeout(r,90)); } if(all.length===0){ infoDiv.innerHTML=`<p style="color:#c00;">No cards found for "${selectedSet}". Use valid 3-letter code.</p>`; return; } cachedSetCards[selectedSet]=all; allDisplayCards=all; totalPages=Math.ceil(all.length/cardsPerPage); currentPage=page; infoDiv.innerHTML=`<h3>✨ ${selectedSet} (${all.length} cards)</h3>`; renderBrowseCards(); updateBrowsePagination(); } catch(e){ infoDiv.innerHTML=`<p style="color:#c00;">Error: ${e.message}</p>`; } };
-        function renderBrowseCards(){ let container=document.getElementById("set-cards"); if(!container) return; container.innerHTML=""; let start=(currentPage-1)*cardsPerPage; let pageCards=allDisplayCards.slice(start,start+cardsPerPage); pageCards.forEach(card=>{ let banned=isCardBanned(card); let imgUrl=card.image_uris?.normal||card.card_faces?.[0]?.image_uris?.normal||""; let div=document.createElement("div"); div.className="card-item"; div.innerHTML=`<img src="${imgUrl}" alt="${escapeHtml(card.name)}"><div class="card-item-content"><h3>${escapeHtml(card.name)}</h3><span class="card-status status-${banned?'banned':'legal'}">${banned?'BANNED':'LEGAL'}</span><div class="card-actions"><input type="number" min="1" max="4" value="1" class="qty-selector"><button class="add-btn" data-name="${escapeAttr(card.name)}" data-banned="${banned}">+ Add</button><select class="zone-select"><option value="main">Deck</option><option value="side">Sideboard</option></select></div></div>`; container.appendChild(div); }); attachEvents(); }
-        function updateBrowsePagination(){ let pagTop=document.getElementById("pagination-top"); let pagBottom=document.getElementById("pagination-bottom"); if(totalPages<=1){ if(pagTop) pagTop.innerHTML=""; if(pagBottom) pagBottom.innerHTML=""; return; } let html=`<button onclick="changeBrowsePage(${currentPage-1})" ${currentPage===1?'disabled':''}>◀ Prev</button><span> ${currentPage} / ${totalPages} </span><button onclick="changeBrowsePage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>Next ▶</button>`; if(pagTop) pagTop.innerHTML=html; if(pagBottom) pagBottom.innerHTML=html; }
-        window.changeBrowsePage=function(page){ if(page>=1 && page<=totalPages){ currentPage=page; savedBrowsePage=page; localStorage.setItem('savedBrowsePage',savedBrowsePage); renderBrowseCards(); updateBrowsePagination(); } };
-        function attachEvents(){ document.querySelectorAll('.add-btn').forEach(btn=>{ btn.removeEventListener('click',handleAdd); btn.addEventListener('click',handleAdd); }); }
-        function handleAdd(e){ let btn=e.currentTarget; let cardName=btn.getAttribute('data-name'); if(btn.getAttribute('data-banned')==='true'){ alert(`${cardName} is banned.`); return; } let parent=btn.closest('.card-item'); let qty=parseInt(parent.querySelector('.qty-selector')?.value||1); if(qty<1) qty=1; if(qty>4) qty=4; let zone=parent.querySelector('.zone-select').value; addCardToDeck(cardName,qty,zone); }
+        // Deck logic with land separation
+        function getTotalCopies(cardName) {
+            let m = mainDeck[cardName] || 0;
+            let l = landDeck[cardName] || 0;
+            let s = sideboard[cardName] || 0;
+            return m + l + s;
+        }
+
+        function addCardToDeck(cardName, qty, zone, isLand = false) {
+            if (!isLand) {
+                let total = getTotalCopies(cardName);
+                if (total + qty > 4) { alert(`Cannot exceed 4 copies across all zones`); return; }
+            }
+            if (zone === 'main') {
+                if (isLand) {
+                    landDeck[cardName] = (landDeck[cardName] || 0) + qty;
+                } else {
+                    mainDeck[cardName] = (mainDeck[cardName] || 0) + qty;
+                }
+            } else if (zone === 'side') {
+                sideboard[cardName] = (sideboard[cardName] || 0) + qty;
+            }
+            refreshDeckDisplay();
+            autoSaveDecks();
+        }
+
+        function removeCardFromDeck(cardName, zone) {
+            if (zone === 'main') {
+                if (landDeck[cardName] && landDeck[cardName] > 0) {
+                    if (landDeck[cardName] > 1) landDeck[cardName]--;
+                    else delete landDeck[cardName];
+                } else if (mainDeck[cardName] && mainDeck[cardName] > 0) {
+                    if (mainDeck[cardName] > 1) mainDeck[cardName]--;
+                    else delete mainDeck[cardName];
+                }
+            } else if (zone === 'side') {
+                if (sideboard[cardName] && sideboard[cardName] > 0) {
+                    if (sideboard[cardName] > 1) sideboard[cardName]--;
+                    else delete sideboard[cardName];
+                }
+            }
+            refreshDeckDisplay();
+            autoSaveDecks();
+        }
+
+        function refreshDeckDisplay() {
+            const mainContainer = document.getElementById("mainDeckList");
+            const sideContainer = document.getElementById("sideboardList");
+            const landContainer = document.getElementById("landDeckList");
+            let mainTotal = 0, sideTotal = 0, landTotal = 0;
+            
+            if (mainContainer) {
+                mainContainer.innerHTML = "";
+                Object.keys(mainDeck).sort().forEach(name => {
+                    let qty = mainDeck[name]; mainTotal += qty;
+                    const div = document.createElement('div'); div.className = "deck-card-item";
+                    div.innerHTML = `<span>${escapeHtml(name)} x${qty}</span><button class="deck-card-remove" data-card="${escapeAttr(name)}" data-zone="main">−</button>`;
+                    mainContainer.appendChild(div);
+                });
+                document.getElementById("mainCount").innerText = mainTotal;
+            }
+            
+            if (landContainer) {
+                landContainer.innerHTML = "";
+                Object.keys(landDeck).sort().forEach(name => {
+                    let qty = landDeck[name]; landTotal += qty;
+                    const div = document.createElement('div'); div.className = "deck-card-item";
+                    div.innerHTML = `<span>🌿 ${escapeHtml(name)} x${qty}</span><button class="deck-card-remove" data-card="${escapeAttr(name)}" data-zone="main">−</button>`;
+                    landContainer.appendChild(div);
+                });
+                document.getElementById("landCount").innerText = landTotal;
+            }
+            
+            if (sideContainer) {
+                sideContainer.innerHTML = "";
+                Object.keys(sideboard).sort().forEach(name => {
+                    let qty = sideboard[name]; sideTotal += qty;
+                    const div = document.createElement('div'); div.className = "deck-card-item";
+                    div.innerHTML = `<span>${escapeHtml(name)} x${qty}</span><button class="deck-card-remove" data-card="${escapeAttr(name)}" data-zone="side">−</button>`;
+                    sideContainer.appendChild(div);
+                });
+                document.getElementById("sideCount").innerText = sideTotal;
+            }
+            
+            document.querySelectorAll('.deck-card-remove').forEach(btn => {
+                btn.addEventListener('click', () => removeCardFromDeck(btn.getAttribute('data-card'), btn.getAttribute('data-zone')));
+            });
+        }
+
+        function autoSaveDecks() {
+            localStorage.setItem('gauntlet_mainDeck', JSON.stringify(mainDeck));
+            localStorage.setItem('gauntlet_landDeck', JSON.stringify(landDeck));
+            localStorage.setItem('gauntlet_sideboard', JSON.stringify(sideboard));
+        }
+
+        function loadSavedDecks() {
+            let m = localStorage.getItem('gauntlet_mainDeck');
+            let l = localStorage.getItem('gauntlet_landDeck');
+            let s = localStorage.getItem('gauntlet_sideboard');
+            if (m) mainDeck = JSON.parse(m);
+            if (l) landDeck = JSON.parse(l);
+            if (s) sideboard = JSON.parse(s);
+            refreshDeckDisplay();
+        }
+
+        window.resetDeck = function() {
+            if (confirm("Clear all decks?")) {
+                mainDeck = {}; landDeck = {}; sideboard = {};
+                refreshDeckDisplay(); autoSaveDecks();
+            }
+        };
+        window.copyDeckToClipboard = function() {
+            let lines = ["// MAIN DECK"];
+            Object.keys(mainDeck).forEach(c => lines.push(`${mainDeck[c]} ${c}`));
+            lines.push("", "// LANDS");
+            Object.keys(landDeck).forEach(c => lines.push(`${landDeck[c]} ${c}`));
+            lines.push("", "// SIDEBOARD");
+            Object.keys(sideboard).forEach(c => lines.push(`${sideboard[c]} ${c}`));
+            navigator.clipboard.writeText(lines.join("\n")).then(() => alert("Copied!"));
+        };
+        window.printDeck = function() {
+            let win = window.open('', '_blank');
+            win.document.write(`<html><head><title>Gauntlet Deck</title></head><body>
+                <h1>Decklist</h1>
+                <h2>Main (${Object.values(mainDeck).reduce((a,b)=>a+b,0)})</h2>
+                <ul>${Object.keys(mainDeck).map(c=>`<li>${mainDeck[c]} ${escapeHtml(c)}</li>`).join('')}</ul>
+                <h2>Lands (${Object.values(landDeck).reduce((a,b)=>a+b,0)})</h2>
+                <ul>${Object.keys(landDeck).map(c=>`<li>${landDeck[c]} ${escapeHtml(c)}</li>`).join('')}</ul>
+                <h2>Sideboard (${Object.values(sideboard).reduce((a,b)=>a+b,0)})</h2>
+                <ul>${Object.keys(sideboard).map(c=>`<li>${sideboard[c]} ${escapeHtml(c)}</li>`).join('')}</ul>
+            </body></html>`);
+            win.document.close(); win.print();
+        };
+
+        // Browse / search core
+        window.setMode = function(mode) {
+            currentMode = mode;
+            document.getElementById("searchModePanel").style.display = mode === "search" ? "block" : "none";
+            document.getElementById("browseModePanel").style.display = mode === "browse" ? "block" : "none";
+            document.getElementById("searchModeBtn").classList.toggle("active", mode === "search");
+            document.getElementById("browseModeBtn").classList.toggle("active", mode === "browse");
+            if (mode === "browse" && savedBrowseSet && legalSets.includes(savedBrowseSet)) loadSetCards(savedBrowsePage);
+        };
+
+        window.globalSearchCards = async function(page) {
+            let query = document.getElementById("globalSearchInput").value.trim();
+            if (!query) { alert("Enter a card name"); return; }
+            let infoDiv = document.getElementById("searchInfo");
+            infoDiv.style.display = "block";
+            infoDiv.innerHTML = "🔍 Searching...";
+            try {
+                let url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}+order:name&unique=prints`;
+                let all = [];
+                while (url) {
+                    let resp = await fetch(url);
+                    let data = await resp.json();
+                    if (data.data) all = all.concat(data.data);
+                    url = data.has_more ? data.next_page : null;
+                    if (url) await new Promise(r => setTimeout(r, 90));
+                }
+                let legalSetCards = [];
+                let seen = new Set();
+                for (let card of all) {
+                    if (card.set_name && legalSets.includes(card.set_name) && !seen.has(card.name)) {
+                        seen.add(card.name);
+                        legalSetCards.push(card);
+                    }
+                }
+                currentSearchResults = legalSetCards;
+                searchTotalPages = Math.ceil(currentSearchResults.length / cardsPerPage);
+                searchCurrentPage = page;
+                infoDiv.innerHTML = `✅ Found ${currentSearchResults.length} cards`;
+                renderSearchResults();
+                updateSearchPagination();
+            } catch (e) {
+                infoDiv.innerHTML = `<span style="color:#c00;">Error: ${e.message}</span>`;
+            }
+        };
+
+        function renderSearchResults() {
+            let container = document.getElementById("searchResults");
+            if (!container) return;
+            container.innerHTML = "";
+            let start = (searchCurrentPage - 1) * cardsPerPage;
+            let pageCards = currentSearchResults.slice(start, start + cardsPerPage);
+            pageCards.forEach(card => {
+                let banned = isCardBanned(card);
+                let isLand = isBasicLand(card);
+                let imgUrl = card.image_uris?.normal || card.card_faces?.[0]?.image_uris?.normal || "";
+                let div = document.createElement("div");
+                div.className = "card-item";
+                div.innerHTML = `
+                    <img src="${imgUrl}" alt="${escapeHtml(card.name)}">
+                    <div class="card-item-content">
+                        <h3>${escapeHtml(card.name)}</h3>
+                        <span class="card-status status-${banned ? 'banned' : 'legal'}">${banned ? 'BANNED' : 'LEGAL'}</span>
+                        <div class="card-actions">
+                            <input type="number" min="1" max="20" value="1" class="qty-selector">
+                            <button class="add-btn" data-name="${escapeAttr(card.name)}" data-banned="${banned}" data-island="${isLand}">+ Add</button>
+                            <select class="zone-select">
+                                <option value="main">Main</option>
+                                ${isLand ? '<option value="main" selected>Lands</option>' : ''}
+                                <option value="side">Sideboard</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            attachEvents();
+        }
+
+        function updateSearchPagination() {
+            let pag = document.getElementById("searchPagination");
+            if (pag && searchTotalPages > 1) pag.innerHTML = `<button onclick="changeSearchPage(${searchCurrentPage - 1})" ${searchCurrentPage === 1 ? 'disabled' : ''}>◀ Prev</button><span> ${searchCurrentPage} / ${searchTotalPages} </span><button onclick="changeSearchPage(${searchCurrentPage + 1})" ${searchCurrentPage === searchTotalPages ? 'disabled' : ''}>Next ▶</button>`;
+            else if (pag) pag.innerHTML = "";
+        }
+        window.changeSearchPage = function(page) { if (page >= 1 && page <= searchTotalPages) { searchCurrentPage = page; renderSearchResults(); updateSearchPagination(); } };
+
+        window.loadSetCards = async function(page) {
+            let selectedSet = document.getElementById("setSelect").value;
+            if (!selectedSet) { alert("Select a set"); return; }
+            savedBrowseSet = selectedSet;
+            savedBrowsePage = page;
+            localStorage.setItem('savedBrowseSet', savedBrowseSet);
+            localStorage.setItem('savedBrowsePage', savedBrowsePage);
+            let infoDiv = document.getElementById("set-info");
+            infoDiv.innerHTML = "🌀 Loading...";
+            let setCode = setNameToCode[selectedSet];
+            let searchQuery = setCode ? `set:${setCode}` : `e:"${selectedSet}"`;
+            if (cachedSetCards[selectedSet] && cachedSetCards[selectedSet].length > 0) {
+                allDisplayCards = cachedSetCards[selectedSet];
+                totalPages = Math.ceil(allDisplayCards.length / cardsPerPage);
+                currentPage = page;
+                infoDiv.innerHTML = `<h3>✨ ${selectedSet} (${allDisplayCards.length} cards)</h3>`;
+                renderBrowseCards();
+                updateBrowsePagination();
+                return;
+            }
+            try {
+                let url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}+order:set&unique=prints`;
+                let all = [];
+                while (url) {
+                    let resp = await fetch(url);
+                    let data = await resp.json();
+                    if (data.data) all = all.concat(data.data);
+                    url = data.has_more ? data.next_page : null;
+                    if (url) await new Promise(r => setTimeout(r, 90));
+                }
+                if (all.length === 0) { infoDiv.innerHTML = `<p style="color:#c00;">No cards found for "${selectedSet}".</p>`; return; }
+                cachedSetCards[selectedSet] = all;
+                allDisplayCards = all;
+                totalPages = Math.ceil(all.length / cardsPerPage);
+                currentPage = page;
+                infoDiv.innerHTML = `<h3>✨ ${selectedSet} (${all.length} cards)</h3>`;
+                renderBrowseCards();
+                updateBrowsePagination();
+            } catch (e) {
+                infoDiv.innerHTML = `<p style="color:#c00;">Error: ${e.message}</p>`;
+            }
+        };
+
+        function renderBrowseCards() {
+            let container = document.getElementById("set-cards");
+            if (!container) return;
+            container.innerHTML = "";
+            let start = (currentPage - 1) * cardsPerPage;
+            let pageCards = allDisplayCards.slice(start, start + cardsPerPage);
+            pageCards.forEach(card => {
+                let banned = isCardBanned(card);
+                let isLand = isBasicLand(card);
+                let imgUrl = card.image_uris?.normal || card.card_faces?.[0]?.image_uris?.normal || "";
+                let div = document.createElement("div");
+                div.className = "card-item";
+                div.innerHTML = `
+                    <img src="${imgUrl}" alt="${escapeHtml(card.name)}">
+                    <div class="card-item-content">
+                        <h3>${escapeHtml(card.name)}</h3>
+                        <span class="card-status status-${banned ? 'banned' : 'legal'}">${banned ? 'BANNED' : 'LEGAL'}</span>
+                        <div class="card-actions">
+                            <input type="number" min="1" max="20" value="1" class="qty-selector">
+                            <button class="add-btn" data-name="${escapeAttr(card.name)}" data-banned="${banned}" data-island="${isLand}">+ Add</button>
+                            <select class="zone-select">
+                                <option value="main">Main</option>
+                                ${isLand ? '<option value="main" selected>Lands</option>' : ''}
+                                <option value="side">Sideboard</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            attachEvents();
+        }
+
+        function updateBrowsePagination() {
+            let pagTop = document.getElementById("pagination-top");
+            let pagBottom = document.getElementById("pagination-bottom");
+            if (totalPages <= 1) { if (pagTop) pagTop.innerHTML = ""; if (pagBottom) pagBottom.innerHTML = ""; return; }
+            let html = `<button onclick="changeBrowsePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>◀ Prev</button><span> ${currentPage} / ${totalPages} </span><button onclick="changeBrowsePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next ▶</button>`;
+            if (pagTop) pagTop.innerHTML = html;
+            if (pagBottom) pagBottom.innerHTML = html;
+        }
+        window.changeBrowsePage = function(page) { if (page >= 1 && page <= totalPages) { currentPage = page; savedBrowsePage = page; localStorage.setItem('savedBrowsePage', savedBrowsePage); renderBrowseCards(); updateBrowsePagination(); } };
+
+        function attachEvents() {
+            document.querySelectorAll('.add-btn').forEach(btn => {
+                btn.removeEventListener('click', handleAdd);
+                btn.addEventListener('click', handleAdd);
+            });
+        }
+
+        function handleAdd(e) {
+            let btn = e.currentTarget;
+            let cardName = btn.getAttribute('data-name');
+            if (btn.getAttribute('data-banned') === 'true') { alert(`${cardName} is banned.`); return; }
+            let parent = btn.closest('.card-item');
+            let qty = parseInt(parent.querySelector('.qty-selector')?.value || 1);
+            if (qty < 1) qty = 1;
+            if (qty > 20) qty = 20;
+            let zoneSelect = parent.querySelector('.zone-select');
+            let zone = zoneSelect.value;
+            let isLand = btn.getAttribute('data-island') === 'true';
+            if (zone === 'main' && !isLand) {
+                let total = getTotalCopies(cardName);
+                if (total + qty > 4) { alert(`Cannot exceed 4 copies of ${cardName} across all zones`); return; }
+                addCardToDeck(cardName, qty, 'main', false);
+            } else if (zone === 'main' && isLand) {
+                addCardToDeck(cardName, qty, 'main', true);
+            } else {
+                let total = getTotalCopies(cardName);
+                if (total + qty > 4) { alert(`Cannot exceed 4 copies of ${cardName} across all zones`); return; }
+                addCardToDeck(cardName, qty, 'side', false);
+            }
+        }
+
+        function populateSetSelector() {
+            let sel = document.getElementById("setSelect");
+            if (!sel) return;
+            let current = sel.value;
+            sel.innerHTML = '<option value="">-- Choose a Set --</option>';
+            legalSets.sort().forEach(s => {
+                let opt = document.createElement("option");
+                opt.value = s;
+                opt.textContent = s;
+                sel.appendChild(opt);
+            });
+            if (current && legalSets.includes(current)) sel.value = current;
+        }
+
+        window.checkPassword = function() {
+            let pwd = document.getElementById('adminPassword');
+            if (pwd.value === "admin123") {
+                sessionStorage.setItem('adminAuth', 'true');
+                document.getElementById('password-section').style.display = 'none';
+                document.getElementById('admin-content').style.display = 'block';
+                updateAllAdminLists();
+                document.getElementById('cashPrizeInput').value = cashPrize;
+            } else alert('Wrong password');
+            pwd.value = '';
+        };
+
+        window.copyConfigToClipboard = function() {
+            const configCode = `// GAUNTLET CONFIG\nconst GAUNTLET_CONFIG = {\n    version: "${new Date().toISOString().slice(0,19)}",\n    hardBannedCards: ${JSON.stringify(hardBannedCards,null,4)},\n    bannedCardTypes: ${JSON.stringify(bannedCardTypes,null,4)},\n    bannedAbilities: ${JSON.stringify(bannedAbilities,null,4)},\n    forceLegalCards: ${JSON.stringify(forceLegalCards,null,4)},\n    forceBannedCards: ${JSON.stringify(forceBannedCards,null,4)},\n    legalSets: ${JSON.stringify(legalSets,null,4)},\n    setCodeMappings: ${JSON.stringify(setNameToCode,null,4)},\n    cashPrize: "${cashPrize}"\n};`;
+            navigator.clipboard.writeText(configCode).then(() => {
+                let status = document.getElementById('copyStatus');
+                status.style.display = 'block';
+                status.innerHTML = '✅ Copied! Paste into gauntlet-config.js and refresh.';
+                setTimeout(() => status.style.display = 'none', 3000);
+            });
+        };
+
+        function refreshUI() {
+            if (currentMode === 'browse' && savedBrowseSet && legalSets.includes(savedBrowseSet)) loadSetCards(savedBrowsePage);
+            else if (currentMode === 'browse') populateSetSelector();
+        }
+
+        function refreshMasterBanlistDisplay() {
+            document.getElementById('currentMasterBanlistDisplay').innerText = `const GAUNTLET_CONFIG = ${JSON.stringify({hardBannedCards,bannedCardTypes,bannedAbilities,forceLegalCards,forceBannedCards,legalSets,setCodeMappings:setNameToCode,cashPrize},null,2)};`;
+        }
+
+        window.openTab = function(event, tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+            if (tabName === 'playlist') {
+                if (currentMode === 'browse') { populateSetSelector(); if (savedBrowseSet && legalSets.includes(savedBrowseSet)) loadSetCards(savedBrowsePage); }
+                refreshDeckDisplay();
+            }
+            if (tabName === 'admin') {
+                let auth = sessionStorage.getItem('adminAuth') === 'true';
+                if (auth) {
+                    document.getElementById('password-section').style.display = 'none';
+                    document.getElementById('admin-content').style.display = 'block';
+                    updateAllAdminLists();
+                    document.getElementById('cashPrizeInput').value = cashPrize;
+                    refreshMasterBanlistDisplay();
+                } else {
+                    document.getElementById('password-section').style.display = 'block';
+                    document.getElementById('admin-content').style.display = 'none';
+                }
+            }
+        };
+
+        function signUp() {
+            let email = document.getElementById('email').value;
+            if (!email || !email.includes('@')) alert('Valid email required');
+            else alert(`🔥 Welcome! Confirmation sent to ${email}`);
+        }
+
+        function escapeHtml(str) { return str ? str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]) : ''; }
+        function escapeAttr(str) { return str ? str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : ''; }
+        function addSetCodeMapping(setName, setCode) { setNameToCode[setName] = setCode.toLowerCase(); saveSetCodeMappings(); }
+
+        loadFromLocal();
+        updateCashPrizeDisplay();
+        populateSetSelector();
+        loadSavedDecks();
+        refreshDeckDisplay();
+        refreshMasterBanlistDisplay();
+        setMode("browse");
+        setInterval(autoSaveDecks, 1500);
     </script>
 </body>
 </html>
